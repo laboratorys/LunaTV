@@ -1,9 +1,12 @@
 name: Update Changelog and Version
-
 on:
   push:
     paths:
-      - 'CHANGELOG'
+      - 'CHANGELOG' # 建议明确文件后缀
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      force:
+        description: '是否强制更新（即使没有CHANGELOG变更）'
 
 jobs:
   update-changelog:
@@ -19,31 +22,37 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm' # 启用pnpm缓存
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (pnpm)
+        run: pnpm install --frozen-lockfile
 
       - name: Run changelog converter
-        run: node scripts/convert-changelog.js
+        run: pnpm exec node scripts/convert-changelog.js
         env:
           GITHUB_ACTIONS: 'true'
+          FORCE_UPDATE: ${{ inputs.force }}
 
       - name: Get branch name
         id: branch
         run: |
           echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
 
+      - name: Check for changes
+        id: changes
+        run: |
+          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
+          echo "has_changes=$([ -n "$(git status --porcelain)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
       - name: Commit changes
-        id: commit
+        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
-          git commit -m "chore: update changelog and version files [skip ci]" || echo "No changes to commit"
-          echo "changes_made=$([[ -n $(git status --porcelain) ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          git commit -m "chore: update changelog and version files [skip ci]"
 
       - name: Push changes
-        if: steps.commit.outputs.changes_made == 'true'
+        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
