@@ -2,11 +2,13 @@ name: Update Changelog and Version
 on:
   push:
     paths:
-      - 'CHANGELOG' # 建议明确文件后缀
-  workflow_dispatch: # 允许手动触发
+      - 'CHANGELOG'
+  workflow_dispatch:
     inputs:
       force:
         description: '是否强制更新（即使没有CHANGELOG变更）'
+        type: boolean
+        default: false
 
 jobs:
   update-changelog:
@@ -22,6 +24,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@10.14.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Run changelog converter
         run: pnpm exec node scripts/convert-changelog.js

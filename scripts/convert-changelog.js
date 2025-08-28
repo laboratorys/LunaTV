@@ -202,7 +202,7 @@ function main() {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    fs.writeFileSync(outputPath, tsContent, 'utf-8');
+    fs.writeFileSync(OUTPUT_PATH, tsContent, 'utf-8');
 
     // 检查是否在 GitHub Actions 环境中运行
     const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
@@ -218,7 +218,7 @@ function main() {
       console.log('💡 版本文件更新将在 git tag 触发的 release 工作流中完成');
     }
 
-    console.log(`✅ 成功生成 ${outputPath}`);
+    console.log(`✅ 成功生成 ${OUTPUT_PATH}`);
     console.log(`📊 版本统计:`);
     changelogData.versions.forEach((version) => {
       console.log(
