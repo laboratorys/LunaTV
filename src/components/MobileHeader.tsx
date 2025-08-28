@@ -57,6 +57,8 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
           <Image
             src='/logo.png'
             alt='Logo'
+            width={16}
+            height={16}
             className='h-[1em] w-[1em] mr-2 align-text-bottom'
           />
           {siteName}

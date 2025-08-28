@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 /* eslint-disable @typescript-eslint/no-var-requires */
-
+const git = require('git-rev-sync');
+const remoteUrl = git.remoteUrl();
+const { user, repo } = parseRepoInfo(remoteUrl);
 const nextConfig = {
   output: 'standalone',
   eslint: {
@@ -67,6 +69,13 @@ const nextConfig = {
 
     return config;
   },
+  env: {
+    GIT_COMMIT_HASH: git.short(),
+    GIT_BRANCH: git.branch(),
+    GIT_USER: user,
+    GIT_REPO: repo,
+    GIT_DATE_TIME: git.date().toLocaleString(),
+  },
 };
 
 const withPWA = require('next-pwa')({
@@ -76,4 +85,18 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
 });
 
+function parseRepoInfo(url) {
+  const matches = url.match(
+    /(?:https?:\/\/[^/]+\/|git@[^:]+:)([^/]+)\/([^/]+?)(?:\.git)?$/i
+  );
+
+  if (!matches || matches.length < 3) {
+    return { user: null, repo: null };
+  }
+
+  return {
+    user: matches[1],
+    repo: matches[2].replace(/\.git$/, ''),
+  };
+}
 module.exports = withPWA(nextConfig);

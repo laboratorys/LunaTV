@@ -41,11 +41,14 @@ function VersionDisplay() {
   return (
     <button
       onClick={() =>
-        window.open('https://github.com/laboratorys/LunaTV', '_blank')
+        window.open(
+          `https://github.com/${process.env.GIT_USER}/${process.env.GIT_REPO}`,
+          '_blank'
+        )
       }
       className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
     >
-      <span className='font-mono'>v{CURRENT_VERSION}</span>
+      <span className='font-mono'>v{CURRENT_VERSION} </span>
       {!isChecking && updateStatus !== UpdateStatus.FETCH_FAILED && (
         <div
           className={`flex items-center gap-1.5 ${
@@ -133,7 +136,13 @@ function LoginPageClient() {
       </div>
       <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
         <div className='flex items-center justify-center mb-8'>
-          <Image src='/logo.png' alt='Logo' className='w-7 h-7 mr-2' />
+          <Image
+            src='/logo.png'
+            alt='Logo'
+            width={28}
+            height={28}
+            className='mr-2'
+          />
           <h1 className='text-green-600 tracking-tight text-3xl font-extrabold bg-clip-text drop-shadow-sm'>
             {siteName}
           </h1>

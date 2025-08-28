@@ -364,7 +364,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     </div>
                   </div>
                   <a
-                    href='https://github.com/laboratorys/LunaTV'
+                    href={`https://github.com/${process.env.GIT_USER}/${process.env.GIT_REPO}`}
                     target='_blank'
                     rel='noopener noreferrer'
                     className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'
@@ -394,7 +394,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     </div>
                   </div>
                   <a
-                    href='https://github.com/laboratorys/LunaTV'
+                    href={`https://github.com/${process.env.GIT_USER}/${process.env.GIT_REPO}`}
                     target='_blank'
                     rel='noopener noreferrer'
                     className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'

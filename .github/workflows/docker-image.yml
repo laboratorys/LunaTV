@@ -7,10 +7,12 @@ on:
         required: false
         default: 'latest'
         type: string
+  workflow_run:
+    workflows: ['Update Changelog and Version']
+    types: [completed]
+    branches: [dev]
   release:
     types: [published]
-  push:
-    branches: [dev]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

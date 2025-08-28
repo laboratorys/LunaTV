@@ -45,9 +45,13 @@ const Logo = () => {
       href='/'
       className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-opacity duration-200 gap-2'
     >
-      <div className='relative h-7 w-7' style={{ minWidth: 32 }}>
-        <Image src='/logo.png' alt='Logo' fill className='object-contain' />
-      </div>
+      <Image
+        src='/logo.png'
+        alt='Logo'
+        width={28}
+        height={28}
+        className='object-contain'
+      />
       <span className='text-2xl font-bold text-green-600 tracking-tight'>
         {siteName}
       </span>
