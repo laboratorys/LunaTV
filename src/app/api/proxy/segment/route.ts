@@ -1,15 +1,15 @@
 /* eslint-disable no-console,@typescript-eslint/no-explicit-any */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-import { getConfig } from "@/lib/config";
+import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
-  const source = searchParams.get('moontv-source');
+  const source = searchParams.get('lunatv-source');
   if (!url) {
     return NextResponse.json({ error: 'Missing url' }, { status: 400 });
   }
@@ -32,16 +32,25 @@ export async function GET(request: Request) {
       },
     });
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch segment' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch segment' },
+        { status: 500 }
+      );
     }
 
     const headers = new Headers();
     headers.set('Content-Type', 'video/mp2t');
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Content-Type, Range, Origin, Accept');
+    headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Range, Origin, Accept'
+    );
     headers.set('Accept-Ranges', 'bytes');
-    headers.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+    headers.set(
+      'Access-Control-Expose-Headers',
+      'Content-Length, Content-Range'
+    );
     const contentLength = response.headers.get('content-length');
     if (contentLength) {
       headers.set('Content-Length', contentLength);
@@ -63,25 +72,28 @@ export async function GET(request: Request) {
             return;
           }
 
-          reader.read().then(({ done, value }) => {
-            if (isCancelled) {
-              return;
-            }
+          reader
+            .read()
+            .then(({ done, value }) => {
+              if (isCancelled) {
+                return;
+              }
 
-            if (done) {
-              controller.close();
-              cleanup();
-              return;
-            }
+              if (done) {
+                controller.close();
+                cleanup();
+                return;
+              }
 
-            controller.enqueue(value);
-            pump();
-          }).catch((error) => {
-            if (!isCancelled) {
-              controller.error(error);
-              cleanup();
-            }
-          });
+              controller.enqueue(value);
+              pump();
+            })
+            .catch((error) => {
+              if (!isCancelled) {
+                controller.error(error);
+                cleanup();
+              }
+            });
         }
 
         function cleanup() {
@@ -115,7 +127,7 @@ export async function GET(request: Request) {
             // 忽略取消时的错误
           }
         }
-      }
+      },
     });
 
     return new Response(stream, { headers });
@@ -137,6 +149,9 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ error: 'Failed to fetch segment' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch segment' },
+      { status: 500 }
+    );
   }
 }

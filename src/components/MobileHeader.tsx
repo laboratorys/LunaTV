@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { BackButton } from './BackButton';
@@ -48,11 +49,16 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
       </div>
 
       {/* 中间：Logo（绝对居中） */}
-      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2'>
         <Link
           href='/'
-          className='text-2xl font-bold text-green-600 tracking-tight hover:opacity-80 transition-opacity'
+          className='flex items-center text-2xl font-bold text-green-600 tracking-tight hover:opacity-80 transition-opacity'
         >
+          <Image
+            src='/logo.png'
+            alt='Logo'
+            className='h-[1em] w-[1em] mr-2 align-text-bottom'
+          />
           {siteName}
         </Link>
       </div>
