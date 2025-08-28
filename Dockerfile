@@ -1,5 +1,7 @@
 # ---- 第 1 阶段：安装依赖 ----
 FROM node:20-alpine AS deps
+# 安装 git
+RUN apk add --no-cache git
 RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 WORKDIR /app
 # 复制整个项目（包括 .git，确保 .dockerignore 未排除）
@@ -10,6 +12,8 @@ RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
 FROM node:20-alpine AS builder
+# 安装 git
+RUN apk add --no-cache git
 RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
 WORKDIR /app
 # 复制依赖和 .git 目录
