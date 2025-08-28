@@ -5,7 +5,7 @@ WORKDIR /app
 # 复制包括.git目录（需确保.dockerignore未排除.git）
 COPY . .
 # 仅保留依赖清单文件（减少后续层大小）
-RUN rm -rf !("package.json"|"pnpm-lock.yaml"|".git")
+RUN rm -rf !("package.json"|"pnpm-lock.yaml")
 RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
