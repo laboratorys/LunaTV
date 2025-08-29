@@ -4,7 +4,11 @@
 
 const fs = require('fs');
 const path = require('path');
-
+const git = require('git-rev-sync');
+const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG');
+const OUTPUT_PATH = path.join(process.cwd(), 'src/lib/changelog.ts');
+const VERSION_TXT_PATH = path.join(process.cwd(), 'VERSION.txt');
+const VERSION_TS_PATH = path.join(process.cwd(), 'src/lib/version.ts');
 function parseChangelog(content) {
   const lines = content.split('\n');
   const versions = [];
@@ -135,9 +139,8 @@ export default changelog;
 }
 
 function updateVersionFile(version) {
-  const versionTxtPath = path.join(process.cwd(), 'VERSION.txt');
   try {
-    fs.writeFileSync(versionTxtPath, version, 'utf8');
+    fs.writeFileSync(VERSION_TXT_PATH, version, 'utf8');
     console.log(`✅ 已更新 VERSION.txt: ${version}`);
   } catch (error) {
     console.error(`❌ 无法更新 VERSION.txt:`, error.message);
@@ -146,31 +149,33 @@ function updateVersionFile(version) {
 }
 
 function updateVersionTs(version) {
-  const versionTsPath = path.join(process.cwd(), 'src/lib/version.ts');
   try {
-    let content = fs.readFileSync(versionTsPath, 'utf8');
-
-    // 替换 CURRENT_VERSION 常量
-    const updatedContent = content.replace(
-      /const CURRENT_VERSION = ['"`][^'"`]+['"`];/,
-      `const CURRENT_VERSION = '${version}';`
-    );
-
-    fs.writeFileSync(versionTsPath, updatedContent, 'utf8');
-    console.log(`✅ 已更新 version.ts: ${version}`);
+    let content = fs.readFileSync(VERSION_TS_PATH, 'utf8');
+    // 处理两种可能的导出方式
+    const updatedContent = content
+      .replace(
+        /export const CURRENT_VERSION = ['"`][^'"`]+['"`];/,
+        `export const CURRENT_VERSION = '${version}';`
+      )
+      .replace(
+        /const CURRENT_VERSION = ['"`][^'"`]+['"`];/,
+        `const CURRENT_VERSION = '${version}';`
+      );
+    fs.writeFileSync(VERSION_TS_PATH, updatedContent, 'utf8');
+    console.log(`✅ Updated version.ts: ${version}`);
   } catch (error) {
-    console.error(`❌ 无法更新 version.ts:`, error.message);
+    console.error(`❌ Failed to update version.ts:`, error.message);
     process.exit(1);
   }
 }
 
 function main() {
   try {
-    const changelogPath = path.join(process.cwd(), 'CHANGELOG');
-    const outputPath = path.join(process.cwd(), 'src/lib/changelog.ts');
+    //const changelogPath = path.join(process.cwd(), 'CHANGELOG');
+    // const outputPath = path.join(process.cwd(), 'src/lib/changelog.ts');
 
     console.log('正在读取 CHANGELOG 文件...');
-    const changelogContent = fs.readFileSync(changelogPath, 'utf-8');
+    const changelogContent = fs.readFileSync(CHANGELOG_PATH, 'utf-8');
 
     console.log('正在解析 CHANGELOG 内容...');
     const changelogData = parseChangelog(changelogContent);
@@ -181,19 +186,23 @@ function main() {
     }
 
     // 获取最新版本号（CHANGELOG中的第一个版本）
-    const latestVersion = changelogData.versions[0].version;
+    let latestVersion = changelogData.versions[0].version;
+    if (git.branch() === 'dev') {
+      const hash = git.short();
+      latestVersion = `${latestVersion}.` + hash;
+    }
     console.log(`🔢 最新版本: ${latestVersion}`);
 
     console.log('正在生成 TypeScript 文件...');
     const tsContent = generateTypeScript(changelogData);
 
     // 确保输出目录存在
-    const outputDir = path.dirname(outputPath);
+    const outputDir = path.dirname(OUTPUT_PATH);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    fs.writeFileSync(outputPath, tsContent, 'utf-8');
+    fs.writeFileSync(OUTPUT_PATH, tsContent, 'utf-8');
 
     // 检查是否在 GitHub Actions 环境中运行
     const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
@@ -209,7 +218,7 @@ function main() {
       console.log('💡 版本文件更新将在 git tag 触发的 release 工作流中完成');
     }
 
-    console.log(`✅ 成功生成 ${outputPath}`);
+    console.log(`✅ 成功生成 ${OUTPUT_PATH}`);
     console.log(`📊 版本统计:`);
     changelogData.versions.forEach((version) => {
       console.log(

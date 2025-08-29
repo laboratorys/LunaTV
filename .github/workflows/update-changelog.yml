@@ -1,0 +1,63 @@
+name: Update Changelog and Version
+on:
+  push:
+    paths:
+      - 'CHANGELOG'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '是否强制更新（即使没有CHANGELOG变更）'
+        type: boolean
+        default: false
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run changelog converter
+        run: pnpm exec node scripts/convert-changelog.js
+        env:
+          GITHUB_ACTIONS: 'true'
+          FORCE_UPDATE: ${{ inputs.force }}
+
+      - name: Get branch name
+        id: branch
+        run: |
+          echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
+          echo "has_changes=$([ -n "$(git status --porcelain)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update changelog and version files [skip ci]"
+
+      - name: Push changes
+        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.branch.outputs.branch_name }}

@@ -1,6 +1,6 @@
 # ---- 第 1 阶段：安装依赖 ----
 FROM node:20-alpine AS deps
-
+RUN apk add --no-cache git
 # 启用 corepack 并激活 pnpm（Node20 默认提供 corepack）
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -8,12 +8,13 @@ WORKDIR /app
 
 # 仅复制依赖清单，提高构建缓存利用率
 COPY package.json pnpm-lock.yaml ./
-
+COPY .git ./.git
 # 安装所有依赖（含 devDependencies，后续会裁剪）
 RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
 FROM node:20-alpine AS builder
+RUN apk add --no-cache git
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
@@ -21,6 +22,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 # 复制全部源代码
 COPY . .
+COPY --from=deps /app/.git ./.git
 
 # 在构建阶段也显式设置 DOCKER_ENV，
 ENV DOCKER_ENV=true
@@ -30,7 +32,7 @@ RUN pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
-
+RUN apk add --no-cache git
 # 创建非 root 用户
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
 

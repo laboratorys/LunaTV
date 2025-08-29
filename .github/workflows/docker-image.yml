@@ -1,5 +1,4 @@
 name: Build & Push Docker image
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,20 +7,19 @@ on:
         required: false
         default: 'latest'
         type: string
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
+  workflow_run:
+    workflows: ['Update Changelog and Version']
+    types: [completed]
+    branches: [dev]
+  release:
+    types: [published]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 permissions:
   contents: write
   packages: write
   actions: write
-
 jobs:
   build:
     strategy:
@@ -32,59 +30,92 @@ jobs:
           - platform: linux/arm64
             os: ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Prepare platform name
+        id: platform_name
         run: |
-          echo "PLATFORM_NAME=${{ matrix.platform }}" | sed 's|/|-|g' >> $GITHUB_ENV
-
+          PLATFORM_NAME=$(echo "${{ matrix.platform }}" | sed 's|/|-|g')
+          echo "PLATFORM_NAME=$PLATFORM_NAME" >> $GITHUB_ENV
+          echo "name=$PLATFORM_NAME" >> $GITHUB_OUTPUT
       - name: Checkout source code
         uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set lowercase repository owner
-        id: lowercase
-        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
+      - name: Set lowercase repository path
+        id: repo
+        run: |
+          repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+          echo "repo=$repo_lower" >> "$GITHUB_OUTPUT"
+          echo "REPO_LOWER=$repo_lower" >> $GITHUB_ENV
+      - name: Determine Docker tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" && "${{ github.ref_name }}" == "dev" ]]; then
+            echo "docker_tag=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "docker_tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Debug environment
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref_name }}"
+          echo "Docker tag: ${{ steps.tag.outputs.docker_tag }}"
+          echo "GitHub Container Registry: ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}"
+          echo "Docker Hub: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }}"
+          docker info --format '{{.ClientInfo}}'
+          docker pull docker.io/library/node:20-alpine || echo "Failed to pull node:20-alpine"
+          docker pull ghcr.io/${{ steps.repo.outputs.repo }}:latest || echo "ghcr.io image does not exist yet"
+          docker pull docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest || echo "Docker Hub image does not exist yet"
+          echo "Listing images before build:"
+          docker images
+          docker buildx inspect --bootstrap
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
-
         with:
-          images: ghcr.io/moontechlab/lunatv
+          images: |
+            ghcr.io/${{ steps.repo.outputs.repo }}
+            docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv
           tags: |
-            type=raw,value=${{ github.event.inputs.tag || 'latest' }},enable={{is_default_branch}}
-
+            type=raw,value=${{ steps.tag.outputs.docker_tag }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != 'dev' || github.event_name == 'release' }}
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ghcr.io/moontechlab/lunatv:${{ github.event.inputs.tag || 'latest' }}
-          outputs: type=image,name=ghcr.io/moontechlab/lunatv,name-canonical=true,push=true
-
+          tags: ${{ steps.meta.outputs.tags }}
+          push: true
+      - name: Debug post-build images
+        run: |
+          echo "Listing images after build:"
+          docker images
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
-
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ env.PLATFORM_NAME }}
+          name: digests-${{ steps.platform_name.outputs.name }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -100,26 +131,49 @@ jobs:
           path: /tmp/digests
           pattern: digests-*
           merge-multiple: true
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set lowercase repository owner
-        id: lowercase
-        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Set lowercase repository path
+        id: repo
+        run: |
+          repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+          echo "repo=$repo_lower" >> "$GITHUB_OUTPUT"
+          echo "REPO_LOWER=$repo_lower" >> $GITHUB_ENV
+      - name: Determine Docker tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" && "${{ github.ref_name }}" == "dev" ]]; then
+            echo "docker_tag=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "docker_tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create -t ghcr.io/moontechlab/lunatv:${{ github.event.inputs.tag || 'latest' }} \
-            $(printf 'ghcr.io/moontechlab/lunatv@sha256:%s ' *)
+          docker buildx imagetools create -t ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }} \
+            $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+          docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }} \
+            $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.tag }}" != "dev" || "${{ github.event_name }}" == "release" ]]; then
+            docker buildx imagetools create -t ghcr.io/${{ steps.repo.outputs.repo }}:latest \
+              $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+            docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest \
+              $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+          fi
 
   cleanup-refresh:
     runs-on: ubuntu-latest
