@@ -19,7 +19,7 @@ export const changelog: ChangelogEntry[] = [
     changed: [
     "更新docker-image.yml，推送镜像使用当前仓库、优化分支和标签命名",
     "既然项目已经改名，全站更换站点名称LunaTV",
-    "添加一些logo和图标"
+    "添加一些logo、图标、海报"
     ],
     fixed: [
     "修复版本号显示"
