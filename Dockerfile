@@ -1,5 +1,5 @@
 # ---- 第 1 阶段：安装依赖 ----
-FROM node:20-alpine AS deps
+FROM ghcr.io/containerbase/node:20-alpine AS deps
 RUN apk add --no-cache git
 # 启用 corepack 并激活 pnpm（Node20 默认提供 corepack）
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -13,7 +13,7 @@ COPY .git ./.git
 RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
-FROM node:20-alpine AS builder
+FROM ghcr.io/containerbase/node:20-alpine AS builder
 RUN apk add --no-cache git
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
@@ -31,7 +31,7 @@ ENV DOCKER_ENV=true
 RUN pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
-FROM node:20-alpine AS runner
+FROM ghcr.io/containerbase/node:20-alpine AS runner
 RUN apk add --no-cache git
 # 创建非 root 用户
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
