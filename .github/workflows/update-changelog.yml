@@ -35,6 +35,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
       - name: Install dependencies
         if: steps.branch_check.outputs.should_execute == 'true'
         run: pnpm install
