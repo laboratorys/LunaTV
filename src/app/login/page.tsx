@@ -26,7 +26,7 @@ function VersionDisplay() {
   useEffect(() => {
     const checkUpdate = async () => {
       try {
-        const status = await checkForUpdates();
+        const { status } = await checkForUpdates();
         setUpdateStatus(status);
       } catch (_) {
         // do nothing
