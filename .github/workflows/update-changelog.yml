@@ -1,15 +1,13 @@
 name: Update Changelog and Version
 on:
   push:
-    paths:
-      - 'CHANGELOG'
-  workflow_dispatch:
-    inputs:
-      force:
-        description: '是否强制更新（即使没有CHANGELOG变更）'
-        type: boolean
-        default: false
-
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
@@ -20,7 +18,19 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref }}
 
+      - name: Set branch-specific conditions
+        id: branch_check
+        run: |
+          # 如果是dev分支或强制更新，直接标记执行；main分支需检查CHANGELOG变更
+          if [ "${{ github.ref_name }}" = "dev" ] || [ "${{ inputs.force }}" = "true" ]; then
+            echo "should_execute=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_execute=$([ -n "$(git diff --name-only HEAD^ HEAD CHANGELOG)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          fi
+
+      # 后续步骤仅当should_execute为true时运行
       - name: Set up Node.js
+        if: steps.branch_check.outputs.should_execute == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -29,35 +39,21 @@ jobs:
         run: corepack enable && corepack prepare pnpm@latest --activate
 
       - name: Install dependencies
+        if: steps.branch_check.outputs.should_execute == 'true'
         run: pnpm install
 
       - name: Run changelog converter
+        if: steps.branch_check.outputs.should_execute == 'true'
         run: pnpm exec node scripts/convert-changelog.js
         env:
           GITHUB_ACTIONS: 'true'
           FORCE_UPDATE: ${{ inputs.force }}
 
-      - name: Get branch name
-        id: branch
-        run: |
-          echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
-
-      - name: Check for changes
-        id: changes
-        run: |
-          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
-          echo "has_changes=$([ -n "$(git status --porcelain)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-
-      - name: Commit changes
-        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
+      - name: Commit and push changes
+        if: steps.branch_check.outputs.should_execute == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
           git commit -m "chore: update changelog and version files [skip ci]"
-
-      - name: Push changes
-        if: steps.changes.outputs.has_changes == 'true' || inputs.force == 'true'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.branch.outputs.branch_name }}
+          git push

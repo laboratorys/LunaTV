@@ -154,12 +154,10 @@ div[data-media-provider] video {
 }
 
 .art-poster {
-  background-size: contain !important; /* 使图片完整展示 */
-  background-position: center center !important; /* 居中显示 */
-  background-repeat: no-repeat !important; /* 防止重复 */
-  background-color: #000 !important; /* 其余区域填充为黑色 */
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
 }
-
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {

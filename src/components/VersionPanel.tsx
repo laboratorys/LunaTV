@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
+  GitBranch,
   Plus,
   RefreshCw,
   X,
@@ -17,8 +18,7 @@ import { createPortal } from 'react-dom';
 
 import { changelog, ChangelogEntry } from '@/lib/changelog';
 import { CURRENT_VERSION } from '@/lib/version';
-import { compareVersions, UpdateStatus } from '@/lib/version_check';
-
+import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 interface VersionPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -81,7 +81,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   const fetchRemoteChangelog = async () => {
     try {
       const response = await fetch(
-        'https://raw.githubusercontent.com/laboratorys/LunaTV/main/CHANGELOG'
+        `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${process.env.GIT_BRANCH}/CHANGELOG`
       );
       if (response.ok) {
         const content = await response.text();
@@ -90,11 +90,9 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
 
         // 检查是否有更新
         if (parsed.length > 0) {
-          const latest = parsed[0];
-          setLatestVersion(latest.version);
-          setIsHasUpdate(
-            compareVersions(latest.version) === UpdateStatus.HAS_UPDATE
-          );
+          const { status, latestVersion } = await checkForUpdates();
+          setLatestVersion(latestVersion);
+          setIsHasUpdate(status === UpdateStatus.HAS_UPDATE);
         }
       } else {
         console.error(
@@ -322,6 +320,10 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
               版本信息
             </h3>
             <div className='flex flex-wrap items-center gap-1 sm:gap-2'>
+              <span className='px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300 rounded-full inline-flex items-center gap-1'>
+                <GitBranch className='w-3 h-3 sm:w-4 sm:h-4 text-sky-600 dark:text-sky-400 inline-block' />
+                {process.env.GIT_BRANCH}
+              </span>
               <span className='px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full'>
                 v{CURRENT_VERSION}
               </span>

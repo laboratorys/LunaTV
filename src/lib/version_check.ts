@@ -11,35 +11,46 @@ export enum UpdateStatus {
   FETCH_FAILED = 'fetch_failed', // 获取失败
 }
 
+interface UpdateInfo {
+  status: UpdateStatus;
+  latestVersion: string;
+}
+
 // 远程版本检查URL配置
 const VERSION_CHECK_URLS = [
   `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${process.env.GIT_BRANCH}/VERSION.txt`,
+  `https://cdn.jsdelivr.net/gh/${process.env.GIT_USER}/${process.env.GIT_REPO}@${process.env.GIT_BRANCH}/VERSION.txt`,
 ];
 
 /**
  * 检查是否有新版本可用
  * @returns Promise<UpdateStatus> - 返回版本检查状态
  */
-export async function checkForUpdates(): Promise<UpdateStatus> {
+export async function checkForUpdates(): Promise<UpdateInfo> {
   try {
     // 尝试从主要URL获取版本信息
     const primaryVersion = await fetchVersionFromUrl(VERSION_CHECK_URLS[0]);
-    console.log(primaryVersion);
     if (primaryVersion) {
-      return compareVersions(primaryVersion);
+      return {
+        status: compareVersions(primaryVersion),
+        latestVersion: primaryVersion,
+      };
     }
 
     // 如果主要URL失败，尝试备用URL
     const backupVersion = await fetchVersionFromUrl(VERSION_CHECK_URLS[1]);
     if (backupVersion) {
-      return compareVersions(backupVersion);
+      return {
+        status: compareVersions(backupVersion),
+        latestVersion: backupVersion,
+      };
     }
 
     // 如果两个URL都失败，返回获取失败状态
-    return UpdateStatus.FETCH_FAILED;
+    return { status: UpdateStatus.FETCH_FAILED, latestVersion: '5.0.0' };
   } catch (error) {
     console.error('版本检查失败:', error);
-    return UpdateStatus.FETCH_FAILED;
+    return { status: UpdateStatus.FETCH_FAILED, latestVersion: '5.0.0' };
   }
 }
 
@@ -88,6 +99,7 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
  */
 export function compareVersions(remoteVersion: string): UpdateStatus {
   // 如果版本号相同，无需更新
+  console.log(remoteVersion, CURRENT_VERSION);
   if (remoteVersion === CURRENT_VERSION) {
     return UpdateStatus.NO_UPDATE;
   }

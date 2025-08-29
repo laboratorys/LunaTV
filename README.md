@@ -39,6 +39,7 @@
 2. 对应 release 版本的 TAG：`ghcr.io/laboratorys/lunatv:v5.0.0`
 3. dev 开发版本，该版本未正式发布可能存在不稳定因素，谨慎食用：`ghcr.io/laboratorys/lunatv:dev`
 4. 如果 tag 不连续，那么中间的开发版本是做过渡使用
+5. 同步更新 docker.io：[iicm/lunatv](https://hub.docker.com/r/iicm/lunatv/tags)
 
 ## ✨ 功能特性
 
@@ -121,6 +122,11 @@ networks:
     driver: bridge
 volumes:
   kvrocks-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: kvrocks-data
+      o: bind
 ```
 
 ### Redis 存储（有一定的丢数据风险）

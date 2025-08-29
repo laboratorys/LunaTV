@@ -971,7 +971,7 @@ function LivePageClient() {
         artPlayerRef.current = new Artplayer({
           container: artRef.current,
           url: targetUrl,
-          poster: currentChannel.logo,
+          poster: '/poster.jpg',
           volume: 0.7,
           isLive: true, // 设置为直播模式
           muted: false,
