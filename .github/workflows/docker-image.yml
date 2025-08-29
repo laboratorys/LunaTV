@@ -62,11 +62,27 @@ jobs:
       - name: Determine Docker tag
         id: tag
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "dev" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_run" && "${{ github.ref_name }}" == "dev" ]]; then
             echo "docker_tag=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "docker_tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "docker_tag=${{ github.event.inputs.tag || github.event.release.tag_name || 'latest' }}" >> "$GITHUB_OUTPUT"
+            echo "docker_tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
           fi
+      - name: Debug environment
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref_name }}"
+          echo "Docker tag: ${{ steps.tag.outputs.docker_tag }}"
+          echo "GitHub Container Registry: ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}"
+          echo "Docker Hub: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }}"
+          docker info --format '{{.ClientInfo}}'
+          docker pull docker.io/library/node:20-alpine || echo "Failed to pull node:20-alpine"
+          docker pull ghcr.io/${{ steps.repo.outputs.repo }}:latest || echo "ghcr.io image does not exist yet"
+          docker pull docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest || echo "Docker Hub image does not exist yet"
+          echo "Listing images before build:"
+          docker images
+          docker buildx inspect --bootstrap
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -76,24 +92,21 @@ jobs:
             docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv
           tags: |
             type=raw,value=${{ steps.tag.outputs.docker_tag }}
-            type=raw,value=latest,enable=${{ github.event_name != 'push' || github.ref_name != 'dev' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != 'dev' || github.event_name == 'release' }}
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: |
-            ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}
-            docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }}
-            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('ghcr.io/{0}:latest', steps.repo.outputs.repo) || '' }}
-            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('docker.io/{0}/lunatv:latest', secrets.DOCKER_HUB_USERNAME) || '' }}
+          tags: ${{ steps.meta.outputs.tags }}
           push: true
-          no-cache: true
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
+      - name: Debug post-build images
+        run: |
+          echo "Listing images after build:"
+          docker images
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
@@ -141,10 +154,12 @@ jobs:
       - name: Determine Docker tag
         id: tag
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" == "dev" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_run" && "${{ github.ref_name }}" == "dev" ]]; then
             echo "docker_tag=dev" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "docker_tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "docker_tag=${{ github.event.inputs.tag || github.event.release.tag_name || 'latest' }}" >> "$GITHUB_OUTPUT"
+            echo "docker_tag=${{ github.event.inputs.tag || 'latest' }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Create manifest list and push
         working-directory: /tmp/digests
@@ -153,7 +168,7 @@ jobs:
             $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
           docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }} \
             $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
-          if [[ "${{ github.event_name }}" != "push" || "${{ github.ref_name }}" != "dev" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.tag }}" != "dev" || "${{ github.event_name }}" == "release" ]]; then
             docker buildx imagetools create -t ghcr.io/${{ steps.repo.outputs.repo }}:latest \
               $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
             docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest \
