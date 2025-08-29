@@ -122,6 +122,11 @@ networks:
     driver: bridge
 volumes:
   kvrocks-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: kvrocks-data
+      o: bind
 ```
 
 ### Redis 存储（有一定的丢数据风险）
