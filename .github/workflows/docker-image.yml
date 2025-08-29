@@ -75,7 +75,7 @@ jobs:
             ghcr.io/${{ steps.repo.outputs.repo }}
             docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv
           tags: |
-            type=raw,value=${{ steps.tag.outputs.docker_tag }},enable=true
+            type=raw,value=${{ steps.tag.outputs.docker_tag }}
             type=raw,value=latest,enable=${{ github.event_name != 'push' || github.ref_name != 'dev' }}
       - name: Build and push by digest
         id: build
