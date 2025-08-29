@@ -87,9 +87,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           tags: |
             ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}
-            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('ghcr.io/{0}:latest', steps.repo.outputs.repo) || '' }}
             docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }}
-            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest') || '' }}
+            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('ghcr.io/{0}:latest', steps.repo.outputs.repo) || '' }}
+            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('docker.io/{0}/lunatv:latest', secrets.DOCKER_HUB_USERNAME) || '' }}
           push: true
           no-cache: true
           build-args: |
