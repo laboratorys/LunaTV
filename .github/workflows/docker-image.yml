@@ -81,6 +81,10 @@ jobs:
             ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}
             ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('ghcr.io/{0}:latest', steps.repo.outputs.repo) || '' }}
           outputs: type=image,name=ghcr.io/${{ steps.repo.outputs.repo }},name-canonical=true,push=true
+          no-cache: true
+          # 添加以下配置
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
