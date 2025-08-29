@@ -36,11 +36,17 @@ jobs:
         run: |
           PLATFORM_NAME=$(echo "${{ matrix.platform }}" | sed 's|/|-|g')
           echo "PLATFORM_NAME=$PLATFORM_NAME" >> $GITHUB_ENV
-          echo "name=$PLATFORM_NAME" >> $GITHUB_OUTPUT  # 输出到 outputs
+          echo "name=$PLATFORM_NAME" >> $GITHUB_OUTPUT
       - name: Checkout source code
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -65,15 +71,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ steps.repo.outputs.repo }}
+          images: |
+            ghcr.io/${{ steps.repo.outputs.repo }}
+            docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv
           tags: |
             type=raw,value=${{ steps.tag.outputs.docker_tag }},enable=true
             type=raw,value=latest,enable=${{ github.event_name != 'push' || github.ref_name != 'dev' }}
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v5
@@ -85,9 +88,10 @@ jobs:
           tags: |
             ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }}
             ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('ghcr.io/{0}:latest', steps.repo.outputs.repo) || '' }}
-          outputs: type=image,name=ghcr.io/${{ steps.repo.outputs.repo }},name-canonical=true,push=true
+            docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }}
+            ${{ github.event_name != 'push' || github.ref_name != 'dev' && format('docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest') || '' }}
+          push: true
           no-cache: true
-          # 添加以下配置
           build-args: |
             BUILDKIT_INLINE_CACHE=1
       - name: Export digest
@@ -122,6 +126,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Set lowercase repository path
         id: repo
         run: |
@@ -141,8 +151,12 @@ jobs:
         run: |
           docker buildx imagetools create -t ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.docker_tag }} \
             $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+          docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:${{ steps.tag.outputs.docker_tag }} \
+            $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
           if [[ "${{ github.event_name }}" != "push" || "${{ github.ref_name }}" != "dev" ]]; then
             docker buildx imagetools create -t ghcr.io/${{ steps.repo.outputs.repo }}:latest \
+              $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
+            docker buildx imagetools create -t docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/lunatv:latest \
               $(printf 'ghcr.io/${{ steps.repo.outputs.repo }}@sha256:%s ' *)
           fi
 
