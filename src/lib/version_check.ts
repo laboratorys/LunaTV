@@ -84,8 +84,10 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const version = await response.text();
-    return version.trim();
+    const versionInfo = await response.text();
+    const branch = `${process.env.GIT_BRANCH}`;
+    const jsonV = JSON.parse(versionInfo);
+    return jsonV[branch] || null;
   } catch (error) {
     console.warn(`从 ${url} 获取版本信息失败:`, error);
     return null;
