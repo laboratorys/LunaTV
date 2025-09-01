@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const version = {
   "main": "5.0.0",
-  "dev": "5.0.1.7ee7c14"
+  "dev": "5.0.1.f36436f"
 };
 const GIT_BRANCH = process.env.GIT_BRANCH || 'main';
 const CURRENT_VERSION: string = 
