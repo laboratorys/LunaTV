@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.1",
+    date: "2025-09-01",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化自动化构建流程：区分版本号、分支、简化Release流程"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "5.0.0",
     date: "2025-08-28",
     added: [
