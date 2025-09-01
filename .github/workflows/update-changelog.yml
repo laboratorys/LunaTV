@@ -25,7 +25,7 @@ jobs:
           if [ "${{ github.ref_name }}" = "dev" ] || [ "${{ inputs.force }}" = "true" ]; then
             echo "should_execute=true" >> $GITHUB_OUTPUT
           else
-            echo "should_execute=$([ -n "$(git diff --name-only HEAD^ HEAD CHANGELOG)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "should_execute=$([ -n "$(git diff --name-only HEAD^ HEAD CHANGELOG.md)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           fi
 
       # 后续步骤仅当should_execute为true时运行

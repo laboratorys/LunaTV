@@ -1,6 +1,10 @@
 name: Release on Merge to Main
 
 on:
+  workflow_run:
+    workflows: ['Update Changelog and Version']
+    types: [completed]
+    branches: [dev, main]
   push:
     branches:
       - main
