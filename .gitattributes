@@ -1,2 +1,5 @@
+[merge "conditional-ours"]
+    name = "Keep ours only on main"
+    driver = 'if [ "$GIT_BRANCH" = "main" ]; then exit 0; else exit 1; fi'
 VERSION.txt merge=ours
 src/lib/version.ts   merge=ours
