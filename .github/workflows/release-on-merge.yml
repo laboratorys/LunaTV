@@ -1,0 +1,65 @@
+name: Release on Merge to Main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'CHANGELOG.md'
+
+jobs:
+  create-release:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify merge from dev
+        id: check-merge
+        run: |
+          if git log -1 --pretty=format:'%p' | grep -q dev; then
+            echo "is_dev_merge=true" >> $GITHUB_OUTPUT
+          else
+            echo "⏩ Not a dev->main merge, skipping release"
+            echo "is_dev_merge=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract version and notes
+        if: steps.check-merge.outputs.is_dev_merge == 'true'
+        id: extract-changelog
+        run: |
+          # 提取最新版本号（第一个 ## [x.x.x] 条目）
+          LATEST_VERSION=$(awk '/^## \[/{gsub(/[\[\]]/, "", $2); print $2; exit}' CHANGELOG.md)
+
+          # 提取该版本对应的变更内容（直到下一个 ## 出现前）
+          RELEASE_NOTES=$(awk -v version="$LATEST_VERSION" '
+            BEGIN {flag=0}
+            /^## \['version'\]/ {flag=1; next}
+            /^## \[/ && flag {exit}
+            flag {print}
+          ' CHANGELOG.md | sed 's/^#/###/g')
+
+          # 添加版本头信息
+          FULL_NOTES="## Changes in v$LATEST_VERSION\n\n$RELEASE_NOTES\n\n_Auto-generated from CHANGELOG.md_"
+
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$FULL_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.check-merge.outputs.is_dev_merge == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.extract-changelog.outputs.version }}
+          name: Release v${{ steps.extract-changelog.outputs.version }}
+          body: ${{ steps.extract-changelog.outputs.notes }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false # 禁用自动生成，使用自定义内容
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
