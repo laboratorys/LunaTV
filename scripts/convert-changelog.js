@@ -184,8 +184,8 @@ async function getOtherVersion(branch) {
  * @returns Promise<string | null> - 版本字符串或null
  */
 async function fetchVersionFromUrl(branch) {
+  const url = `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${branch}/VERSION.txt`;
   try {
-    const url = `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${branch}/VERSION.txt`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
 
