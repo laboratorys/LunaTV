@@ -20,7 +20,7 @@ export const changelog: ChangelogEntry[] = [
     "优化自动化构建流程：区分版本号、分支、简化Release流程"
     ],
     fixed: [
-      // 无修复内容
+    "main分支构建失败"
     ]
   },
   {
