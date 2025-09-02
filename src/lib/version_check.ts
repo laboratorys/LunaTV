@@ -103,11 +103,12 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
  */
 export function compareVersions(remoteVersion: string): UpdateStatus {
   // 如果版本号相同，无需更新
-  console.log(remoteVersion, CURRENT_VERSION);
   if (remoteVersion === CURRENT_VERSION) {
     return UpdateStatus.NO_UPDATE;
   }
-
+  if (remoteVersion != CURRENT_VERSION && branch === 'dev') {
+    return UpdateStatus.HAS_UPDATE;
+  }
   try {
     // 解析版本号为数字数组 [X, Y, Z]
     const currentParts = CURRENT_VERSION.split('.').map((part) => {
