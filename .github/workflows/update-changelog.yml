@@ -54,6 +54,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
+          git add src/lib/changelog.ts src/lib/version-dev.ts VERSION_DEV.txt src/lib/version-main.ts VERSION_MAIN.txt
           git commit -m "chore: update changelog and version files [skip ci]"
           git push
