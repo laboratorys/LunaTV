@@ -14,7 +14,7 @@ export const changelog: ChangelogEntry[] = [
     version: "5.0.1",
     date: "2025-09-01",
     added: [
-      // 无新增内容
+    "登录增加密码查看按钮"
     ],
     changed: [
     "优化自动化构建流程：区分版本号、分支、简化Release流程"
