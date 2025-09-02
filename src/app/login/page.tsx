@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
-import { CURRENT_VERSION } from '@/lib/version';
+import { CURRENT_VERSION } from '@/lib/utils';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 
 import { useSite } from '@/components/SiteProvider';
@@ -37,7 +37,6 @@ function VersionDisplay() {
 
     checkUpdate();
   }, []);
-
   return (
     <button
       onClick={() =>

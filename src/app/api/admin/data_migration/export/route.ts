@@ -7,12 +7,11 @@ import { gzip } from 'zlib';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { SimpleCrypto } from '@/lib/crypto';
 import { db } from '@/lib/db';
-import { CURRENT_VERSION } from '@/lib/version';
+import { CURRENT_VERSION } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
 const gzipAsync = promisify(gzip);
-
 export async function POST(req: NextRequest) {
   try {
     // 检查存储类型

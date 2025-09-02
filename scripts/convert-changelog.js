@@ -7,8 +7,14 @@ const path = require('path');
 const git = require('git-rev-sync');
 const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG.md');
 const OUTPUT_PATH = path.join(process.cwd(), 'src/lib/changelog.ts');
-const VERSION_TXT_PATH = path.join(process.cwd(), 'VERSION.txt');
-const VERSION_TS_PATH = path.join(process.cwd(), 'src/lib/version.ts');
+const VERSION_TXT_PATH = path.join(
+  process.cwd(),
+  `VERSION_${process.env.GIT_BRANCH?.toUpperCase()}.txt`
+);
+const VERSION_TS_PATH = path.join(
+  process.cwd(),
+  `src/lib/version-${process.env.GIT_BRANCH}.ts`
+);
 function parseChangelog(content) {
   const lines = content.split('\n');
   const versions = [];
@@ -140,11 +146,7 @@ export default changelog;
 
 function updateVersionFile(version) {
   try {
-    fs.writeFileSync(
-      VERSION_TXT_PATH,
-      JSON.stringify(version, null, 2),
-      'utf8'
-    );
+    fs.writeFileSync(VERSION_TXT_PATH, version, 'utf8');
     console.log(`✅ 已更新 VERSION.txt: ${version}`);
   } catch (error) {
     console.error(`❌ 无法更新 VERSION.txt:`, error.message);
@@ -155,10 +157,7 @@ function updateVersionFile(version) {
 function updateVersionTs(version) {
   try {
     const updatedContent = `/* eslint-disable no-console */
-const version = ${JSON.stringify(version, null, 2)};
-const GIT_BRANCH = process.env.GIT_BRANCH || 'main';
-const CURRENT_VERSION: string = 
-  version[GIT_BRANCH as keyof typeof version] || version.main;
+const CURRENT_VERSION = '${version}';
 export { CURRENT_VERSION };
 `;
     fs.writeFileSync(VERSION_TS_PATH, updatedContent, 'utf8');
@@ -166,56 +165,6 @@ export { CURRENT_VERSION };
   } catch (error) {
     console.error(`❌ Failed to update version.ts:`, error.message);
     process.exit(1);
-  }
-}
-
-async function getOtherVersion(branch) {
-  try {
-    return fetchVersionFromUrl(branch);
-  } catch (error) {
-    console.error(`❌ Failed to get other version:`, error.message);
-    process.exit(1);
-  }
-}
-
-/**
- * 从指定URL获取版本信息
- * @param url - 版本信息URL
- * @returns Promise<string | null> - 版本字符串或null
- */
-async function fetchVersionFromUrl(branch) {
-  const url = `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${branch}/VERSION.txt`;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
-
-    // 添加时间戳参数以避免缓存
-    const timestamp = Date.now();
-    const urlWithTimestamp = url.includes('?')
-      ? `${url}&_t=${timestamp}`
-      : `${url}?_t=${timestamp}`;
-
-    const response = await fetch(urlWithTimestamp, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const versionInfo = await response.text();
-    const branch = `${process.env.GIT_BRANCH}`;
-    const jsonV = JSON.parse(versionInfo);
-    return jsonV[branch] || null;
-  } catch (error) {
-    console.warn(`从 ${url} 获取版本信息失败:`, error);
-    return null;
   }
 }
 
@@ -237,22 +186,11 @@ function main() {
 
     // 获取最新版本号（CHANGELOG中的第一个版本）
     let latestVersion = changelogData.versions[0].version;
-    let versionInfo = { main: '5.0.0', dev: '5.0.0' };
     if (git.branch() === 'dev') {
       const hash = git.short();
-      versionInfo.dev = `${latestVersion}.` + hash;
-      getOtherVersion('main').then((mainVer) => {
-        versionInfo.main = mainVer || '5.0.0';
-        console.log(`🔢 主分支最新版本: ${versionInfo.main}`);
-      });
-    } else if (git.branch() === 'main') {
-      versionInfo.main = `${latestVersion}`;
-      getOtherVersion('dev').then((devVer) => {
-        versionInfo.dev = devVer || '5.0.0';
-        console.log(`🔢 开发分支最新版本: ${versionInfo.dev}`);
-      });
+      latestVersion = `${latestVersion}.` + hash;
     }
-    console.log(`🔢 最新版本: ${versionInfo}`);
+    console.log(`🔢 最新版本: ${latestVersion}`);
 
     console.log('正在生成 TypeScript 文件...');
     const tsContent = generateTypeScript(changelogData);
@@ -271,8 +209,8 @@ function main() {
     if (isGitHubActions) {
       // 在 GitHub Actions 中，更新版本文件
       console.log('正在更新版本文件...');
-      updateVersionFile(versionInfo);
-      updateVersionTs(versionInfo);
+      updateVersionFile(latestVersion);
+      updateVersionTs(latestVersion);
     } else {
       // 在本地运行时，只提示但不更新版本文件
       console.log('🔧 本地运行模式：跳过版本文件更新');

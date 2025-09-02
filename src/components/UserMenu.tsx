@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
-import { CURRENT_VERSION } from '@/lib/version';
+import { CURRENT_VERSION } from '@/lib/utils';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 
 import { VersionPanel } from './VersionPanel';

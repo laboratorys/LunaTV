@@ -2,7 +2,7 @@
 
 'use client';
 
-import { CURRENT_VERSION } from '@/lib/version';
+import { CURRENT_VERSION } from '@/lib/utils';
 
 // 版本检查结果枚举
 export enum UpdateStatus {
@@ -15,11 +15,15 @@ interface UpdateInfo {
   status: UpdateStatus;
   latestVersion: string;
 }
-
+const branch = process.env.GIT_BRANCH || 'main';
 // 远程版本检查URL配置
 const VERSION_CHECK_URLS = [
-  `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${process.env.GIT_BRANCH}/VERSION.txt`,
-  `https://cdn.jsdelivr.net/gh/${process.env.GIT_USER}/${process.env.GIT_REPO}@${process.env.GIT_BRANCH}/VERSION.txt`,
+  `https://raw.githubusercontent.com/${process.env.GIT_USER}/${
+    process.env.GIT_REPO
+  }/${branch}/VERSION_${branch.toUpperCase()}.txt`,
+  `https://cdn.jsdelivr.net/gh/${process.env.GIT_USER}/${
+    process.env.GIT_REPO
+  }@${branch}/VERSION_${branch.toUpperCase()}.txt`,
 ];
 
 /**
@@ -84,10 +88,8 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const versionInfo = await response.text();
-    const branch = `${process.env.GIT_BRANCH}`;
-    const jsonV = JSON.parse(versionInfo);
-    return jsonV[branch] || null;
+    const version = await response.text();
+    return version;
   } catch (error) {
     console.warn(`从 ${url} 获取版本信息失败:`, error);
     return null;
