@@ -5,10 +5,16 @@
 const fs = require('fs');
 const path = require('path');
 const git = require('git-rev-sync');
-const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG');
+const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG.md');
 const OUTPUT_PATH = path.join(process.cwd(), 'src/lib/changelog.ts');
-const VERSION_TXT_PATH = path.join(process.cwd(), 'VERSION.txt');
-const VERSION_TS_PATH = path.join(process.cwd(), 'src/lib/version.ts');
+const VERSION_TXT_PATH = path.join(
+  process.cwd(),
+  `VERSION_${process.env.GITHUB_BRANCH?.toUpperCase()}.txt`
+);
+const VERSION_TS_PATH = path.join(
+  process.cwd(),
+  `src/lib/version-${process.env.GITHUB_BRANCH}.ts`
+);
 function parseChangelog(content) {
   const lines = content.split('\n');
   const versions = [];
@@ -150,17 +156,10 @@ function updateVersionFile(version) {
 
 function updateVersionTs(version) {
   try {
-    let content = fs.readFileSync(VERSION_TS_PATH, 'utf8');
-    // 处理两种可能的导出方式
-    const updatedContent = content
-      .replace(
-        /export const CURRENT_VERSION = ['"`][^'"`]+['"`];/,
-        `export const CURRENT_VERSION = '${version}';`
-      )
-      .replace(
-        /const CURRENT_VERSION = ['"`][^'"`]+['"`];/,
-        `const CURRENT_VERSION = '${version}';`
-      );
+    const updatedContent = `/* eslint-disable no-console */
+const CURRENT_VERSION = '${version}';
+export { CURRENT_VERSION };
+`;
     fs.writeFileSync(VERSION_TS_PATH, updatedContent, 'utf8');
     console.log(`✅ Updated version.ts: ${version}`);
   } catch (error) {

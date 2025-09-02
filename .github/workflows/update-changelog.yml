@@ -25,7 +25,7 @@ jobs:
           if [ "${{ github.ref_name }}" = "dev" ] || [ "${{ inputs.force }}" = "true" ]; then
             echo "should_execute=true" >> $GITHUB_OUTPUT
           else
-            echo "should_execute=$([ -n "$(git diff --name-only HEAD^ HEAD CHANGELOG)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "should_execute=$([ -n "$(git diff --name-only HEAD^ HEAD CHANGELOG.md)" ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           fi
 
       # 后续步骤仅当should_execute为true时运行
@@ -47,6 +47,7 @@ jobs:
         run: pnpm exec node scripts/convert-changelog.js
         env:
           GITHUB_ACTIONS: 'true'
+          GITHUB_BRANCH: ${{ github.ref_name }}
           FORCE_UPDATE: ${{ inputs.force }}
 
       - name: Commit and push changes
@@ -54,6 +55,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/lib/changelog.ts src/lib/version.ts VERSION.txt
+          git add src/lib/changelog.ts src/lib/version-dev.ts VERSION_DEV.txt src/lib/version-main.ts VERSION_MAIN.txt
           git commit -m "chore: update changelog and version files [skip ci]"
           git push

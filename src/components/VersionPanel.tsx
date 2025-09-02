@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { changelog, ChangelogEntry } from '@/lib/changelog';
-import { CURRENT_VERSION } from '@/lib/version';
+import { CURRENT_VERSION } from '@/lib/utils';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 interface VersionPanelProps {
   isOpen: boolean;
@@ -31,7 +31,6 @@ interface RemoteChangelogEntry {
   changed: string[];
   fixed: string[];
 }
-
 export const VersionPanel: React.FC<VersionPanelProps> = ({
   isOpen,
   onClose,
@@ -81,7 +80,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   const fetchRemoteChangelog = async () => {
     try {
       const response = await fetch(
-        `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${process.env.GIT_BRANCH}/CHANGELOG`
+        `https://raw.githubusercontent.com/${process.env.GIT_USER}/${process.env.GIT_REPO}/${process.env.GIT_BRANCH}/CHANGELOG.md`
       );
       if (response.ok) {
         const content = await response.text();
@@ -175,13 +174,12 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   };
 
   // 渲染变更日志条目
-  const renderChangelogEntry = (
+  const renderChangelogEntry = async (
     entry: ChangelogEntry | RemoteChangelogEntry,
     isCurrentVersion = false,
     isRemote = false
   ) => {
     const isUpdate = isRemote && hasUpdate && entry.version === latestVersion;
-
     return (
       <div
         key={entry.version}
