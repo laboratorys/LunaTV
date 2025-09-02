@@ -9,11 +9,11 @@ const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG.md');
 const OUTPUT_PATH = path.join(process.cwd(), 'src/lib/changelog.ts');
 const VERSION_TXT_PATH = path.join(
   process.cwd(),
-  `VERSION_${process.env.GIT_BRANCH?.toUpperCase()}.txt`
+  `VERSION_${process.env.GITHUB_BRANCH?.toUpperCase()}.txt`
 );
 const VERSION_TS_PATH = path.join(
   process.cwd(),
-  `src/lib/version-${process.env.GIT_BRANCH}.ts`
+  `src/lib/version-${process.env.GITHUB_BRANCH}.ts`
 );
 function parseChangelog(content) {
   const lines = content.split('\n');

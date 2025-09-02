@@ -47,6 +47,7 @@ jobs:
         run: pnpm exec node scripts/convert-changelog.js
         env:
           GITHUB_ACTIONS: 'true'
+          GITHUB_BRANCH: ${{ github.ref_name }}
           FORCE_UPDATE: ${{ inputs.force }}
 
       - name: Commit and push changes
