@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      RELEASE_BODY: ${{ toJson(github.event.release.body) }} # 安全传递
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,33 +22,34 @@ jobs:
       - name: Extract release notes
         id: extract-notes
         run: |
-          # 使用更可靠的 tag_name 获取版本
-          RELEASE_VERSION="${github.event.release.tag_name}"
+          # 处理版本号
+          RELEASE_VERSION="${RELEASE_TAG#v}"
 
-          # 改进的 CHANGELOG 解析（兼容更多格式）
+          # 处理 release notes
           if [ -f CHANGELOG.md ]; then
             RELEASE_NOTES=$(awk -v version="$RELEASE_VERSION" '
               BEGIN {flag=0; count=0}
-              /^## \[?v?/ && ($2 == version || $3 == version) {flag=1; next}
+              /^## \[?v?/ && (index($0, version) > 0) {flag=1; next}
               /^## \[?v?/ && flag {exit}
               flag {print; count++}
               END {if (count==0) exit 1}
             ' CHANGELOG.md)
 
             if [ $? -ne 0 ]; then
-              echo "⚠️ CHANGELOG.md 中未找到匹配版本，使用默认说明"
-              RELEASE_NOTES="${{ github.event.release.body }}"
+              echo "::warning::Using fallback release notes"
+              RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r .)  # 安全解析
             fi
           else
-            RELEASE_NOTES="${{ github.event.release.body }}"
+            RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r .)
           fi
 
-          # 修复换行符问题
-          NOTES_CONTENT=$(printf "## Release v%s\n%s\n\n_自动从 CHANGELOG.md 更新_" "$RELEASE_VERSION" "$RELEASE_NOTES")
+          # 安全格式化输出
+          NOTES_CONTENT=$(printf '## Release v%s\n%s\n\n_Updated from CHANGELOG.md_' \
+            "$RELEASE_VERSION" "$RELEASE_NOTES")
 
           echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES_CONTENT" >> $GITHUB_OUTPUT
+          printf "%s" "$NOTES_CONTENT" >> $GITHUB_OUTPUT  # 避免解释转义字符
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Update Release
