@@ -17,7 +17,8 @@ export const changelog: ChangelogEntry[] = [
     "登录增加密码查看按钮"
     ],
     changed: [
-    "优化自动化构建流程：区分版本号、分支、简化Release流程"
+    "优化自动化构建流程：区分版本号、分支、简化Release流程",
+    "合并时自动更新Release Note"
     ],
     fixed: [
     "main分支构建失败"
