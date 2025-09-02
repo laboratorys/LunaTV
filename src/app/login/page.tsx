@@ -5,6 +5,8 @@
 import {
   AlertCircle,
   CheckCircle,
+  Eye,
+  EyeOff,
   LockKeyhole,
   LogIn,
   User,
@@ -22,7 +24,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 function VersionDisplay() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [isChecking, setIsChecking] = useState(true);
-
   useEffect(() => {
     const checkUpdate = async () => {
       try {
@@ -127,7 +128,7 @@ function LoginPageClient() {
       setLoading(false);
     }
   };
-
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
       <div className='absolute top-4 right-4'>
@@ -184,13 +185,27 @@ function LoginPageClient() {
               </div>
               <input
                 id='password'
-                type='password'
+                type={showPassword ? 'text' : 'password'}
                 autoComplete='current-password'
                 className='block w-full rounded-lg border-0 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur autofill:pl-10'
                 placeholder='输入访问密码'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <div className='absolute inset-y-0 right-0 flex items-center pr-3 z-10'>
+                <button
+                  type='button'
+                  onClick={() => setShowPassword(!showPassword)}
+                  className='p-1 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none'
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                >
+                  {showPassword ? (
+                    <EyeOff className='w-5 h-5' />
+                  ) : (
+                    <Eye className='w-5 h-5' />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
           {error && (
