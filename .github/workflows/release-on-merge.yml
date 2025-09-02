@@ -1,68 +1,59 @@
 name: Update Manual Release
-
 on:
   release:
-    types: [created] # 监听 release 创建事件
-
+    types: [created]
 jobs:
   update-release:
-    # 仅当是手动创建（非 draft）且通过网页/GitHub CLI 创建时触发
     if: |
       github.event.release.draft == false &&
       github.event.action == 'created'
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 需要权限修改 release
-
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # 获取完整提交历史
+          fetch-depth: 0
 
-      - name: Extract latest changes
-        id: extract-changes
+      - name: Extract release notes
+        id: extract-notes
         run: |
-          # 获取最新版本号（从 release tag 提取）
-          RELEASE_VERSION="${GITHUB_REF#refs/tags/}"
-          RELEASE_VERSION="${RELEASE_VERSION#v}"  # 去除可能的 v 前缀
+          # 使用更可靠的 tag_name 获取版本
+          RELEASE_VERSION="${github.event.release.tag_name}"
 
-          # 从 CHANGELOG.md 提取对应版本的变更内容
+          # 改进的 CHANGELOG 解析（兼容更多格式）
           if [ -f CHANGELOG.md ]; then
             RELEASE_NOTES=$(awk -v version="$RELEASE_VERSION" '
               BEGIN {flag=0; count=0}
-              /^## \[/ && $2 == version {flag=1; next}
-              /^## \[/ && flag {exit}
+              /^## \[?v?/ && ($2 == version || $3 == version) {flag=1; next}
+              /^## \[?v?/ && flag {exit}
               flag {print; count++}
               END {if (count==0) exit 1}
             ' CHANGELOG.md)
-            
+
             if [ $? -ne 0 ]; then
-              echo "⚠️ No matching version in CHANGELOG.md, using default notes"
+              echo "⚠️ CHANGELOG.md 中未找到匹配版本，使用默认说明"
               RELEASE_NOTES="${{ github.event.release.body }}"
             fi
           else
             RELEASE_NOTES="${{ github.event.release.body }}"
           fi
 
-          # 格式化输出
+          # 修复换行符问题
+          NOTES_CONTENT=$(printf "## Release v%s\n%s\n\n_自动从 CHANGELOG.md 更新_" "$RELEASE_VERSION" "$RELEASE_NOTES")
+
           echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "## Release v$RELEASE_VERSION" >> $GITHUB_OUTPUT
-          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "\n_Updated automatically from CHANGELOG.md_" >> $GITHUB_OUTPUT
+          echo "$NOTES_CONTENT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Update Release
         uses: softprops/action-gh-release@v2
         with:
-          # 复用已创建的 release
           tag_name: ${{ github.event.release.tag_name }}
-          name: Release v${{ steps.extract-changes.outputs.version }} # 更新标题
-          body: ${{ steps.extract-changes.outputs.notes }} # 更新内容
+          name: Release v${{ steps.extract-notes.outputs.version }}
+          body: ${{ steps.extract-notes.outputs.notes }}
           draft: false
           prerelease: ${{ github.event.release.prerelease }}
-          # 关键参数：指定要更新的 release_id
           release_id: ${{ github.event.release.id }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
