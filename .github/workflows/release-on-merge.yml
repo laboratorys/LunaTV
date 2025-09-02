@@ -2,6 +2,7 @@ name: Update Manual Release
 on:
   release:
     types: [created]
+
 jobs:
   update-release:
     if: |
@@ -24,6 +25,7 @@ jobs:
         run: |
           # 处理版本号
           RELEASE_VERSION="${RELEASE_TAG#v}"
+          echo "DEBUG: RELEASE_VERSION=$RELEASE_VERSION"
 
           # 处理 release notes
           if [ -f CHANGELOG.md ]; then
@@ -37,20 +39,34 @@ jobs:
 
             if [ $? -ne 0 ]; then
               echo "::warning::Using fallback release notes"
-              RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r .)  # 安全解析
+              RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r . 2>/dev/null || echo "Failed to parse RELEASE_BODY")
             fi
           else
-            RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r .)
+            echo "::warning::CHANGELOG.md not found, using RELEASE_BODY"
+            RELEASE_NOTES=$(echo "$RELEASE_BODY" | jq -r . 2>/dev/null || echo "Failed to parse RELEASE_BODY")
           fi
 
-          # 安全格式化输出
-          NOTES_CONTENT=$(printf '## Release v%s\n%s\n\n_Updated from CHANGELOG.md_' \
-            "$RELEASE_VERSION" "$RELEASE_NOTES")
+          # 调试 RELEASE_NOTES 内容
+          echo "DEBUG: RELEASE_NOTES=$RELEASE_NOTES"
 
+          # 如果 RELEASE_NOTES 为空，设置默认值
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="No release notes provided."
+          fi
+
+          # 格式化输出，清理特殊字符
+          NOTES_CONTENT=$(printf '## Release v%s\n%s\n\n_Updated from CHANGELOG.md_' \
+            "$RELEASE_VERSION" "$RELEASE_NOTES" | sed "s/'/\\'/g; s/\\r//g")
+
+          # 写入 GITHUB_OUTPUT
           echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          printf "%s" "$NOTES_CONTENT" >> $GITHUB_OUTPUT  # 避免解释转义字符
+          echo "$NOTES_CONTENT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          # 调试 GITHUB_OUTPUT 内容
+          echo "DEBUG: GITHUB_OUTPUT content:"
+          cat "$GITHUB_OUTPUT"
 
       - name: Update Release
         uses: softprops/action-gh-release@v2
