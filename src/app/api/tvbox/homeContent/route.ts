@@ -37,7 +37,7 @@ export async function fetchDoubanHotList(
   useTencentCDN = false,
   useAliCDN = false,
   type = 'tv',
-  pageStart = 1,
+  pageStart = 0,
   pageLimit = 50
 ): Promise<TvboxContentItem[]> {
   const tag = '热门';
