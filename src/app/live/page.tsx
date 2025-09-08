@@ -882,7 +882,9 @@ function LivePageClient() {
         console.warn('清理 HLS 实例时出错:', err);
       }
     }
-    if (art.flv) art.flv.destroy();
+    if ((art.flv as flvjs.Player | undefined)?.destroy) {
+      (art.flv as flvjs.Player).destroy();
+    }
 
     const hls = new Hls({
       debug: false,
@@ -942,7 +944,9 @@ function LivePageClient() {
       }
     }
     if (flvjs.isSupported()) {
-      if (art.flv) art.flv.destroy();
+      if ((art.flv as flvjs.Player | undefined)?.destroy) {
+        (art.flv as flvjs.Player).destroy();
+      }
       const flv = flvjs.createPlayer({ type: 'flv', url });
       flv.attachMediaElement(video);
       flv.load();
