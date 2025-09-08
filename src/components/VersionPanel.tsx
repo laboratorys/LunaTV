@@ -174,7 +174,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
   };
 
   // 渲染变更日志条目
-  const renderChangelogEntry = async (
+  const renderChangelogEntry = (
     entry: ChangelogEntry | RemoteChangelogEntry,
     isCurrentVersion = false,
     isRemote = false
