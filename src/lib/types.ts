@@ -122,3 +122,11 @@ export interface SkipConfig {
   intro_time: number; // 片头时间（秒）
   outro_time: number; // 片尾时间（秒）
 }
+
+// tvbox列表内容数据结构
+export interface TvboxContentItem {
+  vod_id: string;
+  vod_name: string;
+  vod_pic: string;
+  vod_remarks: string;
+}

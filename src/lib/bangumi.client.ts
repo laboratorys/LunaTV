@@ -3,6 +3,7 @@
 export interface BangumiCalendarData {
   weekday: {
     en: string;
+    id: number;
   };
   items: {
     id: number;
