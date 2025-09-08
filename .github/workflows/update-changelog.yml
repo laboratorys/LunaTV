@@ -49,17 +49,8 @@ jobs:
           GITHUB_ACTIONS: 'true'
           GITHUB_BRANCH: ${{ github.ref_name }}
           FORCE_UPDATE: ${{ inputs.force }}
-      - name: Check for changes before commit
-        if: steps.branch_check.outputs.should_execute == 'true'
-        id: check_changes
-        run: |
-          if git status --porcelain | grep -q '^[MADRC]'; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
       - name: Commit and push changes
-        if: steps.branch_check.outputs.should_execute == 'true' && steps.check_changes.outputs.has_changes == 'true'
+        if: steps.branch_check.outputs.should_execute == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"

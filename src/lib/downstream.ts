@@ -14,6 +14,9 @@ interface ApiSearchItem {
   vod_class?: string;
   vod_year?: string;
   vod_content?: string;
+  vod_director?: string;
+  vod_area?: string;
+  vod_actor?: string;
   vod_douban_id?: number;
   type_name?: string;
 }
@@ -112,7 +115,11 @@ async function searchWithCache(
           ? item.vod_year.match(/\d{4}/)?.[0] || ''
           : 'unknown',
         desc: cleanHtmlTags(item.vod_content || ''),
+        remarks: item.vod_remarks,
         type_name: item.type_name,
+        director: item.vod_director,
+        area: item.vod_area,
+        actor: item.vod_actor,
         douban_id: item.vod_douban_id,
       };
     });

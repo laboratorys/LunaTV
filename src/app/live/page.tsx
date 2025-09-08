@@ -3,6 +3,7 @@
 'use client';
 
 import Artplayer from 'artplayer';
+import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import { Heart, Radio, Tv } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -866,7 +867,7 @@ function LivePageClient() {
     }
   }
 
-  function m3u8Loader(video: HTMLVideoElement, url: string) {
+  function m3u8Loader(video: HTMLVideoElement, url: string, art: Artplayer) {
     if (!Hls) {
       console.error('HLS.js 未加载');
       return;
@@ -880,6 +881,9 @@ function LivePageClient() {
       } catch (err) {
         console.warn('清理 HLS 实例时出错:', err);
       }
+    }
+    if ((art.flv as flvjs.Player | undefined)?.destroy) {
+      (art.flv as flvjs.Player).destroy();
     }
 
     const hls = new Hls({
@@ -915,6 +919,44 @@ function LivePageClient() {
     });
   }
 
+  function mp4Loader(video: HTMLVideoElement, url: string) {
+    // 清理之前的 HLS 实例（如果存在）
+    if (video.hls) {
+      try {
+        video.hls.destroy();
+        video.hls = null;
+      } catch (err) {
+        console.warn('清理 HLS 实例时出错:', err);
+      }
+    }
+    // 直接设置视频源
+    video.src = url;
+    video.load();
+  }
+
+  function flvLoader(video: HTMLVideoElement, url: string, art: Artplayer) {
+    if (video.hls) {
+      try {
+        video.hls.destroy();
+        video.hls = null;
+      } catch (err) {
+        console.warn('清理 HLS 实例时出错:', err);
+      }
+    }
+    if (flvjs.isSupported()) {
+      if ((art.flv as flvjs.Player | undefined)?.destroy) {
+        (art.flv as flvjs.Player).destroy();
+      }
+      const flv = flvjs.createPlayer({ type: 'flv', url });
+      flv.attachMediaElement(video);
+      flv.load();
+      art.flv = flv;
+      art.on('destroy', () => flv.destroy());
+    } else {
+      art.notice.show = 'Unsupported playback format: flv';
+    }
+  }
+
   // 播放器初始化
   useEffect(() => {
     const preload = async () => {
@@ -928,7 +970,7 @@ function LivePageClient() {
         return;
       }
 
-      console.log('视频URL:', videoUrl);
+      //console.log('视频URL:', videoUrl);
 
       // 销毁之前的播放器实例并创建新的
       if (artPlayerRef.current) {
@@ -950,8 +992,8 @@ function LivePageClient() {
         type = precheckResult.type;
       }
 
-      // 如果不是 m3u8 类型，设置不支持的类型并返回
-      if (type !== 'm3u8') {
+      // 如果不是 m3u8\mp4\flv 类型，设置不支持的类型并返回
+      if (type !== 'm3u8' && type !== 'mp4' && type !== 'flv') {
         setUnsupportedType(type);
         setIsVideoLoading(false);
         return;
@@ -960,8 +1002,12 @@ function LivePageClient() {
       // 重置不支持的类型
       setUnsupportedType(null);
 
-      const customType = { m3u8: m3u8Loader };
-      const targetUrl = `/api/proxy/m3u8?url=${encodeURIComponent(
+      const customType = { m3u8: m3u8Loader, mp4: mp4Loader, flv: flvLoader };
+      let proxyType = 'video';
+      if (type == 'm3u8') {
+        proxyType = 'm3u8';
+      }
+      const targetUrl = `/api/proxy/${proxyType}?url=${encodeURIComponent(
         videoUrl
       )}&lunatv-source=${currentSourceRef.current?.key || ''}`;
       try {
