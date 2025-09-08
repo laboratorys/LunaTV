@@ -8,6 +8,7 @@
 ### Added
 
 - TvBox支持
+- 【继续观看】增加展开收起/按钮
 
 ### Changed
 
