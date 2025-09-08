@@ -32,7 +32,7 @@ export async function GET() {
     return NextResponse.json({ error: '获取主页数据失败' }, { status: 500 });
   }
 }
-export async function fetchDoubanHotList(
+async function fetchDoubanHotList(
   proxyUrl: string,
   useTencentCDN = false,
   useAliCDN = false,
