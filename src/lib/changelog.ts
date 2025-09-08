@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.2",
+    date: "2025-09-05",
+    added: [
+    "TvBox支持"
+    ],
+    changed: [
+    "【直播】添加了对flv、mp4格式的支持"
+    ],
+    fixed: [
+    "【后台管理】点击Tab控制台错误"
+    ]
+  },
+  {
     version: "5.0.1",
     date: "2025-09-01",
     added: [
