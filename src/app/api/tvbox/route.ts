@@ -7,6 +7,7 @@ import { getConfig } from '@/lib/config';
 import { tvboxConfig } from '@/app/api/tvbox/tvbox';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
