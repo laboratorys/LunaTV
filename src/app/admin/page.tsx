@@ -4012,6 +4012,24 @@ const ConfigFileComponent = ({
                 '拉取配置'
               )}
             </button>
+            <button
+              onClick={handleFetchConfig}
+              disabled={isLoading('fetchConfig') || !subscriptionUrl.trim()}
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                isLoading('fetchConfig') || !subscriptionUrl.trim()
+                  ? buttonStyles.disabled
+                  : buttonStyles.success
+              }`}
+            >
+              {isLoading('fetchConfig') ? (
+                <div className='flex items-center justify-center gap-2'>
+                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                  拉取中…
+                </div>
+              ) : (
+                '拉取配置'
+              )}
+            </button>
           </div>
 
           {/* 自动更新开关 */}
