@@ -14,13 +14,15 @@ export const changelog: ChangelogEntry[] = [
     version: "5.0.2",
     date: "2025-09-05",
     added: [
-    "TvBox支持"
+    "TvBox支持",
+    "【继续观看】增加展开收起/按钮"
     ],
     changed: [
     "【直播】添加了对flv、mp4格式的支持"
     ],
     fixed: [
-    "【后台管理】点击Tab控制台错误"
+    "【后台管理】点击Tab控制台错误",
+    "查看版本信息页面闪烁"
     ]
   },
   {
