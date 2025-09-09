@@ -2,42 +2,90 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
+import { searchFromApi } from '@/lib/downstream';
+import { yellowWords } from '@/lib/yellow';
+
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('key');
-
   if (!query) {
-    return new Response(JSON.stringify({ error: '搜索关键词不能为空' }), {
-      status: 400,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const cacheTime = await getCacheTime();
+    return NextResponse.json(
+      { results: [] },
+      {
+        headers: {
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Netlify-Vary': 'query',
+        },
+      }
+    );
   }
-  const detailContentData = await fetchDetailContent(query);
-  const processedData = processData(detailContentData);
-  return NextResponse.json(processedData);
-}
-async function fetchDetailContent(id: string) {
-  const detailContentUrl = new URL(
-    `http://localhost:3000/api/tvbox/detailContent?id=${id}`
-  );
-  const response = await fetch(detailContentUrl.toString());
-  return await response.json();
-}
+  const config = await getConfig();
+  const apiSites = await getAvailableApiSites();
 
-function processData(data: any) {
-  if (data.list.length > 0) {
-    return {
-      list: {
-        vod_id: data.list[0].vod_name,
-        vod_name: data.list[0].vod_name,
-        vod_pic: data.list[0].vod_pic,
-        vod_remarks: data.list[0].vod_remarks,
+  // 添加超时控制和错误处理，避免慢接口拖累整体响应
+  const searchPromises = apiSites.map((site) =>
+    Promise.race([
+      searchFromApi(site, query),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
+      ),
+    ]).catch((err) => {
+      console.warn(`搜索失败 ${site.name}:`, err.message);
+      return []; // 返回空数组而不是抛出错误
+    })
+  );
+
+  try {
+    const results = await Promise.allSettled(searchPromises);
+    const successResults = results
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => (result as PromiseFulfilledResult<any>).value);
+    let flattenedResults = successResults.flat();
+    if (!config.SiteConfig.DisableYellowFilter) {
+      flattenedResults = flattenedResults.filter((result) => {
+        const typeName = result.type_name || '';
+        return !yellowWords.some((word: string) => typeName.includes(word));
+      });
+    }
+    const cacheTime = await getCacheTime();
+
+    if (flattenedResults.length === 0) {
+      // no cache if empty
+      return NextResponse.json({ results: [] }, { status: 200 });
+    }
+    const uniqueResults = Array.from(
+      new Map(
+        flattenedResults.map((item) => [
+          item.title,
+          {
+            vod_id: item.title,
+            vod_name: item.title,
+            vod_pic: item.poster || '',
+            vod_remarks: item.remarks,
+          },
+        ])
+      ).values()
+    );
+    return NextResponse.json(
+      {
+        list: uniqueResults,
       },
-    };
+      {
+        headers: {
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Netlify-Vary': 'query',
+        },
+      }
+    );
+  } catch (error) {
+    return NextResponse.json({ error: '搜索失败' }, { status: 500 });
   }
-  return { list: [] };
 }
