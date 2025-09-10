@@ -57,6 +57,7 @@ export interface AdminConfig {
   }[];
   TvBoxConfig?: {
     disabled: boolean;
+    expireSeconds: number;
   };
 }
 

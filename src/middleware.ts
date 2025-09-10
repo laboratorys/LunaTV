@@ -5,6 +5,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
+  //cache middleware
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return cache(request);
+  }
+  return auth(request);
+}
+async function auth(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 跳过不需要认证的路径
@@ -57,6 +64,14 @@ export async function middleware(request: NextRequest) {
 
   // 签名验证失败或不存在签名
   return handleAuthFailure(request, pathname);
+}
+async function cache(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  // 跳过不需要缓存的路径
+  if (!shouldCache(pathname)) {
+    return NextResponse.next();
+  }
+  return NextResponse.next();
 }
 
 // 验证签名
@@ -125,14 +140,14 @@ function shouldSkipAuth(pathname: string): boolean {
     '/icons/',
     '/logo.png',
     '/screenshot.png',
+    '/api/tvbox',
   ];
 
   return skipPaths.some((path) => pathname.startsWith(path));
 }
 
-// 配置middleware匹配规则
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|login|warning|api/login|api/register|api/logout|api/cron|api/server-config|api/tvbox|api/tvbox/homeContent|api/tvbox/categoryContent|api/tvbox/detailContent|api/tvbox/searchContent).*)',
-  ],
-};
+// 判断是否需要缓存
+function shouldCache(pathName: string): boolean {
+  const cachePaths = ['/api/tvbox/homeContent'];
+  return cachePaths.some((path) => pathName.startsWith(path));
+}

@@ -1,5 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
+import { SqliteStorage } from '@/lib/sqlite.db';
+
 import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
@@ -10,10 +12,11 @@ import { UpstashRedisStorage } from './upstash.db';
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
+    | 'sqlite'
     | 'redis'
     | 'upstash'
     | 'kvrocks'
-    | undefined) || 'localstorage';
+    | undefined) || 'sqlite';
 
 // 创建存储实例
 function createStorage(): IStorage {
@@ -24,6 +27,8 @@ function createStorage(): IStorage {
       return new UpstashRedisStorage();
     case 'kvrocks':
       return new KvrocksStorage();
+    case 'sqlite':
+      return new SqliteStorage();
     case 'localstorage':
     default:
       return null as unknown as IStorage;
@@ -165,6 +170,23 @@ export class DbManager {
 
   async deleteSearchHistory(userName: string, keyword?: string): Promise<void> {
     await this.storage.deleteSearchHistory(userName, keyword);
+  }
+
+  async getCacheByKey(key: string): Promise<any> {
+    const result = await this.storage.getCacheByKey(key);
+    return result ? JSON.parse(result) : null;
+  }
+
+  async setCacheByKey(key: string, data: any, ttl: number): Promise<void> {
+    this.storage.setCacheByKey(key, JSON.stringify(data), ttl);
+  }
+
+  async clearExpiredCache(): Promise<number> {
+    return this.storage.clearExpiredCache();
+  }
+
+  async clearAllCache(keysPrefix: string): Promise<number> {
+    return this.storage.clearAllCache(keysPrefix);
   }
 
   // 获取全部用户名

@@ -32,7 +32,7 @@ RUN pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
-RUN apk add --no-cache git
+RUN apk add --no-cache git libc6-compat sqlite
 # 创建非 root 用户
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
 

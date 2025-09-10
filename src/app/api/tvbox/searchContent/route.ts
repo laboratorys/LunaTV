@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
+import { getAvailableApiSites, getConfig } from '@/lib/config';
+import { db } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
+import { TVBOX_SEARCH_KEY } from '@/lib/keys';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
@@ -12,20 +14,20 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('key');
   if (!query) {
-    const cacheTime = await getCacheTime();
-    return NextResponse.json(
-      { results: [] },
-      {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Netlify-Vary': 'query',
-        },
-      }
-    );
+    return NextResponse.json({ results: [] });
   }
   const config = await getConfig();
+  const isCached =
+    config.TvBoxConfig?.expireSeconds && config.TvBoxConfig?.expireSeconds > 0;
+  if (isCached) {
+    const cacheData = await db.getCacheByKey(`${TVBOX_SEARCH_KEY}${query}`);
+    if (cacheData) {
+      console.log(
+        `【tvbox】searchContent return from cache:${TVBOX_SEARCH_KEY}${query}`
+      );
+      return NextResponse.json(cacheData);
+    }
+  }
   const apiSites = await getAvailableApiSites();
 
   // 添加超时控制和错误处理，避免慢接口拖累整体响应
@@ -53,7 +55,6 @@ export async function GET(request: NextRequest) {
         return !yellowWords.some((word: string) => typeName.includes(word));
       });
     }
-    const cacheTime = await getCacheTime();
 
     if (flattenedResults.length === 0) {
       // no cache if empty
@@ -72,19 +73,18 @@ export async function GET(request: NextRequest) {
         ])
       ).values()
     );
-    return NextResponse.json(
-      {
-        list: uniqueResults,
-      },
-      {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Netlify-Vary': 'query',
+    if (isCached) {
+      db.setCacheByKey(
+        `${TVBOX_SEARCH_KEY}${query}`,
+        {
+          list: uniqueResults,
         },
-      }
-    );
+        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+      );
+    }
+    return NextResponse.json({
+      list: uniqueResults,
+    });
   } catch (error) {
     return NextResponse.json({ error: '搜索失败' }, { status: 500 });
   }

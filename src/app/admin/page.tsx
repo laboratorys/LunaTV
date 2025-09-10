@@ -53,6 +53,7 @@ import { createPortal } from 'react-dom';
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
+import CustomDropdown from '@/components/CustomDropdown';
 import DataMigration from '@/components/DataMigration';
 import PageLayout from '@/components/PageLayout';
 
@@ -329,6 +330,7 @@ interface LiveDataSource {
 // TvBox数据类型
 interface TvBoxConfig {
   disabled: boolean;
+  expireSeconds: number;
 }
 
 // 自定义分类数据类型
@@ -4012,24 +4014,6 @@ const ConfigFileComponent = ({
                 '拉取配置'
               )}
             </button>
-            <button
-              onClick={handleFetchConfig}
-              disabled={isLoading('fetchConfig') || !subscriptionUrl.trim()}
-              className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                isLoading('fetchConfig') || !subscriptionUrl.trim()
-                  ? buttonStyles.disabled
-                  : buttonStyles.success
-              }`}
-            >
-              {isLoading('fetchConfig') ? (
-                <div className='flex items-center justify-center gap-2'>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  拉取中…
-                </div>
-              ) : (
-                '拉取配置'
-              )}
-            </button>
           </div>
 
           {/* 自动更新开关 */}
@@ -5311,9 +5295,27 @@ const TvBoxConfigComponent = ({
   const { isLoading, withLoading } = useLoadingState();
   const [tvboxConfig, setTvboxConfig] = useState<TvBoxConfig>({
     disabled: config?.TvBoxConfig?.disabled ?? true,
+    expireSeconds: config?.TvBoxConfig?.expireSeconds ?? 12 * 60 * 60,
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
+  const initialCacheTime = tvboxConfig.expireSeconds;
+  const [cacheTimeValue, setCacheTimeValue] = useState<number>(() => {
+    if (initialCacheTime % 2592000 === 0) return initialCacheTime / 2592000; // 月
+    if (initialCacheTime % 604800 === 0) return initialCacheTime / 604800; // 星期
+    if (initialCacheTime % 86400 === 0) return initialCacheTime / 86400; // 天
+    if (initialCacheTime % 3600 === 0) return initialCacheTime / 3600; // 小时
+    return initialCacheTime / 60; // 分钟（默认）
+  });
+
+  const [cacheTimeUnit, setCacheTimeUnit] = useState<string>(() => {
+    if (initialCacheTime % 2592000 === 0) return 'months';
+    if (initialCacheTime % 604800 === 0) return 'weeks';
+    if (initialCacheTime % 86400 === 0) return 'days';
+    if (initialCacheTime % 3600 === 0) return 'hours';
+    return 'minutes'; // 默认
+  });
+  const [setIsDropdownOpen] = useState(false);
   // 保存TvBox配置
   const handleSave = async () => {
     await withLoading('saveTvBoxConfig', async () => {
@@ -5353,6 +5355,32 @@ const TvBoxConfigComponent = ({
       console.error(err);
     }
   };
+  useEffect(() => {
+    let seconds: number;
+    switch (cacheTimeUnit) {
+      case 'minutes':
+        seconds = cacheTimeValue * 60;
+        break;
+      case 'hours':
+        seconds = cacheTimeValue * 3600;
+        break;
+      case 'days':
+        seconds = cacheTimeValue * 86400;
+        break;
+      case 'weeks':
+        seconds = cacheTimeValue * 604800;
+        break;
+      case 'months':
+        seconds = cacheTimeValue * 2592000;
+        break;
+      default:
+        seconds = cacheTimeValue;
+    }
+    setTvboxConfig((prev) => ({
+      ...prev,
+      expireSeconds: seconds,
+    }));
+  }, [cacheTimeValue, cacheTimeUnit]);
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
@@ -5362,7 +5390,7 @@ const TvBoxConfigComponent = ({
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-6 h-[358px]'>
       {/* 开启TvBox */}
       <div>
         <div className='flex items-center justify-between'>
@@ -5398,7 +5426,39 @@ const TvBoxConfigComponent = ({
           由于开启后无法对配置接口进行认证，请不要暴露你的接口地址给陌生人。
         </p>
       </div>
+      {/* 接口缓存有效期 */}
+      <div className='h-auto'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+          缓存有效期
+        </label>
+        <div className='flex gap-2'>
+          <input
+            type='number'
+            min='0'
+            value={cacheTimeValue} // 假设你有一个 state 存储数值
+            onChange={(e) => setCacheTimeValue(Number(e.target.value))}
+            className='w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+          />
 
+          {/* 时间单位下拉框 */}
+          <CustomDropdown
+            options={[
+              { value: 'minutes', label: '分钟' },
+              { value: 'hours', label: '小时' },
+              { value: 'days', label: '天' },
+              { value: 'weeks', label: '星期' },
+              { value: 'months', label: '月' },
+            ]}
+            value={cacheTimeUnit}
+            onChange={setCacheTimeUnit}
+            onOpenChange={setIsDropdownOpen}
+            //maxHeight='60'
+          />
+        </div>
+        <p className='mt-3 text-xs text-gray-500 dark:text-gray-400'>
+          设置成0可以关闭缓存
+        </p>
+      </div>
       {/* 配置接口 */}
       <div>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>

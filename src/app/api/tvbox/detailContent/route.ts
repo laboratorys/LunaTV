@@ -2,8 +2,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
+import { getAvailableApiSites, getConfig } from '@/lib/config';
+import { db } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
+import { TVBOX_DETAIL_KEY } from '@/lib/keys';
 import { yellowWords } from '@/lib/yellow';
 export const runtime = 'nodejs';
 
@@ -27,21 +29,21 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('id');
 
   if (!query) {
-    const cacheTime = await getCacheTime();
-    return NextResponse.json(
-      { list: [] },
-      {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Netlify-Vary': 'query',
-        },
-      }
-    );
+    return NextResponse.json({ list: [] });
+  }
+  const config = await getConfig();
+  const isCached =
+    config.TvBoxConfig?.expireSeconds && config.TvBoxConfig?.expireSeconds > 0;
+  if (isCached) {
+    const cacheData = await db.getCacheByKey(`${TVBOX_DETAIL_KEY}${query}`);
+    if (cacheData) {
+      console.log(
+        `【tvbox】detailContent return from cache:${TVBOX_DETAIL_KEY}${query}`
+      );
+      return NextResponse.json(cacheData);
+    }
   }
 
-  const config = await getConfig();
   //获取所有可用的API站点
   const apiSites = await getAvailableApiSites();
 
@@ -70,7 +72,6 @@ export async function GET(request: NextRequest) {
         return !yellowWords.some((word: string) => typeName.includes(word));
       });
     }
-    const cacheTime = await getCacheTime();
 
     if (flattenedResults.length === 0) {
       // no cache if empty
@@ -109,17 +110,14 @@ export async function GET(request: NextRequest) {
         vod_play_url: playUrl,
       },
     ];
-    return NextResponse.json(
-      { list: detailContentItem },
-      {
-        headers: {
-          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-          'Netlify-Vary': 'query',
-        },
-      }
-    );
+    if (isCached) {
+      db.setCacheByKey(
+        `${TVBOX_DETAIL_KEY}${query}`,
+        { list: detailContentItem },
+        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+      );
+    }
+    return NextResponse.json({ list: detailContentItem });
   } catch (error) {
     return NextResponse.json({ error: '查询失败' }, { status: 500 });
   }

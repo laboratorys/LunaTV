@@ -252,6 +252,38 @@ export class UpstashRedisStorage implements IStorage {
     }
   }
 
+  // ---------- 获取缓存 ----------
+  async getCacheByKey(key: string): Promise<any> {
+    const result = await withRetry(() => this.client.get(key));
+    return result as any;
+  }
+
+  // ---------- 设置缓存 ----------
+  async setCacheByKey(key: string, data: any, ttl: number): Promise<void> {
+    await withRetry(() => {
+      if (ttl != -1) {
+        return this.client.set(key, data, { ex: ttl });
+      }
+      return this.client.set(key, data);
+    });
+  }
+
+  // ---------- 清理过期缓存 ----------
+  async clearExpiredCache(): Promise<number> {
+    //无需清理，ttl到期自动失效
+    return 1;
+  }
+
+  // ---------- 清理全部缓存 ----------
+  async clearAllCache(keysPrefix: string): Promise<number> {
+    const keys = await withRetry(() => this.client.keys(`${keysPrefix}*`));
+    if (!keys || keys.length === 0) {
+      return 0;
+    }
+    const deleteCount = await withRetry(() => this.client.del(...keys));
+    return deleteCount;
+  }
+
   // ---------- 获取全部用户 ----------
   async getAllUsers(): Promise<string[]> {
     const keys = await withRetry(() => this.client.keys('u:*:pwd'));
