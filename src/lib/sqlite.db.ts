@@ -1,6 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
-
 import Database from 'better-sqlite3';
+import fs from 'fs';
+import path from 'path';
 
 import { AdminConfig } from './admin.types';
 import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
@@ -22,7 +23,11 @@ class DB {
 
   static getInstance(): Database.Database {
     if (!DB.instance) {
-      DB.instance = new Database(process.env.SQLITE_PATH || '/app/data/tv.db');
+      const dbPath = process.env.SQLITE_PATH || '/app/data/tv.db';
+      if (!fs.existsSync(path.dirname(dbPath))) {
+        fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+      }
+      DB.instance = new Database(dbPath);
       DB.instance.pragma('journal_mode = WAL');
       // 初始化表结构
       DB.instance.exec(`
