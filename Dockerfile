@@ -7,7 +7,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # 仅复制依赖清单，提高构建缓存利用率
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .git ./.git
 # 安装所有依赖（含 devDependencies，后续会裁剪）
 RUN pnpm install --frozen-lockfile

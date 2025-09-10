@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     tvboxConfig.warningText = config.SiteConfig.Announcement;
-    tvboxConfig.lives = config.LiveConfig?.filter((item) => {
-      const isValid = item?.url && item?.name && item.disabled;
+    const lives = config.LiveConfig?.filter((item) => {
+      const isValid = item?.url && item?.name && !item.disabled;
       return isValid;
     })?.map((item) => {
       return {
@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         playerType: 1,
       };
     }) as any;
+    tvboxConfig.lives = lives;
     tvboxConfig.sites[0].ext = `${url}/api/tvbox`;
     tvboxConfig.wallpaper = `${url}/api/tvbox/wallpapers`;
     tvboxConfig.spider = `${url}/api/tvbox/spider`;
