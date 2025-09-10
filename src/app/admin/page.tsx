@@ -5315,7 +5315,7 @@ const TvBoxConfigComponent = ({
     if (initialCacheTime % 3600 === 0) return 'hours';
     return 'minutes'; // 默认
   });
-  const [setIsDropdownOpen] = useState(false);
+  const [setIsDropdownOpen] = useState();
   // 保存TvBox配置
   const handleSave = async () => {
     await withLoading('saveTvBoxConfig', async () => {
