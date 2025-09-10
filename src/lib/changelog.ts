@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.3",
+    date: "2025-09-09",
+    added: [
+    "增加sqlite支持，并将sqlite设置为默认",
+    "【继续观看】增加展开收起/按钮"
+    ],
+    changed: [
+    "【tvbox】增加接口缓存、超时、豆瓣配置读取优化、搜索接口修改"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "5.0.2",
     date: "2025-09-05",
     added: [
