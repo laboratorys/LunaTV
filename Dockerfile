@@ -41,6 +41,9 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
+ENV SQLITE_PATH=/app/data/tv.db
+
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 # 从构建器中复制 standalone 输出
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
