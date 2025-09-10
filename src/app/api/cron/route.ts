@@ -41,6 +41,7 @@ async function cronJob() {
   await refreshConfig();
   await refreshAllLiveChannels();
   await refreshRecordAndFavorites();
+  await refreshApiCaches();
 }
 
 async function refreshAllLiveChannels() {
@@ -261,4 +262,8 @@ async function refreshRecordAndFavorites() {
   } catch (err) {
     console.error('刷新播放记录/收藏任务启动失败', err);
   }
+}
+async function refreshApiCaches() {
+  //清理过期缓存（主要是针对sqlite）
+  await db.clearExpiredCache();
 }

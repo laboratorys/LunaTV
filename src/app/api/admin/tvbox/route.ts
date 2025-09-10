@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
     }
     const username = authInfo.username;
 
-    const { disabled } = body as {
+    const { disabled, expireSeconds } = body as {
       disabled: boolean;
+      expireSeconds: number;
     };
 
     // 参数校验
@@ -53,11 +54,12 @@ export async function POST(request: NextRequest) {
     // 更新缓存中的站点设置
     adminConfig.TvBoxConfig = {
       disabled,
+      expireSeconds,
     };
 
     // 写入数据库
     await db.saveAdminConfig(adminConfig);
-
+    await db.clearAllCache('api:cache:tvbox:');
     return NextResponse.json(
       { ok: true },
       {

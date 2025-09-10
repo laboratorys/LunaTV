@@ -26,6 +26,12 @@
 2. 你可以[反馈](https://github.com/laboratorys/LunaTV/issues)，但是我不一定（能）解决，主打一个随性。
 3. 尽量保证原汁原味，感谢原作者的付出，站在巨人的肩膀上！
 
+### 🚀 新特性概览
+
+- [x] tvbox 对接
+- [x] 支持 sqlite 存储
+- [ ] 边下边播
+
 ### 🌿 版本分支
 
 - v100 分支：原项目 v100 版本的最终代码，不会再做任何修改
@@ -90,7 +96,52 @@
 
 本项目**仅支持 Docker 或其他基于 Docker 的平台** 部署。
 
-### Kvrocks 存储（推荐）
+### sqlite 存储（方式 1-手动创建目录）
+
+**由于容器中以非 root 账户运行，需要在宿主机创建目录并设置权限**
+
+```
+sudo mkdir -p /opt/lunatv/data
+sudo chown -R 1001:1001 /opt/lunatv/data
+```
+
+```yml
+services:
+  lunatv-core:
+    image: ghcr.io/laboratorys/lunatv:latest
+    container_name: lunatv-core
+    restart: on-failure
+    ports:
+      - '3000:3000'
+    environment:
+      - USERNAME=admin
+      - PASSWORD=admin_password
+      - NEXT_PUBLIC_STORAGE_TYPE=sqlite
+    volumes:
+      - /opt/lunatv/data:/app/data
+```
+
+### sqlite 存储（方式 2-命名卷自动管理）
+
+```yml
+services:
+  lunatv-core:
+    image: ghcr.io/laboratorys/lunatv:latest
+    container_name: lunatv-core
+    restart: on-failure
+    ports:
+      - '3000:3000'
+    environment:
+      - USERNAME=admin
+      - PASSWORD=admin_password
+      - NEXT_PUBLIC_STORAGE_TYPE=sqlite
+    volumes:
+      - lunatv-data:/app/data
+volumes:
+  lunatv-data:
+```
+
+### Kvrocks 存储
 
 ```yml
 services:
@@ -239,25 +290,25 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 
 ## 环境变量
 
-| 变量                                | 说明                     | 可选值                   | 默认值                                                                                                                     |
-| ----------------------------------- | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| USERNAME                            | 站长账号                 | 任意字符串               | 无默认，必填字段                                                                                                           |
-| PASSWORD                            | 站长密码                 | 任意字符串               | 无默认，必填字段                                                                                                           |
-| SITE_BASE                           | 站点 url                 | 形如 https://example.com | 空                                                                                                                         |
-| NEXT_PUBLIC_SITE_NAME               | 站点名称                 | 任意字符串               | LunaTV                                                                                                                     |
-| ANNOUNCEMENT                        | 站点公告                 | 任意字符串               | 本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。 |
-| NEXT_PUBLIC_STORAGE_TYPE            | 播放记录/收藏的存储方式  | redis、kvrocks、upstash  | 无默认，必填字段                                                                                                           |
-| KVROCKS_URL                         | kvrocks 连接 url         | 连接 url                 | 空                                                                                                                         |
-| REDIS_URL                           | redis 连接 url           | 连接 url                 | 空                                                                                                                         |
-| UPSTASH_URL                         | upstash redis 连接 url   | 连接 url                 | 空                                                                                                                         |
-| UPSTASH_TOKEN                       | upstash redis 连接 token | 连接 token               | 空                                                                                                                         |
-| NEXT_PUBLIC_SEARCH_MAX_PAGE         | 搜索接口可拉取的最大页数 | 1-50                     | 5                                                                                                                          |
-| NEXT_PUBLIC_DOUBAN_PROXY_TYPE       | 豆瓣数据源请求方式       | 见下方                   | direct                                                                                                                     |
-| NEXT_PUBLIC_DOUBAN_PROXY            | 自定义豆瓣数据代理 URL   | url prefix               | (空)                                                                                                                       |
-| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE | 豆瓣图片代理类型         | 见下方                   | direct                                                                                                                     |
-| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY      | 自定义豆瓣图片代理 URL   | url prefix               | (空)                                                                                                                       |
-| NEXT_PUBLIC_DISABLE_YELLOW_FILTER   | 关闭色情内容过滤         | true/false               | false                                                                                                                      |
-| NEXT_PUBLIC_FLUID_SEARCH            | 是否开启搜索接口流式输出 | true/ false              | true                                                                                                                       |
+| 变量                                | 说明                     | 可选值                         | 默认值                                                                                                                     |
+| ----------------------------------- | ------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| USERNAME                            | 站长账号                 | 任意字符串                     | 无默认，必填字段                                                                                                           |
+| PASSWORD                            | 站长密码                 | 任意字符串                     | 无默认，必填字段                                                                                                           |
+| SITE_BASE                           | 站点 url                 | 形如 https://example.com       | 空                                                                                                                         |
+| NEXT_PUBLIC_SITE_NAME               | 站点名称                 | 任意字符串                     | LunaTV                                                                                                                     |
+| ANNOUNCEMENT                        | 站点公告                 | 任意字符串                     | 本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。 |
+| NEXT_PUBLIC_STORAGE_TYPE            | 播放记录/收藏的存储方式  | sqlte、redis、kvrocks、upstash | 无默认，必填字段                                                                                                           |
+| KVROCKS_URL                         | kvrocks 连接 url         | 连接 url                       | 空                                                                                                                         |
+| REDIS_URL                           | redis 连接 url           | 连接 url                       | 空                                                                                                                         |
+| UPSTASH_URL                         | upstash redis 连接 url   | 连接 url                       | 空                                                                                                                         |
+| UPSTASH_TOKEN                       | upstash redis 连接 token | 连接 token                     | 空                                                                                                                         |
+| NEXT_PUBLIC_SEARCH_MAX_PAGE         | 搜索接口可拉取的最大页数 | 1-50                           | 5                                                                                                                          |
+| NEXT_PUBLIC_DOUBAN_PROXY_TYPE       | 豆瓣数据源请求方式       | 见下方                         | direct                                                                                                                     |
+| NEXT_PUBLIC_DOUBAN_PROXY            | 自定义豆瓣数据代理 URL   | url prefix                     | (空)                                                                                                                       |
+| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE | 豆瓣图片代理类型         | 见下方                         | direct                                                                                                                     |
+| NEXT_PUBLIC_DOUBAN_IMAGE_PROXY      | 自定义豆瓣图片代理 URL   | url prefix                     | (空)                                                                                                                       |
+| NEXT_PUBLIC_DISABLE_YELLOW_FILTER   | 关闭色情内容过滤         | true/false                     | false                                                                                                                      |
+| NEXT_PUBLIC_FLUID_SEARCH            | 是否开启搜索接口流式输出 | true/ false                    | true                                                                                                                       |
 
 NEXT_PUBLIC_DOUBAN_PROXY_TYPE 选项解释：
 

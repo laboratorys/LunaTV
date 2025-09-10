@@ -59,6 +59,12 @@ export interface IStorage {
   addSearchHistory(userName: string, keyword: string): Promise<void>;
   deleteSearchHistory(userName: string, keyword?: string): Promise<void>;
 
+  //缓存相关
+  getCacheByKey(key: string): Promise<any>;
+  setCacheByKey(key: string, data: any, ttl: number): Promise<void>;
+  clearExpiredCache(): Promise<number>;
+  clearAllCache(keysPrefix: string): Promise<number>;
+
   // 用户列表
   getAllUsers(): Promise<string[]>;
 

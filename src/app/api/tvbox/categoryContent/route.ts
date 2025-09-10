@@ -2,6 +2,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getConfig } from '@/lib/config';
+import { db } from '@/lib/db';
+import { TVBOX_CATEGORY_KEY } from '@/lib/keys';
+
 import {
   commonReturn,
   fetchDoubanCategoryList,
@@ -13,11 +17,28 @@ export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json();
     const { tid, pg = 1, query } = requestBody;
+    const config = await getConfig();
+    const keySuffix = jsonToUrlParams(tid, pg, query);
+    const isCached =
+      config.TvBoxConfig?.expireSeconds &&
+      config.TvBoxConfig?.expireSeconds > 0;
+    if (isCached) {
+      const cacheData = await db.getCacheByKey(
+        `${TVBOX_CATEGORY_KEY}${keySuffix}`
+      );
+      if (cacheData) {
+        console.log(
+          `【tvbox】categoryContent return from cache:${TVBOX_CATEGORY_KEY}${keySuffix}`
+        );
+        return NextResponse.json(cacheData);
+      }
+    }
     const pageSize = 25;
     const pageStart = (pg - 1) * pageSize;
     let category = '热门';
     let kind = 'movie';
     let type = '全部';
+
     if (tid === 'tv') {
       kind = 'tv';
       type = query?.type as string | 'tv';
@@ -62,8 +83,6 @@ export async function POST(request: NextRequest) {
         sort = query.sort;
       }
       const items = await fetchDoubanRecommendList(
-        false,
-        true,
         kind,
         selectedCategories,
         tags,
@@ -71,20 +90,51 @@ export async function POST(request: NextRequest) {
         pageStart,
         pageSize
       );
+      if (isCached) {
+        db.setCacheByKey(
+          `${TVBOX_CATEGORY_KEY}${keySuffix}`,
+          {
+            list: items || [],
+            limit: pageSize,
+          },
+          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+        );
+      }
+
       return commonReturn(items, pageSize);
     }
     const items = await fetchDoubanCategoryList(
-      false,
-      true,
       kind,
       category,
       type,
       pageStart,
       pageSize
     );
+    if (isCached) {
+      db.setCacheByKey(
+        `${TVBOX_CATEGORY_KEY}${keySuffix}`,
+        {
+          list: items || [],
+          limit: pageSize,
+        },
+        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+      );
+    }
     return commonReturn(items, pageSize);
   } catch (error) {
     console.error('【tvbox】分类数据：', error);
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
+}
+
+function jsonToUrlParams(tid: string, pg: number, query: JSON) {
+  const params = new URLSearchParams();
+  params.append('tid', String(tid));
+  params.append('pg', String(pg));
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (value != null && value !== '') params.append(key, String(value));
+    });
+  }
+  return params.toString();
 }

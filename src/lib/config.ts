@@ -227,6 +227,10 @@ async function getInitConfig(
     SourceConfig: [],
     CustomCategories: [],
     LiveConfig: [],
+    TvBoxConfig: {
+      disabled: true,
+      expireSeconds: 7200,
+    },
   };
 
   // 补充用户信息
