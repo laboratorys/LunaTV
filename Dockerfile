@@ -4,7 +4,7 @@ RUN apk add --no-cache git
 # 启用 corepack 并激活 pnpm（Node20 默认提供 corepack）
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-WORKDIR /app7
+WORKDIR /app
 
 # 仅复制依赖清单，提高构建缓存利用率
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
