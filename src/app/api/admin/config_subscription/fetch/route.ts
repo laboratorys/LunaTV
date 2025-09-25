@@ -53,14 +53,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       configContent: decodedContent,
-      message: '配置拉取成功'
+      message: '配置拉取成功',
     });
-
   } catch (error) {
     console.error('拉取配置失败:', error);
-    return NextResponse.json(
-      { error: '拉取配置失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '拉取配置失败' }, { status: 500 });
   }
 }
