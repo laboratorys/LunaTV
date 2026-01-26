@@ -4459,7 +4459,14 @@ const SiteConfigComponent = ({
                       siteSettings.DoubanImageProxyType === option.value
                         ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                         : 'text-gray-900 dark:text-gray-100'
-                    }`}
+                    }
+                    ${
+                      // 添加以下样式逻辑
+                      option.value === 'direct'
+                        ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                        : ''
+                    }
+                      `}
                   >
                     <span className='truncate'>{option.label}</span>
                     {siteSettings.DoubanImageProxyType === option.value && (
