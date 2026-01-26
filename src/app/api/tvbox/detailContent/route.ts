@@ -26,19 +26,20 @@ interface DetailContentItem {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('id');
+  const name = searchParams.get('id');
+  const year = searchParams.get('year');
+  const doubanId = searchParams.get('douban_id');
 
-  if (!query) {
+  if (!name) {
     return NextResponse.json({ list: [] });
   }
   const config = await getConfig();
-  const isCached =
-    config.TvBoxConfig?.expireSeconds && config.TvBoxConfig?.expireSeconds > 0;
+  const isCached = (config.TvBoxConfig?.expireSeconds ?? 0) > 0;
   if (isCached) {
-    const cacheData = await db.getCacheByKey(`${TVBOX_DETAIL_KEY}${query}`);
+    const cacheData = await db.getCacheByKey(`${TVBOX_DETAIL_KEY}${name}`);
     if (cacheData) {
       console.log(
-        `【tvbox】detailContent return from cache:${TVBOX_DETAIL_KEY}${query}`
+        `【tvbox】detailContent return from cache:${TVBOX_DETAIL_KEY}${name}`
       );
       return NextResponse.json(cacheData);
     }
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
   // 添加超时控制和错误处理，避免慢接口拖累整体响应
   const searchPromises = apiSites.map((site) =>
     Promise.race([
-      searchFromApi(site, query),
+      searchFromApi(site, name),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
       ),
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const results = await Promise.allSettled(searchPromises);
+
     const successResults = results
       .filter((result) => result.status === 'fulfilled')
       .map((result) => (result as PromiseFulfilledResult<any>).value);
@@ -77,6 +79,14 @@ export async function GET(request: NextRequest) {
       // no cache if empty
       return NextResponse.json({ list: [] }, { status: 200 });
     }
+    flattenedResults = flattenedResults.filter((result) => {
+      const yearMatch = !year || !result.year || result.year === year;
+      const doubanIdMatch =
+        !doubanId ||
+        result.douban_id == '0' ||
+        String(result.douban_id) === String(doubanId);
+      return yearMatch && doubanIdMatch;
+    });
     //处理成tvbox支持的数据格式
     const baseInfo = flattenedResults[0];
     //取出播放源集合
@@ -112,7 +122,7 @@ export async function GET(request: NextRequest) {
     ];
     if (isCached) {
       db.setCacheByKey(
-        `${TVBOX_DETAIL_KEY}${query}`,
+        `${TVBOX_DETAIL_KEY}${name}`,
         { list: detailContentItem },
         config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
       );

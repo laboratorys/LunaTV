@@ -24,9 +24,8 @@ interface HomeContentClass {
 export async function GET() {
   try {
     const config = await getConfig();
-    const isCached =
-      config.TvBoxConfig?.expireSeconds &&
-      config.TvBoxConfig?.expireSeconds > 0;
+    const isCached = (config.TvBoxConfig?.expireSeconds ?? 0) > 0;
+
     if (isCached) {
       const cacheData = await db.getCacheByKey(TVBOX_HOME_KEY);
       if (cacheData) {
