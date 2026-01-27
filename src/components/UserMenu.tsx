@@ -813,6 +813,10 @@ export const UserMenu: React.FC = () => {
                           doubanImageProxyType === option.value
                             ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                             : 'text-gray-900 dark:text-gray-100'
+                        }${
+                          option.value === 'direct'
+                            ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                            : ''
                         }`}
                       >
                         <span className='truncate'>{option.label}</span>

@@ -1,16 +1,17 @@
 /* eslint-disable no-console */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { TVBOX_HOME_KEY } from '@/lib/keys';
 import { TvboxContentItem } from '@/lib/types';
 
-import { fetchDoubanHotList } from '@/app/api/tvbox/common';
+import { fetchDoubanHotList, getUrlPrefix } from '@/app/api/tvbox/common';
 
 import { classes, filters } from './constant';
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface HomeContent {
   list: TvboxContentItem[];
@@ -21,12 +22,12 @@ interface HomeContentClass {
   type_id: string;
   type_name: string;
 }
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const urlPrefix = getUrlPrefix(request);
     const config = await getConfig();
-    const isCached =
-      config.TvBoxConfig?.expireSeconds &&
-      config.TvBoxConfig?.expireSeconds > 0;
+    const isCached = (config.TvBoxConfig?.expireSeconds ?? 0) > 0;
+
     if (isCached) {
       const cacheData = await db.getCacheByKey(TVBOX_HOME_KEY);
       if (cacheData) {
@@ -34,14 +35,14 @@ export async function GET() {
         return NextResponse.json(cacheData);
       }
     }
-    const items = await fetchDoubanHotList();
+    const items = await fetchDoubanHotList(urlPrefix);
     const content: HomeContent = {
       list: items,
       class: classes,
       filters: filters,
     };
     if (isCached) {
-      db.setCacheByKey(
+      await db.setCacheByKey(
         TVBOX_HOME_KEY,
         content,
         config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2

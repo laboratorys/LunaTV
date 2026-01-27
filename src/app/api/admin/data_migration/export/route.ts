@@ -63,25 +63,25 @@ export async function POST(req: NextRequest) {
     // 获取所有用户
     let allUsers = await db.getAllUsers();
     // 添加站长用户
-    allUsers.push(process.env.USERNAME);
+    //allUsers.push(process.env.USERNAME);
     allUsers = Array.from(new Set(allUsers));
 
     // 为每个用户收集数据
-    for (const username of allUsers) {
+    for (const u of allUsers) {
       const userData = {
         // 播放记录
-        playRecords: await db.getAllPlayRecords(username),
+        playRecords: await db.getAllPlayRecords(u.user_name),
         // 收藏夹
-        favorites: await db.getAllFavorites(username),
+        favorites: await db.getAllFavorites(u.user_name),
         // 搜索历史
-        searchHistory: await db.getSearchHistory(username),
+        searchHistory: await db.getSearchHistory(u.user_name),
         // 跳过片头片尾配置
-        skipConfigs: await db.getAllSkipConfigs(username),
+        skipConfigs: await db.getAllSkipConfigs(u.user_name),
         // 用户密码（通过验证空密码来检查用户是否存在，然后获取密码）
-        password: await getUserPassword(username),
+        password: await getUserPassword(u.user_name),
       };
 
-      exportData.data.userData[username] = userData;
+      exportData.data.userData[u.user_name] = userData;
     }
 
     // 覆盖站长密码

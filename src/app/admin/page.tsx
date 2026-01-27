@@ -303,6 +303,7 @@ interface SiteConfig {
   DoubanImageProxy: string;
   DisableYellowFilter: boolean;
   FluidSearch: boolean;
+  OpenRegister: boolean;
 }
 
 // 视频源数据类型
@@ -648,6 +649,24 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     setChangePasswordUser({ username, password: '' });
     setShowChangePasswordForm(true);
     setShowAddUserForm(false); // 关闭添加用户表单
+  };
+
+  const handleCopyTVBoxUrl = (key: string) => {
+    const tvBoxUrl = `${window.location.protocol}//${window.location.host}/api/tvbox?k=${key}`;
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard
+          .writeText(tvBoxUrl)
+          .then(() => {
+            showSuccess('TVBox API URL 已复制到剪贴板', showAlert);
+          })
+          .catch(() => {
+            showError('复制失败，请手动复制', showAlert);
+          });
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDeleteUser = (username: string) => {
@@ -1199,6 +1218,12 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
+                  key
+                </th>
+                <th
+                  scope='col'
+                  className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
+                >
                   角色
                 </th>
                 <th
@@ -1290,6 +1315,9 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                         <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100'>
                           {user.username}
                         </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100'>
+                          {user.key ? user.key : '--'}
+                        </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${
@@ -1361,11 +1389,17 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                           </div>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
+                          <button
+                            onClick={() => handleCopyTVBoxUrl(user.key)}
+                            className={buttonStyles.roundedSuccess}
+                          >
+                            TVBox
+                          </button>
                           {/* 修改密码按钮 */}
                           {canChangePassword && (
                             <button
                               onClick={() =>
-                                handleShowChangePasswordForm(user.username)
+                                handleShowChangePasswordForm(user.key)
                               }
                               className={buttonStyles.roundedPrimary}
                             >
@@ -4120,6 +4154,7 @@ const SiteConfigComponent = ({
     DoubanImageProxy: '',
     DisableYellowFilter: false,
     FluidSearch: true,
+    OpenRegister: false,
   });
 
   // 豆瓣数据源相关状态
@@ -4183,6 +4218,7 @@ const SiteConfigComponent = ({
         DoubanImageProxy: config.SiteConfig.DoubanImageProxy || '',
         DisableYellowFilter: config.SiteConfig.DisableYellowFilter || false,
         FluidSearch: config.SiteConfig.FluidSearch || true,
+        OpenRegister: config.SiteConfig.OpenRegister || false,
       });
     }
   }, [config]);
@@ -4459,7 +4495,14 @@ const SiteConfigComponent = ({
                       siteSettings.DoubanImageProxyType === option.value
                         ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                         : 'text-gray-900 dark:text-gray-100'
-                    }`}
+                    }
+                    ${
+                      // 添加以下样式逻辑
+                      option.value === 'direct'
+                        ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                        : ''
+                    }
+                      `}
                   >
                     <span className='truncate'>{option.label}</span>
                     {siteSettings.DoubanImageProxyType === option.value && (
@@ -4628,6 +4671,42 @@ const SiteConfigComponent = ({
         </div>
         <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
           启用后搜索结果将实时流式返回，提升用户体验。
+        </p>
+      </div>
+
+      {/* 开放注册 */}
+      <div>
+        <div className='flex items-center justify-between'>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            开放注册
+          </label>
+          <button
+            type='button'
+            onClick={() =>
+              setSiteSettings((prev) => ({
+                ...prev,
+                OpenRegister: !prev.OpenRegister,
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+              siteSettings.OpenRegister
+                ? buttonStyles.toggleOn
+                : buttonStyles.toggleOff
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full ${
+                buttonStyles.toggleThumb
+              } transition-transform ${
+                siteSettings.OpenRegister
+                  ? buttonStyles.toggleThumbOn
+                  : buttonStyles.toggleThumbOff
+              }`}
+            />
+          </button>
+        </div>
+        <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+          启用后用户将可以自行注册账号
         </p>
       </div>
 
@@ -5340,7 +5419,12 @@ const TvBoxConfigComponent = ({
     });
   };
   const getTvBoxApiUrl = () => {
-    return `${window.location.protocol}//${window.location.host}/api/tvbox`;
+    const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
+    const userMatch = config?.UserConfig.Users.find(
+      (u) => u.username === currentUsername
+    );
+    const userKey = userMatch ? userMatch.key : '';
+    return `${window.location.protocol}//${window.location.host}/api/tvbox?k=${userKey}`;
   };
   const copyToClipboard = async () => {
     if (!inputRef.current) return;

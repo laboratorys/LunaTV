@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
 
+import { getUrlPrefix } from '@/app/api/tvbox/common';
 import { tvboxConfig } from '@/app/api/tvbox/tvbox';
 
 export const runtime = 'nodejs';
@@ -13,11 +14,19 @@ export async function GET(request: NextRequest) {
   try {
     const url = getUrlPrefix(request);
     const userAgent = request.headers.get('user-agent');
+    const { searchParams } = new URL(request.url);
     if (!userAgent?.startsWith('okhttp')) {
       return NextResponse.redirect(new URL(url));
     }
+    const k = searchParams.get('k');
+    if (!k) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const config = await getConfig();
-    if (!config.TvBoxConfig || config.TvBoxConfig.disabled) {
+    const validKey = config.UserConfig.Users.some(
+      (user) => user.key === k && !user.banned
+    );
+    if (!config.TvBoxConfig || config.TvBoxConfig.disabled || !validKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     tvboxConfig.warningText = config.SiteConfig.Announcement;
@@ -45,8 +54,4 @@ export async function GET(request: NextRequest) {
     console.error('【tvbox】获取配置数据失败:', error);
     return NextResponse.json({ error: '获取配置数据失败' }, { status: 500 });
   }
-}
-function getUrlPrefix(request: NextRequest) {
-  const { protocol, host } = request.nextUrl;
-  return `${protocol}//${request.headers.get('host') || host}`;
 }

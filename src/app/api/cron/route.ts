@@ -118,8 +118,17 @@ async function refreshConfig() {
 async function refreshRecordAndFavorites() {
   try {
     const users = await db.getAllUsers();
-    if (process.env.USERNAME && !users.includes(process.env.USERNAME)) {
-      users.push(process.env.USERNAME);
+
+    // 检查环境变量中的用户名是否已存在于用户对象列表中
+    if (
+      process.env.USERNAME &&
+      !users.some((u) => u.user_name === process.env.USERNAME)
+    ) {
+      users.push({
+        user_name: process.env.USERNAME,
+        key: '',
+        password: '',
+      });
     }
     // 函数级缓存：key 为 `${source}+${id}`，值为 Promise<VideoDetail | null>
     const detailCache = new Map<string, Promise<SearchResult | null>>();
@@ -157,7 +166,7 @@ async function refreshRecordAndFavorites() {
 
       // 播放记录
       try {
-        const playRecords = await db.getAllPlayRecords(user);
+        const playRecords = await db.getAllPlayRecords(user.user_name);
         const totalRecords = Object.keys(playRecords).length;
         let processedRecords = 0;
 
@@ -177,7 +186,7 @@ async function refreshRecordAndFavorites() {
 
             const episodeCount = detail.episodes?.length || 0;
             if (episodeCount > 0 && episodeCount !== record.total_episodes) {
-              await db.savePlayRecord(user, source, id, {
+              await db.savePlayRecord(user.user_name, source, id, {
                 title: detail.title || record.title,
                 source_name: record.source_name,
                 cover: detail.poster || record.cover,
@@ -208,7 +217,7 @@ async function refreshRecordAndFavorites() {
 
       // 收藏
       try {
-        let favorites = await db.getAllFavorites(user);
+        let favorites = await db.getAllFavorites(user.user_name);
         favorites = Object.fromEntries(
           Object.entries(favorites).filter(([_, fav]) => fav.origin !== 'live')
         );
@@ -231,7 +240,7 @@ async function refreshRecordAndFavorites() {
 
             const favEpisodeCount = favDetail.episodes?.length || 0;
             if (favEpisodeCount > 0 && favEpisodeCount !== fav.total_episodes) {
-              await db.saveFavorite(user, source, id, {
+              await db.saveFavorite(user.user_name, source, id, {
                 title: favDetail.title || fav.title,
                 source_name: fav.source_name,
                 cover: favDetail.poster || fav.cover,

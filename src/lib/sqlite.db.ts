@@ -4,7 +4,9 @@ import fs from 'fs';
 import path from 'path';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { verifyPassword } from './bcrypt';
+import { DbUser, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { generateShortKey } from './utils';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -29,6 +31,41 @@ class DB {
       }
       DB.instance = new Database(dbPath);
       DB.instance.pragma('journal_mode = WAL');
+      const migrations = [
+        {
+          table: 'users',
+          column: 'key',
+          sqls: [
+            `ALTER TABLE users ADD COLUMN key TEXT`,
+            `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_key ON users (key)`,
+          ],
+        },
+      ];
+      for (const m of migrations) {
+        try {
+          const tableCheck = DB.instance
+            .prepare(
+              "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+            )
+            .get(m.table);
+          if (tableCheck) {
+            const columns = DB.instance.pragma(
+              `table_info(${m.table})`
+            ) as any[];
+            const columnExists = columns.some((col) => col.name === m.column);
+
+            if (!columnExists) {
+              console.log(`正在升级表 ${m.table}，添加字段: ${m.column}`);
+              // 循环执行该任务下的所有 SQL
+              for (const sql of m.sqls) {
+                DB.instance.exec(sql);
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`执行迁移任务 [${m.column}] 时出错:`, e);
+        }
+      }
       // 初始化表结构
       DB.instance.exec(`
         CREATE TABLE IF NOT EXISTS play_records (
@@ -45,6 +82,7 @@ class DB {
         );
         CREATE TABLE IF NOT EXISTS users (
           user_name TEXT PRIMARY KEY,
+          key TEXT,
           password TEXT
         );
         CREATE TABLE IF NOT EXISTS search_history (
@@ -69,6 +107,7 @@ class DB {
           config TEXT,
           PRIMARY KEY (user_name, source, id)
         );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_key ON users (key);
       `);
     }
     return DB.instance;
@@ -187,11 +226,13 @@ export class SqliteStorage implements IStorage {
     return { user_name: user };
   }
 
-  async registerUser(userName: string, password: string): Promise<void> {
+  async registerUser(userName: string, password: string): Promise<string> {
     const stmt = this.db.prepare(
-      'INSERT OR REPLACE INTO users (user_name, password) VALUES (?, ?)'
+      'INSERT OR REPLACE INTO users (user_name, key, password) VALUES (?, ? ,?)'
     );
-    stmt.run(userName, password);
+    const key = generateShortKey(userName);
+    stmt.run(userName, key, password);
+    return key;
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
@@ -199,7 +240,17 @@ export class SqliteStorage implements IStorage {
       'SELECT password FROM users WHERE user_name = ?'
     );
     const row = stmt.get(userName) as { password: string } | undefined;
-    return row ? ensureString(row.password) === password : false;
+    return row
+      ? await verifyPassword(password, ensureString(row.password))
+      : false;
+  }
+
+  async getUser(userName: string): Promise<any> {
+    const stmt = this.db.prepare('SELECT * FROM users WHERE user_name = ?');
+    const row = stmt.get(userName) as
+      | { user_name: string; key: string; password: string }
+      | undefined;
+    return row ? row : null;
   }
 
   async checkUserExist(userName: string): Promise<boolean> {
@@ -334,10 +385,14 @@ export class SqliteStorage implements IStorage {
   }
 
   // ---------- 获取全部用户 ----------
-  async getAllUsers(): Promise<string[]> {
-    const stmt = this.db.prepare('SELECT user_name FROM users');
-    const rows = stmt.all() as { user_name: string }[];
-    return rows.map((row) => ensureString(row.user_name));
+  async getAllUsers(): Promise<DbUser[]> {
+    const stmt = this.db.prepare('SELECT user_name, key FROM users');
+    const rows = stmt.all() as { user_name: string; key: string }[];
+    return rows.map((row) => ({
+      user_name: ensureString(row.user_name),
+      key: row.key,
+      password: '',
+    }));
   }
 
   // ---------- 管理员配置 ----------

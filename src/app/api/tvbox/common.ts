@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminConfig } from '@/lib/admin.types';
 import { db } from '@/lib/db';
@@ -15,6 +15,7 @@ export async function commonReturn(
   });
 }
 export async function fetchDoubanCategoryList(
+  urlPrefix: string,
   kind = 'movie',
   category = '热门',
   type = '全部',
@@ -29,6 +30,7 @@ export async function fetchDoubanCategoryList(
     throw new Error('pageStart 不能小于 0');
   }
   const { proxyUrl, useTencentCDN, useAliCDN } = await getDoubanProxyConfig();
+  const { imageProxyType, imageProxyUrl } = await getDoubanImageProxyConfig();
   const target = useTencentCDN
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
     : useAliCDN
@@ -44,12 +46,24 @@ export async function fetchDoubanCategoryList(
     }
 
     const doubanData = await response.json();
-
     // 转换数据格式
     const list: TvboxContentItem[] = doubanData.items.map((item: any) => ({
-      vod_id: item.title,
+      vod_id: parseId(item),
       vod_name: item.title,
-      vod_pic: item.pic?.normal || item.pic?.large || '',
+      vod_pic:
+        processImageUrl(
+          item.pic?.normal,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        processImageUrl(
+          item.pic?.large,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        '',
       vod_remarks: '',
     }));
     return list;
@@ -57,7 +71,24 @@ export async function fetchDoubanCategoryList(
     throw new Error(`获取豆瓣热门数据失败: ${(error as Error).message}`);
   }
 }
+export function parseId(item: any): string {
+  const year = parseYearFromSubtitle(item.card_subtitle);
+  const title = item.title || '';
+  const doubanId = item.id || '';
+  return `${encodeURIComponent(title)}&year=${year}&douban_id=${doubanId}`;
+}
+export function parseYearFromSubtitle(subtitle: string): string {
+  if (!subtitle || typeof subtitle !== 'string') return '';
+  const yearMatch = subtitle.match(/\b((19|20)\d{2})\b/);
+
+  if (yearMatch) {
+    return yearMatch[1];
+  }
+  const fallbackMatch = subtitle.match(/\d{4}/);
+  return fallbackMatch ? fallbackMatch[0] : '';
+}
 export async function fetchDoubanRecommendList(
+  urlPrefix: string,
   kind = 'movie',
   selectedCategories = {},
   tags = [] as Array<string>,
@@ -73,6 +104,7 @@ export async function fetchDoubanRecommendList(
     throw new Error('pageStart 不能小于 0');
   }
   const { proxyUrl, useTencentCDN, useAliCDN } = await getDoubanProxyConfig();
+  const { imageProxyType, imageProxyUrl } = await getDoubanImageProxyConfig();
   const baseUrl = useTencentCDN
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/${kind}/recommend`
     : useAliCDN
@@ -103,9 +135,22 @@ export async function fetchDoubanRecommendList(
     const doubanData = await response.json();
     // 转换数据格式
     const list: TvboxContentItem[] = doubanData.items.map((item: any) => ({
-      vod_id: item.title,
+      vod_id: parseId(item),
       vod_name: item.title,
-      vod_pic: item.pic?.normal || item.pic?.large || '',
+      vod_pic:
+        processImageUrl(
+          item.pic?.normal,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        processImageUrl(
+          item.pic?.large,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        '',
       vod_remarks: '',
     }));
     return list;
@@ -115,6 +160,7 @@ export async function fetchDoubanRecommendList(
 }
 
 export async function fetchDoubanHotList(
+  urlPrefix: string,
   type = 'tv',
   pageStart = 0,
   pageLimit = 50
@@ -128,6 +174,7 @@ export async function fetchDoubanHotList(
     throw new Error('pageStart 不能小于 0');
   }
   const { proxyUrl, useTencentCDN, useAliCDN } = await getDoubanProxyConfig();
+  const { imageProxyType, imageProxyUrl } = await getDoubanImageProxyConfig();
   const target = useTencentCDN
     ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
     : useAliCDN
@@ -147,9 +194,14 @@ export async function fetchDoubanHotList(
 
     // 转换数据格式
     const list: TvboxContentItem[] = doubanData.subjects.map((item: any) => ({
-      vod_id: item.title,
+      vod_id: parseId(item),
       vod_name: item.title,
-      vod_pic: item.cover,
+      vod_pic: processImageUrl(
+        item.cover,
+        imageProxyType,
+        imageProxyUrl,
+        urlPrefix
+      ),
       vod_remarks: '',
     }));
 
@@ -174,7 +226,7 @@ interface DoubanProxyConfig {
 export async function getDoubanProxyConfig(): Promise<DoubanProxyConfig> {
   const config: AdminConfig | null = await db.getAdminConfig();
   const proxy = config?.SiteConfig.DoubanProxy;
-  const proxyType = config?.SiteConfig.DoubanImageProxyType;
+  const proxyType = config?.SiteConfig.DoubanProxyType;
   switch (proxyType) {
     case 'cors-proxy-zwei':
       return {
@@ -209,3 +261,61 @@ export async function getDoubanProxyConfig(): Promise<DoubanProxyConfig> {
       };
   }
 }
+
+export async function getDoubanImageProxyConfig(): Promise<{
+  imageProxyType: string;
+  imageProxyUrl: string;
+}> {
+  const config: AdminConfig | null = await db.getAdminConfig();
+
+  const imageProxyType =
+    config?.SiteConfig.DoubanImageProxyType || 'cmliussss-cdn-tencent';
+  const imageProxyUrl =
+    config?.SiteConfig.DoubanImageProxy || 'cmliussss-cdn-tencent';
+
+  return {
+    imageProxyType,
+    imageProxyUrl,
+  };
+}
+
+export function processImageUrl(
+  originalUrl: string,
+  proxyType: string,
+  proxyUrl: string,
+  urlPrefix: string
+): string {
+  if (!originalUrl) return originalUrl;
+
+  // 仅处理豆瓣图片代理
+  if (!originalUrl.includes('doubanio.com')) {
+    return originalUrl;
+  }
+  switch (proxyType) {
+    case 'server':
+      return `${urlPrefix}/api/image-proxy?url=${encodeURIComponent(
+        originalUrl
+      )}`;
+    case 'img3':
+      return originalUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
+    case 'cmliussss-cdn-tencent':
+      return originalUrl.replace(
+        /img\d+\.doubanio\.com/g,
+        'img.doubanio.cmliussss.net'
+      );
+    case 'cmliussss-cdn-ali':
+      return originalUrl.replace(
+        /img\d+\.doubanio\.com/g,
+        'img.doubanio.cmliussss.com'
+      );
+    case 'custom':
+      return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+    case 'direct':
+    default:
+      return originalUrl;
+  }
+}
+export const getUrlPrefix = (request: NextRequest) => {
+  const { protocol, host } = request.nextUrl;
+  return `${protocol}//${request.headers.get('host') || host}`;
+};

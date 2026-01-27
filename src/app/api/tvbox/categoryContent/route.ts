@@ -10,11 +10,13 @@ import {
   commonReturn,
   fetchDoubanCategoryList,
   fetchDoubanRecommendList,
+  getUrlPrefix,
 } from '@/app/api/tvbox/common';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    const urlPrefix = getUrlPrefix(request);
     const requestBody = await request.json();
     const { tid, pg = 1, query } = requestBody;
     const config = await getConfig();
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest) {
         sort = query.sort;
       }
       const items = await fetchDoubanRecommendList(
+        urlPrefix,
         kind,
         selectedCategories,
         tags,
@@ -104,6 +107,7 @@ export async function POST(request: NextRequest) {
       return commonReturn(items, pageSize);
     }
     const items = await fetchDoubanCategoryList(
+      urlPrefix,
       kind,
       category,
       type,

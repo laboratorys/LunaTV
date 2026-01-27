@@ -1,19 +1,21 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console,@typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { NextRequest, NextResponse } from 'next/server';
 
+import { isBcryptHash } from '@/lib/bcrypt';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
-// 读取存储类型环境变量，默认 localstorage
+// 读取存储类型环境变量，默认 sqlite
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
     | 'redis'
     | 'upstash'
     | 'kvrocks'
-    | undefined) || 'localstorage';
+    | 'sqlite'
+    | undefined) || 'sqlite';
 
 // 生成签名
 async function generateSignature(
@@ -132,12 +134,15 @@ export async function POST(req: NextRequest) {
     if (!password || typeof password !== 'string') {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
     }
-
     // 可能是站长，直接读环境变量
     if (
       username === process.env.USERNAME &&
       password === process.env.PASSWORD
     ) {
+      const userData = await db.getUser(username);
+      if (userData != null && !isBcryptHash(userData.password)) {
+        await db.changePassword(username, password);
+      }
       // 验证成功，设置认证cookie
       const response = NextResponse.json({ ok: true });
       const cookieValue = await generateAuthCookie(
@@ -177,7 +182,10 @@ export async function POST(req: NextRequest) {
           { status: 401 }
         );
       }
-
+      const userData = await db.getUser(username);
+      if (userData != null && !isBcryptHash(userData.password)) {
+        await db.changePassword(username, password);
+      }
       // 验证成功，设置认证cookie
       const response = NextResponse.json({ ok: true });
       const cookieValue = await generateAuthCookie(

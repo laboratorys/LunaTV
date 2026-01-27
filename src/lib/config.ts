@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion */
 
 import { db } from '@/lib/db';
+import { DbUser } from '@/lib/types';
 
 import { AdminConfig } from './admin.types';
 
@@ -52,7 +53,7 @@ export const API_CONFIG = {
     },
   },
 };
-
+db;
 // 在模块加载时根据环境决定配置来源
 let cachedConfig: AdminConfig;
 
@@ -220,6 +221,7 @@ async function getInitConfig(
       DisableYellowFilter:
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
       FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
+      OpenRegister: process.env.NEXT_PUBLIC_OPEN_REGISTER === 'true',
     },
     UserConfig: {
       Users: [],
@@ -234,24 +236,18 @@ async function getInitConfig(
   };
 
   // 补充用户信息
-  let userNames: string[] = [];
+  let users: DbUser[] = [];
   try {
-    userNames = await db.getAllUsers();
+    users = await db.getAllUsers();
   } catch (e) {
     console.error('获取用户列表失败:', e);
   }
-  const allUsers = userNames
-    .filter((u) => u !== process.env.USERNAME)
-    .map((u) => ({
-      username: u,
-      role: 'user',
-      banned: false,
-    }));
-  allUsers.unshift({
-    username: process.env.USERNAME!,
-    role: 'owner',
+  const allUsers = users.map((u) => ({
+    username: u.user_name,
+    role: u.user_name !== process.env.USERNAME ? 'user' : 'owner',
+    key: u.key,
     banned: false,
-  });
+  }));
   adminConfig.UserConfig.Users = allUsers as any;
 
   // 从配置文件中补充源信息
@@ -314,6 +310,17 @@ export async function getConfig(): Promise<AdminConfig> {
   // db 中无配置，执行一次初始化
   if (!adminConfig) {
     adminConfig = await getInitConfig('');
+    //初始化owner
+    const key = await db.registerUser(
+      process.env.USERNAME!,
+      process.env.PASSWORD! || '123456'
+    );
+    adminConfig.UserConfig.Users.unshift({
+      username: process.env.USERNAME!,
+      key: key as string,
+      role: 'owner',
+      banned: false,
+    });
   }
   adminConfig = configSelfCheck(adminConfig);
   cachedConfig = adminConfig;
@@ -346,7 +353,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   }
 
   // 站长变更自检
-  const ownerUser = process.env.USERNAME;
+  // const ownerUser = process.env.USERNAME;
 
   // 去重
   const seenUsernames = new Set<string>();
@@ -358,26 +365,26 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     return true;
   });
   // 过滤站长
-  const originOwnerCfg = adminConfig.UserConfig.Users.find(
-    (u) => u.username === ownerUser
-  );
-  adminConfig.UserConfig.Users = adminConfig.UserConfig.Users.filter(
-    (user) => user.username !== ownerUser
-  );
+  //const originOwnerCfg = adminConfig.UserConfig.Users.find(
+  //  (u) => u.username === ownerUser
+  //);
+  //adminConfig.UserConfig.Users = adminConfig.UserConfig.Users.filter(
+  //  (user) => user.username !== ownerUser
+  //);
   // 其他用户不得拥有 owner 权限
-  adminConfig.UserConfig.Users.forEach((user) => {
-    if (user.role === 'owner') {
-      user.role = 'user';
-    }
-  });
+  //adminConfig.UserConfig.Users.forEach((user) => {
+  //  if (user.role === 'owner') {
+  //    user.role = 'user';
+  //  }
+  //});
   // 重新添加回站长
-  adminConfig.UserConfig.Users.unshift({
-    username: ownerUser!,
-    role: 'owner',
-    banned: false,
-    enabledApis: originOwnerCfg?.enabledApis || undefined,
-    tags: originOwnerCfg?.tags || undefined,
-  });
+  // adminConfig.UserConfig.Users.unshift({
+  //   username: ownerUser!,
+  //   role: 'owner',
+  //   banned: false,
+  //   enabledApis: originOwnerCfg?.enabledApis || undefined,
+  //  tags: originOwnerCfg?.tags || undefined,
+  //});
 
   // 采集源去重
   const seenSourceKeys = new Set<string>();
