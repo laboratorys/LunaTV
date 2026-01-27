@@ -13,13 +13,11 @@ export async function POST(req: NextRequest) {
     try {
       usernames.forEach(async (username: any) => {
         await db.generateNewKey(username);
-        if (process.env.USERNAME === username) {
-          const userData = await db.getUser(username);
-          if (userData == null) {
-            db.registerUser(username, process.env.PASSWORD!);
-          }
-        }
       });
+      const userData = await db.getUser(process.env.USERNAME!);
+      if (userData == null) {
+        await db.registerUser(process.env.USERNAME!, process.env.PASSWORD!);
+      }
       const adminConfig = await getConfig();
       let users: DbUser[] = [];
       try {
@@ -27,12 +25,22 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         console.error('获取用户列表失败:', e);
       }
-      const allUsers = users.map((u) => ({
-        username: u.user_name,
-        role: u.user_name !== process.env.USERNAME ? 'user' : 'owner',
-        key: u.key,
-        banned: false,
-      }));
+      const oldUsersMap = new Map(
+        (adminConfig.UserConfig?.Users || []).map((u: any) => [u.username, u])
+      );
+      const allUsers = users.map((u) => {
+        const oldData = oldUsersMap.get(u.user_name);
+        return {
+          username: u.user_name,
+          key: u.key,
+          role: oldData
+            ? oldData.role
+            : u.user_name !== process.env.USERNAME
+            ? 'user'
+            : 'owner',
+          banned: oldData ? oldData.banned : false,
+        };
+      });
       adminConfig.UserConfig.Users = allUsers as any;
       await db.saveAdminConfig(adminConfig);
       await setCachedConfig(adminConfig);
