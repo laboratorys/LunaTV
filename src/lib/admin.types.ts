@@ -16,10 +16,12 @@ export interface AdminConfig {
     DoubanImageProxy: string;
     DisableYellowFilter: boolean;
     FluidSearch: boolean;
+    OpenRegister: boolean;
   };
   UserConfig: {
     Users: {
       username: string;
+      key: string;
       role: 'user' | 'admin' | 'owner';
       banned?: boolean;
       enabledApis?: string[]; // 优先级高于tags限制

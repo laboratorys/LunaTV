@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminConfig } from '@/lib/admin.types';
 import { db } from '@/lib/db';
@@ -15,6 +15,7 @@ export async function commonReturn(
   });
 }
 export async function fetchDoubanCategoryList(
+  urlPrefix: string,
   kind = 'movie',
   category = '热门',
   type = '全部',
@@ -50,8 +51,18 @@ export async function fetchDoubanCategoryList(
       vod_id: parseId(item),
       vod_name: item.title,
       vod_pic:
-        processImageUrl(item.pic?.normal, imageProxyType, imageProxyUrl) ||
-        processImageUrl(item.pic?.large, imageProxyType, imageProxyUrl) ||
+        processImageUrl(
+          item.pic?.normal,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        processImageUrl(
+          item.pic?.large,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
         '',
       vod_remarks: '',
     }));
@@ -77,6 +88,7 @@ export function parseYearFromSubtitle(subtitle: string): string {
   return fallbackMatch ? fallbackMatch[0] : '';
 }
 export async function fetchDoubanRecommendList(
+  urlPrefix: string,
   kind = 'movie',
   selectedCategories = {},
   tags = [] as Array<string>,
@@ -126,8 +138,18 @@ export async function fetchDoubanRecommendList(
       vod_id: parseId(item),
       vod_name: item.title,
       vod_pic:
-        processImageUrl(item.pic?.normal, imageProxyType, imageProxyUrl) ||
-        processImageUrl(item.pic?.large, imageProxyType, imageProxyUrl) ||
+        processImageUrl(
+          item.pic?.normal,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
+        processImageUrl(
+          item.pic?.large,
+          imageProxyType,
+          imageProxyUrl,
+          urlPrefix
+        ) ||
         '',
       vod_remarks: '',
     }));
@@ -138,6 +160,7 @@ export async function fetchDoubanRecommendList(
 }
 
 export async function fetchDoubanHotList(
+  urlPrefix: string,
   type = 'tv',
   pageStart = 0,
   pageLimit = 50
@@ -173,7 +196,12 @@ export async function fetchDoubanHotList(
     const list: TvboxContentItem[] = doubanData.subjects.map((item: any) => ({
       vod_id: parseId(item),
       vod_name: item.title,
-      vod_pic: processImageUrl(item.cover, imageProxyType, imageProxyUrl),
+      vod_pic: processImageUrl(
+        item.cover,
+        imageProxyType,
+        imageProxyUrl,
+        urlPrefix
+      ),
       vod_remarks: '',
     }));
 
@@ -254,7 +282,8 @@ export async function getDoubanImageProxyConfig(): Promise<{
 export function processImageUrl(
   originalUrl: string,
   proxyType: string,
-  proxyUrl: string
+  proxyUrl: string,
+  urlPrefix: string
 ): string {
   if (!originalUrl) return originalUrl;
 
@@ -264,7 +293,9 @@ export function processImageUrl(
   }
   switch (proxyType) {
     case 'server':
-      return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+      return `${urlPrefix}/api/image-proxy?url=${encodeURIComponent(
+        originalUrl
+      )}`;
     case 'img3':
       return originalUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
     case 'cmliussss-cdn-tencent':
@@ -284,3 +315,7 @@ export function processImageUrl(
       return originalUrl;
   }
 }
+export const getUrlPrefix = (request: NextRequest) => {
+  const { protocol, host } = request.nextUrl;
+  return `${protocol}//${request.headers.get('host') || host}`;
+};

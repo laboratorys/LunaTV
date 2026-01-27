@@ -26,6 +26,12 @@ export interface Favorite {
   origin?: 'vod' | 'live';
 }
 
+export interface DbUser {
+  user_name: string;
+  key: string; // key
+  password: string;
+}
+
 // 存储接口
 export interface IStorage {
   // 播放记录相关
@@ -45,8 +51,10 @@ export interface IStorage {
   deleteFavorite(userName: string, key: string): Promise<void>;
 
   // 用户相关
-  registerUser(userName: string, password: string): Promise<void>;
+  registerUser(userName: string, password: string): Promise<string>;
   verifyUser(userName: string, password: string): Promise<boolean>;
+  //查询用户信息
+  getUser(userName: string): Promise<any>;
   // 检查用户是否存在（无需密码）
   checkUserExist(userName: string): Promise<boolean>;
   // 修改用户密码
@@ -66,7 +74,7 @@ export interface IStorage {
   clearAllCache(keysPrefix: string): Promise<number>;
 
   // 用户列表
-  getAllUsers(): Promise<string[]>;
+  getAllUsers(): Promise<DbUser[]>;
 
   // 管理员配置相关
   getAdminConfig(): Promise<AdminConfig | null>;

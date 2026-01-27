@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        await db.registerUser(targetUsername!, targetPassword);
+        const key = await db.registerUser(targetUsername!, targetPassword);
 
         // 获取用户组信息
         const { userGroup } = body as { userGroup?: string };
@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         // 更新配置
         const newUser: any = {
           username: targetUsername!,
+          key: key,
           role: 'user',
         };
 

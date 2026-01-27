@@ -3,9 +3,10 @@
 import { SqliteStorage } from '@/lib/sqlite.db';
 
 import { AdminConfig } from './admin.types';
+import { hashPassword } from './bcrypt';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { DbUser, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
 // storage type 常量: 'localstorage' | 'redis' | 'upstash'，默认 'localstorage'
@@ -138,21 +139,25 @@ export class DbManager {
   }
 
   // ---------- 用户相关 ----------
-  async registerUser(userName: string, password: string): Promise<void> {
-    await this.storage.registerUser(userName, password);
+  async registerUser(userName: string, password: string): Promise<string> {
+    const hashedPassword = await hashPassword(password);
+    return await this.storage.registerUser(userName, hashedPassword);
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
     return this.storage.verifyUser(userName, password);
   }
-
+  async getUser(userName: string): Promise<any> {
+    return this.storage.getUser(userName);
+  }
   // 检查用户是否已存在
   async checkUserExist(userName: string): Promise<boolean> {
     return this.storage.checkUserExist(userName);
   }
 
   async changePassword(userName: string, newPassword: string): Promise<void> {
-    await this.storage.changePassword(userName, newPassword);
+    const hashedPassword = await hashPassword(newPassword);
+    await this.storage.changePassword(userName, hashedPassword);
   }
 
   async deleteUser(userName: string): Promise<void> {
@@ -190,7 +195,7 @@ export class DbManager {
   }
 
   // 获取全部用户名
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<DbUser[]> {
     if (typeof (this.storage as any).getAllUsers === 'function') {
       return (this.storage as any).getAllUsers();
     }

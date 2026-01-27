@@ -53,7 +53,6 @@ const CustomDropdown = ({
   }, [isOpen, onOpenChange]);
   // 动态计算下拉列表高度（每个选项约 2.5rem + 边距）
   const calculatedHeight = options.length * 2.75; // 每个选项约 2.5rem + 0.25rem 边距
-  console.log(calculatedHeight);
   const heightClass = maxHeight
     ? `max-h-${maxHeight}`
     : `h-[${calculatedHeight}rem]`;

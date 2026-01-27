@@ -3,7 +3,9 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { hashPassword, verifyPassword } from './bcrypt';
+import { DbUser, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
+import { generateShortKey } from './utils';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -266,20 +268,32 @@ export abstract class BaseRedisStorage implements IStorage {
     return `u:${user}:pwd`;
   }
 
-  async registerUser(userName: string, password: string): Promise<void> {
+  async registerUser(userName: string, password: string): Promise<string> {
+    const userData: DbUser = {
+      user_name: userName,
+      password: password,
+      key: generateShortKey(userName),
+    };
     // 简单存储明文密码，生产环境应加密
     await this.withRetry(() =>
-      this.client.set(this.userPwdKey(userName), password)
+      this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
     );
+    return userData.key;
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
+    const userData = await this.getUser(userName);
+    if (userData === null) return false;
+    // 确保比较时都是字符串类型
+    return verifyPassword(password, userData.password);
+  }
+
+  async getUser(userName: string): Promise<any> {
     const stored = await this.withRetry(() =>
       this.client.get(this.userPwdKey(userName))
     );
-    if (stored === null) return false;
-    // 确保比较时都是字符串类型
-    return ensureString(stored) === password;
+    if (stored === null) return null;
+    return JSON.parse(ensureString(stored));
   }
 
   // 检查用户是否存在
@@ -293,9 +307,11 @@ export abstract class BaseRedisStorage implements IStorage {
 
   // 修改用户密码
   async changePassword(userName: string, newPassword: string): Promise<void> {
+    const userData = await this.getUser(userName);
+    userData.password = await hashPassword(newPassword);
     // 简单存储明文密码，生产环境应加密
     await this.withRetry(() =>
-      this.client.set(this.userPwdKey(userName), newPassword)
+      this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
     );
   }
 
@@ -404,14 +420,29 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   // ---------- 获取全部用户 ----------
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<DbUser[]> {
     const keys = await this.withRetry(() => this.client.keys('u:*:pwd'));
-    return keys
-      .map((k) => {
-        const match = k.match(/^u:(.+?):pwd$/);
-        return match ? ensureString(match[1]) : undefined;
+    if (keys.length === 0) return [];
+    const values = await this.withRetry(() => this.client.mGet(keys));
+    return values
+      .map((val, index) => {
+        if (!val) return undefined;
+
+        try {
+          const data = JSON.parse(val);
+          const match = keys[index].match(/^u:(.+?):pwd$/);
+          const userName = match ? match[1] : 'unknown';
+
+          return {
+            user_name: userName,
+            password: data.password || '',
+            key: data.key || generateShortKey(userName),
+          };
+        } catch (e) {
+          return undefined;
+        }
       })
-      .filter((u): u is string => typeof u === 'string');
+      .filter((u): u is DbUser => !!u);
   }
 
   // ---------- 管理员配置 ----------
@@ -509,8 +540,8 @@ export abstract class BaseRedisStorage implements IStorage {
       const allUsers = await this.getAllUsers();
 
       // 删除所有用户及其数据
-      for (const username of allUsers) {
-        await this.deleteUser(username);
+      for (const u of allUsers) {
+        await this.deleteUser(u.user_name);
       }
 
       // 删除管理员配置

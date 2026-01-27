@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
+import CryptoJS from 'crypto-js';
 import he from 'he';
 import Hls from 'hls.js';
 
@@ -239,3 +240,20 @@ export const CURRENT_VERSION =
   (process.env.GIT_BRANCH || 'main') === 'dev'
     ? CURRENT_VERSION_DEV
     : CURRENT_VERSION_MAIN;
+
+export const generateShortKey = (username: string) => {
+  const hash = CryptoJS.MD5(username);
+  const hashHex = hash.toString(CryptoJS.enc.Hex);
+  const substring = hashHex.substring(0, 8);
+  const decimal = parseInt(substring, 16);
+  const chars =
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let key = '';
+  let num = decimal;
+  if (num === 0) return chars[0];
+  while (num > 0) {
+    key = chars[num % 62] + key;
+    num = Math.floor(num / 62);
+  }
+  return key;
+};
