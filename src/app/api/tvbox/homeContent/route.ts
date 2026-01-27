@@ -11,6 +11,7 @@ import { fetchDoubanHotList, getUrlPrefix } from '@/app/api/tvbox/common';
 
 import { classes, filters } from './constant';
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface HomeContent {
   list: TvboxContentItem[];
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       filters: filters,
     };
     if (isCached) {
-      db.setCacheByKey(
+      await db.setCacheByKey(
         TVBOX_HOME_KEY,
         content,
         config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
