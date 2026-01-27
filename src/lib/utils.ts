@@ -242,7 +242,7 @@ export const CURRENT_VERSION =
     : CURRENT_VERSION_MAIN;
 
 export const generateShortKey = (username: string) => {
-  const hash = CryptoJS.MD5(username);
+  const hash = CryptoJS.SHA256(username);
   const hashHex = hash.toString(CryptoJS.enc.Hex);
   const substring = hashHex.substring(0, 8);
   const decimal = parseInt(substring, 16);
