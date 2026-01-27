@@ -786,6 +786,38 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     });
   };
 
+  const handleGenerateKey = async () => {
+    if (selectedUsers.size === 0) return;
+
+    await withLoading('generateKey', async () => {
+      try {
+        const res = await fetch('/api/admin/keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'batchUpdateUserGroups',
+            usernames: Array.from(selectedUsers),
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `操作失败: ${res.status}`);
+        }
+
+        const userCount = selectedUsers.size;
+        setSelectedUsers(new Set());
+        showSuccess(`已为 ${userCount} 个用户生成Key`, showAlert);
+
+        // 刷新配置
+        await refreshConfig();
+      } catch (err) {
+        showError('生成Key失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
   // 提取URL域名的辅助函数
   const extractDomain = (url: string): string => {
     try {
@@ -1014,6 +1046,12 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   <span className='text-sm text-gray-600 dark:text-gray-400'>
                     已选择 {selectedUsers.size} 个用户
                   </span>
+                  <button
+                    onClick={() => handleGenerateKey()}
+                    className={buttonStyles.secondary}
+                  >
+                    生成Key
+                  </button>
                   <button
                     onClick={() => setShowBatchUserGroupModal(true)}
                     className={buttonStyles.primary}

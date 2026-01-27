@@ -296,6 +296,16 @@ export abstract class BaseRedisStorage implements IStorage {
     return JSON.parse(ensureString(stored));
   }
 
+  // 生成新Key
+  async generateNewKey(userName: string): Promise<void> {
+    const key = generateShortKey(userName);
+    const userData = await this.getUser(userName);
+    userData.key = key;
+    await this.withRetry(() =>
+      this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
+    );
+  }
+
   // 检查用户是否存在
   async checkUserExist(userName: string): Promise<boolean> {
     // 使用 EXISTS 判断 key 是否存在

@@ -150,6 +150,10 @@ export class DbManager {
   async getUser(userName: string): Promise<any> {
     return this.storage.getUser(userName);
   }
+  //生成新Key
+  async generateNewKey(userName: string): Promise<any> {
+    return this.storage.generateNewKey(userName);
+  }
   // 检查用户是否已存在
   async checkUserExist(userName: string): Promise<boolean> {
     return this.storage.checkUserExist(userName);

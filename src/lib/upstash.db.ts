@@ -181,6 +181,16 @@ export class UpstashRedisStorage implements IStorage {
     return JSON.parse(ensureString(stored));
   }
 
+  // 生成新Key
+  async generateNewKey(userName: string): Promise<void> {
+    const key = generateShortKey(userName);
+    const userData = await this.getUser(userName);
+    userData.key = key;
+    await withRetry(() =>
+      this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
+    );
+  }
+
   // 检查用户是否存在
   async checkUserExist(userName: string): Promise<boolean> {
     // 使用 EXISTS 判断 key 是否存在
@@ -194,7 +204,6 @@ export class UpstashRedisStorage implements IStorage {
   async changePassword(userName: string, newPassword: string): Promise<void> {
     const userData = await this.getUser(userName);
     userData.password = await hashPassword(newPassword);
-    // 简单存储明文密码，生产环境应加密
     await withRetry(() =>
       this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
     );

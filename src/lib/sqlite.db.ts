@@ -253,6 +253,15 @@ export class SqliteStorage implements IStorage {
     return row ? row : null;
   }
 
+  async generateNewKey(userName: string): Promise<void> {
+    const key = generateShortKey(userName);
+    console.log('Generated new key for', userName, ':', key);
+    const stmt = this.db.prepare(
+      'UPDATE users SET key = ? WHERE user_name = ?'
+    );
+    stmt.run(key, userName);
+  }
+
   async checkUserExist(userName: string): Promise<boolean> {
     const stmt = this.db.prepare('SELECT 1 FROM users WHERE user_name = ?');
     const row = stmt.get(userName);

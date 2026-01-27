@@ -55,6 +55,8 @@ export interface IStorage {
   verifyUser(userName: string, password: string): Promise<boolean>;
   //查询用户信息
   getUser(userName: string): Promise<any>;
+  //生成新Key
+  generateNewKey(userName: string): Promise<void>;
   // 检查用户是否存在（无需密码）
   checkUserExist(userName: string): Promise<boolean>;
   // 修改用户密码
