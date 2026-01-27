@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.5",
+    date: "2026-01-27",
+    added: [
+    "【用户】增加短key，当前主要用于tvbox，区分不同用户，未来将用于播放记录和收藏同步",
+    "【站点配置】增加开放注册开关，开启后用户可以进行注册账户"
+    ],
+    changed: [
+    "【tvbox】豆瓣数据及图片策略跟随系统设置",
+    "【用户】密码存储改为密文"
+    ],
+    fixed: [
+    "禁用图片代理-浏览器直连，请避免选择此项，否则可能导致海报无法显示",
+    "【tvbox】修复详情页数据错误（提升搜索精准度）"
+    ]
+  },
+  {
     version: "5.0.4",
     date: "2025-09-25",
     added: [
