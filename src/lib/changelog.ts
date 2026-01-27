@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.6",
+    date: "2026-01-27",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "由于TVBox地址变更，请及时更新",
+    "【用户】增加Key刷新按钮，用于兼容旧数据"
+    ]
+  },
+  {
     version: "5.0.5",
     date: "2026-01-27",
     added: [
