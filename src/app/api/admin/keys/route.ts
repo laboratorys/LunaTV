@@ -13,6 +13,12 @@ export async function POST(req: NextRequest) {
     try {
       usernames.forEach(async (username: any) => {
         await db.generateNewKey(username);
+        if (process.env.USERNAME === username) {
+          const userData = await db.getUser(username);
+          if (userData == null) {
+            db.registerUser(username, process.env.PASSWORD!);
+          }
+        }
       });
       const adminConfig = await getConfig();
       let users: DbUser[] = [];
