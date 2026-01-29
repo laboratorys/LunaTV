@@ -14,10 +14,10 @@ export const changelog: ChangelogEntry[] = [
     version: "5.0.7",
     date: "2026-01-29",
     added: [
-      // 无新增内容
+    "增加【短剧】分类"
     ],
     changed: [
-    "-【TVBox】壁纸切换不生效"
+    "【用户】Key生成加盐"
     ],
     fixed: [
       // 无修复内容
