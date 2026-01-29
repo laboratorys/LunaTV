@@ -20,6 +20,19 @@ export const changelog: ChangelogEntry[] = [
       // 无变更内容
     ],
     fixed: [
+    "【TVBox】海报切换不生效"
+    ]
+  },
+  {
+    version: "5.0.7",
+    date: "2026-01-29",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "【用户】key生成加盐"
+    ],
+    fixed: [
     "由于TVBox地址变更，请及时更新",
     "【用户】增加Key刷新按钮，用于兼容旧数据"
     ]
