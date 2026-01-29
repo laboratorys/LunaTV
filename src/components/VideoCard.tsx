@@ -54,6 +54,7 @@ export interface VideoCardProps {
   isBangumi?: boolean;
   isAggregate?: boolean;
   origin?: 'vod' | 'live';
+  remark?: string;
 }
 
 export type VideoCardHandle = {
@@ -84,6 +85,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       isBangumi = false,
       isAggregate = false,
       origin = 'vod',
+      remark = '',
     }: VideoCardProps,
     ref
   ) {
@@ -106,6 +108,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       douban_id
     );
 
+    const [dynamicRemark, setDynamicRemark] = useState<string>(remark);
+
     useEffect(() => {
       setDynamicEpisodes(episodes);
     }, [episodes]);
@@ -117,6 +121,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     useEffect(() => {
       setDynamicDoubanId(douban_id);
     }, [douban_id]);
+
+    useEffect(() => {
+      setDynamicRemark(remark);
+    }, [remark]);
 
     useImperativeHandle(ref, () => ({
       setEpisodes: (eps?: number) => setDynamicEpisodes(eps),
@@ -137,6 +145,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         ? 'movie'
         : 'tv'
       : type;
+    const actualRemark = dynamicRemark;
 
     // 获取收藏状态（搜索结果页面不检查）
     useEffect(() => {
@@ -720,6 +729,28 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               </div>
             )}
 
+            {/* 备注徽章 */}
+            {actualRemark && (
+              <div
+                className='absolute bottom-0 left-0 pointer-events-none'
+                style={{ zIndex: 0 }}
+              >
+                <div
+                  className='
+                        flex items-center 
+                        bg-emerald-500/60 backdrop-blur-md 
+                        px-1.5 sm:px-2.5 
+                        py-1 
+                        rounded-r-md 
+                        shadow-sm
+                      '
+                >
+                  <span className='text-white text-[10px] sm:text-xs font-semibold leading-none tracking-wide'>
+                    {actualRemark}
+                  </span>
+                </div>
+              </div>
+            )}
             {/* 操作按钮 */}
             {(config.showHeart || config.showCheckCircle) && (
               <div

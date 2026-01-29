@@ -4,6 +4,7 @@
 
 import {
   Cat,
+  Clapperboard,
   Clover,
   Film,
   Home,
@@ -162,6 +163,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       icon: Clover,
       label: '综艺',
       href: '/douban?type=show',
+    },
+    {
+      icon: Clapperboard,
+      label: '短剧',
+      href: '/short-drama',
     },
     {
       icon: Radio,

@@ -2,7 +2,16 @@
 
 'use client';
 
-import { Cat, Clover, Film, Home, Radio, Star, Tv } from 'lucide-react';
+import {
+  Cat,
+  Clapperboard,
+  Clover,
+  Film,
+  Home,
+  Radio,
+  Star,
+  Tv,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,6 +50,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       icon: Clover,
       label: '综艺',
       href: '/douban?type=show',
+    },
+    {
+      icon: Clapperboard,
+      label: '短剧',
+      href: '/short-drama',
     },
     {
       icon: Radio,
@@ -101,10 +115,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
               >
                 <item.icon
-                  className={`h-6 w-6 ${active
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                    }`}
+                  className={`h-6 w-6 ${
+                    active
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
                 />
                 <span
                   className={

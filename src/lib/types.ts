@@ -146,3 +146,12 @@ export interface TvboxContentItem {
   vod_pic: string;
   vod_remarks: string;
 }
+
+// 豆瓣数据结构
+export interface ShortDramaItem {
+  vod_id: string;
+  vod_name: string;
+  vod_pic: string;
+  vod_tag: string;
+  vod_remarks: string;
+}

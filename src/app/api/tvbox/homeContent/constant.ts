@@ -3,6 +3,7 @@ export const classes = [
   { type_id: 'tv', type_name: '剧集' },
   { type_id: 'anime', type_name: '动漫' },
   { type_id: 'show', type_name: '综艺' },
+  { type_id: 'short-drama', type_name: '短剧' },
 ];
 export const filters = {
   movie: [
