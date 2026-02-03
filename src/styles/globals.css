@@ -115,4 +115,12 @@
   .animated-underline:focus-visible {
     background-size: 0 2px, 100% 2px;
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

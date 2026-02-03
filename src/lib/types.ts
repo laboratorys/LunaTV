@@ -155,3 +155,15 @@ export interface ShortDramaItem {
   vod_tag: string;
   vod_remarks: string;
 }
+
+export interface Source {
+  key: string;
+  name: string;
+}
+
+export interface CategoryNode {
+  id: number;
+  name: string;
+  parentId: number;
+  children: CategoryNode[];
+}

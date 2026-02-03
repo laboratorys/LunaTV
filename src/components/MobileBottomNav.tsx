@@ -8,13 +8,14 @@ import {
   Clover,
   Film,
   Home,
+  MonitorPlay,
   Radio,
   Star,
   Tv,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface MobileBottomNavProps {
   /**
@@ -24,58 +25,99 @@ interface MobileBottomNavProps {
 }
 
 const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
   // 当前激活路径：优先使用传入的 activePath，否则回退到浏览器地址
   const currentActive = activePath ?? pathname;
 
-  const [navItems, setNavItems] = useState([
-    { icon: Home, label: '首页', href: '/' },
-    {
-      icon: Film,
-      label: '电影',
-      href: '/douban?type=movie',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv',
-    },
-    {
-      icon: Cat,
-      label: '动漫',
-      href: '/douban?type=anime',
-    },
-    {
-      icon: Clover,
-      label: '综艺',
-      href: '/douban?type=show',
-    },
-    {
-      icon: Clapperboard,
-      label: '短剧',
-      href: '/short-drama',
-    },
-    {
-      icon: Radio,
-      label: '直播',
-      href: '/live',
-    },
-  ]);
-
+  const scrollContainerRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
-    const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setNavItems((prevItems) => [
-        ...prevItems,
-        {
-          icon: Star,
-          label: '自定义',
-          href: '/douban?type=custom',
-        },
-      ]);
-    }
+    const timer = setTimeout(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+      const activeElement = container.querySelector(
+        '[data-active="true"]'
+      ) as HTMLElement;
+
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [currentActive]);
+  useEffect(() => {
+    setMounted(true);
   }, []);
+  const visibleMenuItems = useMemo(() => {
+    if (!mounted || typeof window === 'undefined') return [];
+    const cfg = (window as any).RUNTIME_CONFIG;
+    const items = [
+      {
+        icon: Home,
+        label: '首页',
+        href: '/',
+        show: true,
+      },
+      {
+        icon: Film,
+        label: '电影',
+        href: '/douban?type=movie',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Tv,
+        label: '剧集',
+        href: '/douban?type=tv',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Cat,
+        label: '动漫',
+        href: '/douban?type=anime',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Clover,
+        label: '综艺',
+        href: '/douban?type=show',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Clapperboard,
+        label: '短剧',
+        href: '/short-drama',
+        show: cfg?.SHOW_SHORT_DRAMA,
+      },
+      {
+        icon: MonitorPlay,
+        label: '播放源',
+        href: '/sources',
+        show: cfg?.SHOW_SOURCE,
+      },
+      {
+        icon: Radio,
+        label: '直播',
+        href: '/live',
+        show: cfg?.SHOW_LIVE,
+      },
+    ];
+    const filtered = items.filter((item) => item.show !== false);
+    if (cfg?.CUSTOM_CATEGORIES?.length > 0 && cfg?.SHOW_DOUBAN) {
+      filtered.push({
+        icon: Star,
+        label: '自定义',
+        href: '/douban?type=custom',
+        show: true,
+      });
+    }
+    return filtered;
+  }, [mounted]);
 
   const isActive = (href: string) => {
     const typeMatch = href.match(/type=([^&]+)/)?.[1];
@@ -101,14 +143,18 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
         minHeight: 'calc(3.5rem + env(safe-area-inset-bottom))',
       }}
     >
-      <ul className='flex items-center overflow-x-auto scrollbar-hide'>
-        {navItems.map((item) => {
+      <ul
+        ref={scrollContainerRef}
+        className='flex items-center overflow-x-auto scrollbar-hide'
+      >
+        {visibleMenuItems.map((item) => {
           const active = isActive(item.href);
           return (
             <li
               key={item.href}
               className='flex-shrink-0'
               style={{ width: '20vw', minWidth: '20vw' }}
+              data-active={active}
             >
               <Link
                 href={item.href}

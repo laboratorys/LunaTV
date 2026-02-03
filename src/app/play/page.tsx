@@ -106,6 +106,7 @@ function PlayPageClient() {
     searchParams.get('source') || ''
   );
   const [currentId, setCurrentId] = useState(searchParams.get('id') || '');
+  const [one] = useState(searchParams.get('one') || '');
 
   // 搜索所需信息
   const [searchTitle] = useState(searchParams.get('stitle') || '');
@@ -678,9 +679,12 @@ function PlayPageClient() {
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根据搜索词获取全部源信息
       try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query.trim())}`
-        );
+        const safeQuery = (query || '').trim();
+        let url = `/api/search?q=${encodeURIComponent(safeQuery)}`;
+        if (currentId && currentSource && one === 'true') {
+          url += `&id=${currentId}&source=${currentSource}&one=true`;
+        }
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('搜索失败');
         }
@@ -724,7 +728,7 @@ function PlayPageClient() {
           : '🔍 正在搜索播放源...'
       );
 
-      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle || '');
       if (
         currentSource &&
         currentId &&
@@ -1245,7 +1249,8 @@ function PlayPageClient() {
     if (
       !detail ||
       !detail.episodes ||
-      currentEpisodeIndex >= detail.episodes.length ||
+      currentEpisodeIndex >= detail?.episodes?.length ||
+      0 ||
       currentEpisodeIndex < 0
     ) {
       setError(`选集索引无效，当前共 ${totalEpisodes} 集`);
@@ -1256,7 +1261,6 @@ function PlayPageClient() {
       setError('视频地址无效');
       return;
     }
-    console.log(videoUrl);
 
     // 检测是否为WebKit浏览器
     const isWebkit =

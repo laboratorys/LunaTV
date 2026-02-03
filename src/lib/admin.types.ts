@@ -61,9 +61,24 @@ export interface AdminConfig {
     disabled: boolean;
     expireSeconds: number;
   };
+  FeaturesConfig?: {
+    douban: boolean;
+    shortDrama: boolean;
+    source: boolean;
+    live: boolean;
+  };
 }
 
 export interface AdminConfigResult {
   Role: 'owner' | 'admin';
   Config: AdminConfig;
+}
+
+export interface SectionConfigProps {
+  config: AdminConfig | null;
+  role: 'owner' | 'admin' | null;
+  refresh: () => Promise<void>;
+  showError: (message: string, showAlert?: (config: any) => void) => void;
+  showAlert: (config: any) => void;
+  showSuccess: (message: string, showAlert?: (config: any) => void) => void;
 }

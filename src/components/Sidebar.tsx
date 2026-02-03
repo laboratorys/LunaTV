@@ -9,6 +9,7 @@ import {
   Film,
   Home,
   Menu,
+  MonitorPlay,
   Radio,
   Search,
   Star,
@@ -23,6 +24,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -73,6 +75,8 @@ declare global {
 }
 
 const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
+  const [mounted, setMounted] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -109,7 +113,9 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   }, [isCollapsed]);
 
   const [active, setActive] = useState(activePath);
-
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   useEffect(() => {
     // 优先使用传入的 activePath
     if (activePath) {
@@ -142,53 +148,64 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   const contextValue = {
     isCollapsed,
   };
-
-  const [menuItems, setMenuItems] = useState([
-    {
-      icon: Film,
-      label: '电影',
-      href: '/douban?type=movie',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv',
-    },
-    {
-      icon: Cat,
-      label: '动漫',
-      href: '/douban?type=anime',
-    },
-    {
-      icon: Clover,
-      label: '综艺',
-      href: '/douban?type=show',
-    },
-    {
-      icon: Clapperboard,
-      label: '短剧',
-      href: '/short-drama',
-    },
-    {
-      icon: Radio,
-      label: '直播',
-      href: '/live',
-    },
-  ]);
-
-  useEffect(() => {
-    const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setMenuItems((prevItems) => [
-        ...prevItems,
-        {
-          icon: Star,
-          label: '自定义',
-          href: '/douban?type=custom',
-        },
-      ]);
+  const visibleMenuItems = useMemo(() => {
+    if (!mounted || typeof window === 'undefined') return [];
+    const cfg = (window as any).RUNTIME_CONFIG;
+    const items = [
+      {
+        icon: Film,
+        label: '电影',
+        href: '/douban?type=movie',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Tv,
+        label: '剧集',
+        href: '/douban?type=tv',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Cat,
+        label: '动漫',
+        href: '/douban?type=anime',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Clover,
+        label: '综艺',
+        href: '/douban?type=show',
+        show: cfg?.SHOW_DOUBAN,
+      },
+      {
+        icon: Clapperboard,
+        label: '短剧',
+        href: '/short-drama',
+        show: cfg?.SHOW_SHORT_DRAMA,
+      },
+      {
+        icon: MonitorPlay,
+        label: '播放源',
+        href: '/sources',
+        show: cfg?.SHOW_SOURCE,
+      },
+      {
+        icon: Radio,
+        label: '直播',
+        href: '/live',
+        show: cfg?.SHOW_LIVE,
+      },
+    ];
+    const filtered = items.filter((item) => item.show !== false);
+    if (cfg?.CUSTOM_CATEGORIES?.length > 0 && cfg?.SHOW_DOUBAN) {
+      filtered.push({
+        icon: Star,
+        label: '自定义',
+        href: '/douban?type=custom',
+        show: true,
+      });
     }
-  }, []);
+    return filtered;
+  }, [mounted]);
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -271,7 +288,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             {/* 菜单项 */}
             <div className='flex-1 overflow-y-auto px-2 pt-4'>
               <div className='space-y-1'>
-                {menuItems.map((item) => {
+                {visibleMenuItems.map((item) => {
                   // 检查当前路径是否匹配这个菜单项
                   const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
 

@@ -8,7 +8,6 @@ export function getAuthInfoFromCookie(request: NextRequest): {
   timestamp?: number;
 } | null {
   const authCookie = request.cookies.get('auth');
-
   if (!authCookie) {
     return null;
   }

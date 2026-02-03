@@ -2,7 +2,7 @@
 
 import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
 import { getCachedSearchPage, setCachedSearchPage } from '@/lib/search-cache';
-import { SearchResult } from '@/lib/types';
+import { CategoryNode, SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
 interface ApiSearchItem {
@@ -19,6 +19,12 @@ interface ApiSearchItem {
   vod_actor?: string;
   vod_douban_id?: number;
   type_name?: string;
+}
+
+interface ClassItem {
+  type_id: number;
+  type_pid: number;
+  type_name: string;
 }
 
 /**
@@ -147,14 +153,193 @@ async function searchWithCache(
   }
 }
 
+export async function searchWithNoCache(
+  apiSite: ApiSite,
+  ids: string,
+  wd: string,
+  pg: number,
+  t: string,
+  h: string,
+  timeoutMs = 8000
+): Promise<SearchResult[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const url =
+      apiSite.api +
+      API_CONFIG.search.pagePath
+        .replace('{query}', encodeURIComponent(wd))
+        .replace('{page}', pg.toString())
+        .replace('{ids}', ids)
+        .replace('{h}', h)
+        .replace('{t}', t);
+    const response = await fetch(url, {
+      headers: API_CONFIG.search.headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    if (
+      !data ||
+      !data.list ||
+      !Array.isArray(data.list) ||
+      data.list.length === 0
+    ) {
+      // 空结果不做负缓存要求，这里不写入缓存
+      return [];
+    }
+
+    // 处理结果数据
+    const allResults = data.list.map((item: ApiSearchItem) => {
+      let episodes: string[] = [];
+      let titles: string[] = [];
+
+      // 使用正则表达式从 vod_play_url 提取 m3u8 链接
+      if (item.vod_play_url) {
+        // 先用 $$$ 分割
+        const vod_play_url_array = item.vod_play_url.split('$$$');
+        // 分集之间#分割，标题和播放链接 $ 分割
+        vod_play_url_array.forEach((url: string) => {
+          const matchEpisodes: string[] = [];
+          const matchTitles: string[] = [];
+          const title_url_array = url.split('#');
+          title_url_array.forEach((title_url: string) => {
+            const episode_title_url = title_url.split('$');
+            if (
+              episode_title_url.length === 2 &&
+              episode_title_url[1].endsWith('.m3u8')
+            ) {
+              matchTitles.push(episode_title_url[0]);
+              matchEpisodes.push(episode_title_url[1]);
+            }
+          });
+          if (matchEpisodes.length > episodes.length) {
+            episodes = matchEpisodes;
+            titles = matchTitles;
+          }
+        });
+      }
+
+      return {
+        id: item.vod_id.toString(),
+        title: item.vod_name.trim().replace(/\s+/g, ' '),
+        poster: item.vod_pic,
+        episodes,
+        episodes_titles: titles,
+        source: apiSite.key,
+        source_name: apiSite.name,
+        class: item.vod_class,
+        year: item.vod_year
+          ? item.vod_year.match(/\d{4}/)?.[0] || ''
+          : 'unknown',
+        desc: cleanHtmlTags(item.vod_content || ''),
+        remarks: item.vod_remarks,
+        type_name: item.type_name,
+        director: item.vod_director,
+        area: item.vod_area,
+        actor: item.vod_actor,
+        douban_id: item.vod_douban_id,
+      };
+    });
+    const results = allResults.filter(
+      (result: SearchResult) => result.episodes.length > 0
+    );
+    return results;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    return [];
+  }
+}
+
+/**
+ * 不带缓存搜索函数
+ */
+export async function getClassWithCache(
+  apiSite: ApiSite,
+  timeoutMs = 8000
+): Promise<CategoryNode[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const url = apiSite.api + API_CONFIG.search.classePath;
+    const response = await fetch(url, {
+      headers: API_CONFIG.search.headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    if (
+      !data ||
+      !data.class ||
+      !Array.isArray(data.class) ||
+      data.class.length === 0
+    ) {
+      // 空结果不做负缓存要求，这里不写入缓存
+      return [];
+    }
+
+    // 处理结果数据
+    const rawClasses: ClassItem[] = data.class;
+    const itemMap: Record<number, CategoryNode> = {};
+    rawClasses.forEach((item) => {
+      itemMap[item.type_id] = {
+        id: item.type_id,
+        name: item.type_name,
+        parentId: item.type_pid,
+        children: [],
+      };
+    });
+    const tree: CategoryNode[] = [];
+    rawClasses.forEach((item) => {
+      const currentNode = itemMap[item.type_id];
+
+      if (item.type_pid === 0) {
+        // pid 为 0 说明是一级分类
+        tree.push(currentNode);
+      } else {
+        // 否则将其加入到父节点的 children 中
+        const parentNode = itemMap[item.type_pid];
+        if (parentNode) {
+          parentNode.children.push(currentNode);
+        } else {
+          // 容错：如果找不到父节点（数据异常），视作一级分类或直接丢弃
+          tree.push(currentNode);
+        }
+      }
+    });
+    return tree;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    return [];
+  }
+}
+
 export async function searchFromApi(
   apiSite: ApiSite,
-  query: string
+  query: string,
+  id?: string
 ): Promise<SearchResult[]> {
   try {
     const apiBaseUrl = apiSite.api;
     const apiUrl =
       apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query);
+    if (id) {
+      apiBaseUrl + API_CONFIG.detail.path + id;
+    }
     // 使用新的缓存搜索函数处理第一页
     const firstPageResult = await searchWithCache(
       apiSite,
@@ -183,7 +368,10 @@ export async function searchFromApi(
           apiBaseUrl +
           API_CONFIG.search.pagePath
             .replace('{query}', encodeURIComponent(query))
-            .replace('{page}', page.toString());
+            .replace('{page}', page.toString())
+            .replace('{ids}', '')
+            .replace('{h}', '')
+            .replace('{t}', '');
 
         const pagePromise = (async () => {
           // 使用新的缓存搜索函数处理分页
