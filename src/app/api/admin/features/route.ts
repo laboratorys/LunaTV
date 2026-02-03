@@ -28,13 +28,20 @@ export async function POST(request: NextRequest) {
     }
     const username = authInfo.username;
 
-    const { disabled, expireSeconds } = body as {
-      disabled: boolean;
-      expireSeconds: number;
+    const { douban, shortDrama, source, live } = body as {
+      douban: true;
+      shortDrama: true;
+      source: false;
+      live: false;
     };
 
     // 参数校验
-    if (typeof disabled !== 'boolean') {
+    if (
+      typeof douban !== 'boolean' ||
+      typeof shortDrama !== 'boolean' ||
+      typeof source !== 'boolean' ||
+      typeof live !== 'boolean'
+    ) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
@@ -51,15 +58,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 更新缓存中的设置
-    adminConfig.TvBoxConfig = {
-      disabled,
-      expireSeconds,
+    adminConfig.FeaturesConfig = {
+      douban,
+      shortDrama,
+      source,
+      live,
     };
 
     // 写入数据库
     await db.saveAdminConfig(adminConfig);
-    await db.clearAllCache('api:cache:tvbox:');
     return NextResponse.json(
       { ok: true },
       {
@@ -69,10 +76,10 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('更新TvBox配置失败:', error);
+    console.error('更新功能配置失败:', error);
     return NextResponse.json(
       {
-        error: '更新TvBox配置失败',
+        error: '更新功能配置失败',
         details: (error as Error).message,
       },
       { status: 500 }

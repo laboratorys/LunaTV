@@ -61,6 +61,10 @@ export default async function RootLayout({
     type: 'movie' | 'tv';
     query: string;
   }[];
+  let douban = true;
+  let shortDrama = true;
+  let source = false;
+  let live = false;
   if (storageType !== 'localstorage') {
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
@@ -80,6 +84,10 @@ export default async function RootLayout({
     }));
     fluidSearch = config.SiteConfig.FluidSearch;
     openRegister = config.SiteConfig.OpenRegister;
+    douban = config.FeaturesConfig?.douban ?? true;
+    shortDrama = config.FeaturesConfig?.shortDrama ?? true;
+    source = config.FeaturesConfig?.source ?? false;
+    live = config.FeaturesConfig?.live ?? false;
   }
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取
@@ -93,6 +101,10 @@ export default async function RootLayout({
     CUSTOM_CATEGORIES: customCategories,
     FLUID_SEARCH: fluidSearch,
     OPEN_REGISTER: openRegister,
+    SHOW_DOUBAN: douban,
+    SHOW_SHORT_DRAMA: shortDrama,
+    SHOW_SOURCE: source,
+    SHOW_LIVE: live,
   };
 
   return (

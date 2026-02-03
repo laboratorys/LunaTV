@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use client';
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { PlayRecord } from '@/lib/db.client';
@@ -110,7 +110,8 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   return (
     <section className={`mb-8 ${className || ''}`}>
       <div className='mb-4 flex items-center justify-between'>
-        <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+        <h2 className='flex items-center text-xl font-bold text-gray-800 dark:text-gray-200'>
+          <History className='mr-2 h-6 w-6' />
           继续观看
         </h2>
         <div className='flex items-center space-x-3'>

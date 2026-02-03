@@ -45,7 +45,7 @@ export interface VideoCardProps {
   source_names?: string[];
   progress?: number;
   year?: string;
-  from: 'playrecord' | 'favorite' | 'search' | 'douban';
+  from: 'playrecord' | 'favorite' | 'search' | 'douban' | 'source';
   currentEpisode?: number;
   douban_id?: number;
   onDelete?: () => void;
@@ -54,6 +54,7 @@ export interface VideoCardProps {
   isBangumi?: boolean;
   isAggregate?: boolean;
   origin?: 'vod' | 'live';
+  remark?: string;
 }
 
 export type VideoCardHandle = {
@@ -84,6 +85,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       isBangumi = false,
       isAggregate = false,
       origin = 'vod',
+      remark = '',
     }: VideoCardProps,
     ref
   ) {
@@ -106,6 +108,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       douban_id
     );
 
+    const [dynamicRemark, setDynamicRemark] = useState<string>(remark);
+
     useEffect(() => {
       setDynamicEpisodes(episodes);
     }, [episodes]);
@@ -117,6 +121,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     useEffect(() => {
       setDynamicDoubanId(douban_id);
     }, [douban_id]);
+
+    useEffect(() => {
+      setDynamicRemark(remark);
+    }, [remark]);
 
     useImperativeHandle(ref, () => ({
       setEpisodes: (eps?: number) => setDynamicEpisodes(eps),
@@ -137,10 +145,17 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         ? 'movie'
         : 'tv'
       : type;
+    const actualRemark = dynamicRemark;
 
     // 获取收藏状态（搜索结果页面不检查）
     useEffect(() => {
-      if (from === 'douban' || from === 'search' || !actualSource || !actualId)
+      if (
+        from === 'douban' ||
+        from === 'search' ||
+        from === 'source' ||
+        !actualSource ||
+        !actualId
+      )
         return;
 
       const fetchFavoriteStatus = async () => {
@@ -263,7 +278,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''}${
+          from === 'source' ? '&one=true' : '&one=false'
+        }`;
         router.push(url);
       }
     }, [
@@ -416,6 +433,16 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           showDoubanLink: true,
           showRating: !!rate,
           showYear: false,
+        },
+        source: {
+          showSourceName: false,
+          showProgress: false,
+          showPlayButton: true,
+          showHeart: false,
+          showCheckCircle: false,
+          showDoubanLink: false,
+          showRating: false,
+          showYear: true,
         },
       };
       return configs[from] || configs.search;
@@ -720,6 +747,34 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               </div>
             )}
 
+            {/* 备注徽章 */}
+            {actualRemark && (
+              <div
+                className='absolute bottom-0 left-0 pointer-events-none'
+                style={{ zIndex: 0 }}
+              >
+                <div
+                  className='
+                    flex items-center 
+                    bg-emerald-500/60 backdrop-blur-md 
+                    px-1.5 sm:px-2.5 
+                    py-1 
+                    rounded-r-md 
+                    shadow-sm
+                    max-w-[120px] sm:max-w-[200px]
+                  '
+                >
+                  <span
+                    className='
+                        text-white text-[10px] sm:text-xs font-semibold leading-none tracking-wide
+                        truncate block
+                      '
+                  >
+                    {actualRemark}
+                  </span>
+                </div>
+              </div>
+            )}
             {/* 操作按钮 */}
             {(config.showHeart || config.showCheckCircle) && (
               <div

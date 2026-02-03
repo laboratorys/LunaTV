@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
-
+  const id = searchParams.get('id');
+  const one = searchParams.get('one');
+  const source = searchParams.get('source');
   if (!query) {
     const cacheTime = await getCacheTime();
     return NextResponse.json(
@@ -34,12 +36,15 @@ export async function GET(request: NextRequest) {
   }
 
   const config = await getConfig();
-  const apiSites = await getAvailableApiSites(authInfo.username);
-
+  let apiSites = await getAvailableApiSites(authInfo.username);
+  if (id && source && one === 'true') {
+    //单源播放
+    apiSites = apiSites.filter((site) => site.key === source);
+  }
   // 添加超时控制和错误处理，避免慢接口拖累整体响应
   const searchPromises = apiSites.map((site) =>
     Promise.race([
-      searchFromApi(site, query),
+      searchFromApi(site, query, id || ''),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
       ),

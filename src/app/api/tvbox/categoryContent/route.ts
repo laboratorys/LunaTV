@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { TVBOX_CATEGORY_KEY } from '@/lib/keys';
+import { fetchHotShortDramaPaged } from '@/lib/short-drama.client';
+import { ShortDramaItem } from '@/lib/types';
+import { TvboxContentItem } from '@/lib/types';
 
 import {
   commonReturn,
@@ -104,6 +107,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      return commonReturn(items, pageSize);
+    } else if (tid === 'short-drama') {
+      const data: {
+        list: ShortDramaItem[];
+        total: number;
+        page: number;
+        totalPage: number;
+      } = await fetchHotShortDramaPaged(pg, pageSize);
+      const items: TvboxContentItem[] = data.list.map((item) => ({
+        vod_id: item.vod_name,
+        vod_name: item.vod_name,
+        vod_pic: item.vod_pic,
+        vod_remarks: item.vod_remarks,
+      }));
+      if (isCached) {
+        db.setCacheByKey(
+          `${TVBOX_CATEGORY_KEY}${keySuffix}`,
+          {
+            list: items || [],
+            limit: pageSize,
+          },
+          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+        );
+      }
       return commonReturn(items, pageSize);
     }
     const items = await fetchDoubanCategoryList(

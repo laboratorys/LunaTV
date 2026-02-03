@@ -11,6 +11,25 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.7",
+    date: "2026-01-29",
+    added: [
+    "增加【短剧】分类",
+    "增加【视频源】页面",
+    "【功能配置】用于配置功能菜单的显隐",
+    "【首页】增加播放记录单独标签页"
+    ],
+    changed: [
+    "【用户】Key生成加盐",
+    "【移动端】底部菜单自动定位到当前菜单",
+    "【管理面版】修改布局"
+    ],
+    fixed: [
+    "【TVBox】壁纸切换不生效",
+    "【用户】密码修改失败"
+    ]
+  },
+  {
     version: "5.0.6",
     date: "2026-01-27",
     added: [

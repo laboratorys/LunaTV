@@ -1,6 +1,6 @@
 /* eslint-disable no-console,@typescript-eslint/no-explicit-any */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { getConfig, refineConfig } from '@/lib/config';
 import { db } from '@/lib/db';
@@ -10,8 +10,7 @@ import { SearchResult } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  console.log(request.url);
+export async function GET() {
   try {
     console.log('Cron job triggered:', new Date().toISOString());
 

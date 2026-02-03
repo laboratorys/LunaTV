@@ -37,7 +37,8 @@ interface ConfigFileStruct {
 export const API_CONFIG = {
   search: {
     path: '?ac=videolist&wd=',
-    pagePath: '?ac=videolist&wd={query}&pg={page}',
+    pagePath: '?ac=videolist&wd={query}&pg={page}&h={h}&t={t}&ids={ids}',
+    classePath: '?ac=list&ids=abc',
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -232,6 +233,12 @@ async function getInitConfig(
     TvBoxConfig: {
       disabled: true,
       expireSeconds: 7200,
+    },
+    FeaturesConfig: {
+      douban: true,
+      shortDrama: true,
+      source: false,
+      live: false,
     },
   };
 
