@@ -6,8 +6,7 @@ import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { TVBOX_CATEGORY_KEY } from '@/lib/keys';
 import { fetchHotShortDramaPaged } from '@/lib/short-drama.client';
-import { ShortDramaItem } from '@/lib/types';
-import { TvboxContentItem } from '@/lib/types';
+import { ShortDramaItem, TvboxContentItem } from '@/lib/types';
 
 import {
   commonReturn,
@@ -87,6 +86,9 @@ export async function POST(request: NextRequest) {
       if (query && query.sort != 'T') {
         sort = query.sort;
       }
+      if (!sort) {
+        sort = 'U';
+      }
       const items = await fetchDoubanRecommendList(
         urlPrefix,
         kind,
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
         totalPage: number;
       } = await fetchHotShortDramaPaged(pg, pageSize);
       const items: TvboxContentItem[] = data.list.map((item) => ({
-        vod_id: item.vod_name,
+        vod_id: `${encodeURIComponent(item.vod_name)}&short_drama=1`,
         vod_name: item.vod_name,
         vod_pic: item.vod_pic,
         vod_remarks: item.vod_remarks,

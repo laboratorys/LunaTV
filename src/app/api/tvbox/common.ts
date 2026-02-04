@@ -75,7 +75,9 @@ export function parseId(item: any): string {
   const year = parseYearFromSubtitle(item.card_subtitle);
   const title = item.title || '';
   const doubanId = item.id || '';
-  return `${encodeURIComponent(title)}&year=${year}&douban_id=${doubanId}`;
+  return `${encodeURIComponent(
+    title
+  )}&year=${year}&douban_id=${doubanId}&short_drama=0`;
 }
 export function parseYearFromSubtitle(subtitle: string): string {
   if (!subtitle || typeof subtitle !== 'string') return '';
@@ -134,25 +136,27 @@ export async function fetchDoubanRecommendList(
 
     const doubanData = await response.json();
     // 转换数据格式
-    const list: TvboxContentItem[] = doubanData.items.map((item: any) => ({
-      vod_id: parseId(item),
-      vod_name: item.title,
-      vod_pic:
-        processImageUrl(
-          item.pic?.normal,
-          imageProxyType,
-          imageProxyUrl,
-          urlPrefix
-        ) ||
-        processImageUrl(
-          item.pic?.large,
-          imageProxyType,
-          imageProxyUrl,
-          urlPrefix
-        ) ||
-        '',
-      vod_remarks: '',
-    }));
+    const list: TvboxContentItem[] = doubanData.items
+      .filter((item: any) => item.type == 'movie' || item.type == 'tv')
+      .map((item: any) => ({
+        vod_id: parseId(item),
+        vod_name: item.title,
+        vod_pic:
+          processImageUrl(
+            item.pic?.normal,
+            imageProxyType,
+            imageProxyUrl,
+            urlPrefix
+          ) ||
+          processImageUrl(
+            item.pic?.large,
+            imageProxyType,
+            imageProxyUrl,
+            urlPrefix
+          ) ||
+          '',
+        vod_remarks: '',
+      }));
     return list;
   } catch (error) {
     throw new Error(`获取豆瓣热门数据失败: ${(error as Error).message}`);

@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   const name = searchParams.get('id');
   const year = searchParams.get('year');
   const doubanId = searchParams.get('douban_id');
+  const shortDrama = searchParams.get('short_drama');
 
   if (!name) {
     return NextResponse.json({ list: [] });
@@ -79,7 +80,11 @@ export async function GET(request: NextRequest) {
       // no cache if empty
       return NextResponse.json({ list: [] }, { status: 200 });
     }
-    flattenedResults = flattenedResults.filter((result) => {
+    const filteredResults = flattenedResults.filter((result) => {
+      if (shortDrama === '1') {
+        const isShortDrama = (result.class || '').includes('短剧');
+        if (!isShortDrama) return false;
+      }
       const yearMatch = !year || !result.year || result.year === year;
       const doubanIdMatch =
         !doubanId ||
@@ -87,6 +92,19 @@ export async function GET(request: NextRequest) {
         String(result.douban_id) === String(doubanId);
       return yearMatch && doubanIdMatch;
     });
+    // 使用 Map 确保每个 source_name 只保留一个对象
+    const uniqueResults = Array.from(
+      filteredResults
+        .reduce((map, item) => {
+          // 如果 map 中还没有这个 source_name，则存入
+          if (item.source_name && !map.has(item.source_name)) {
+            map.set(item.source_name, item);
+          }
+          return map;
+        }, new Map())
+        .values()
+    );
+    flattenedResults = uniqueResults;
     //处理成tvbox支持的数据格式
     const baseInfo = flattenedResults[0];
     //取出播放源集合
