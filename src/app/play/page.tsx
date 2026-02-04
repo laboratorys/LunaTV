@@ -624,6 +624,7 @@ function PlayPageClient() {
       const load = this.load.bind(this);
       this.load = function (context: any, config: any, callbacks: any) {
         // 拦截manifest和level请求
+        console.log(context);
         if (
           (context as any).type === 'manifest' ||
           (context as any).type === 'level'
@@ -769,8 +770,6 @@ function PlayPageClient() {
 
         detailData = await preferBestSource(sourcesInfo);
       }
-
-      console.log(detailData.source, detailData.id);
 
       setNeedPrefer(false);
       setCurrentSource(detailData.source);

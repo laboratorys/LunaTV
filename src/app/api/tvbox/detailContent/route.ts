@@ -7,6 +7,8 @@ import { db } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
 import { TVBOX_DETAIL_KEY } from '@/lib/keys';
 import { yellowWords } from '@/lib/yellow';
+
+import { getUrlPrefix } from '@/app/api/tvbox/common';
 export const runtime = 'nodejs';
 
 interface DetailContentItem {
@@ -25,6 +27,7 @@ interface DetailContentItem {
 }
 
 export async function GET(request: NextRequest) {
+  const urlPrefix = getUrlPrefix(request);
   const { searchParams } = new URL(request.url);
   const name = searchParams.get('id');
   const year = searchParams.get('year');
@@ -36,6 +39,7 @@ export async function GET(request: NextRequest) {
   }
   const config = await getConfig();
   const isCached = (config.TvBoxConfig?.expireSeconds ?? 0) > 0;
+  const isProxyFilterAds = config.TvBoxConfig?.proxyFilterAds;
   if (isCached) {
     const cacheData = await db.getCacheByKey(`${TVBOX_DETAIL_KEY}${name}`);
     if (cacheData) {
@@ -115,7 +119,11 @@ export async function GET(request: NextRequest) {
       .map((item) => {
         const pairedEpisodes = item.episodes_titles.map(
           (title: string, index: number) => {
-            return `${title}$${item.episodes[index]}`;
+            let url = `${item.episodes[index]}`;
+            if (isProxyFilterAds) {
+              url = urlPrefix + '/api/proxy/ad?url=' + url;
+            }
+            return `${title}$${url}`;
           }
         );
 

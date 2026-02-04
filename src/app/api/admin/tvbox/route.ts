@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
     }
     const username = authInfo.username;
 
-    const { disabled, expireSeconds } = body as {
+    const { disabled, proxyFilterAds, expireSeconds } = body as {
       disabled: boolean;
+      proxyFilterAds: boolean;
       expireSeconds: number;
     };
 
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
     // 更新缓存中的设置
     adminConfig.TvBoxConfig = {
       disabled,
+      proxyFilterAds,
       expireSeconds,
     };
 

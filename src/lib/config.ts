@@ -232,6 +232,7 @@ async function getInitConfig(
     LiveConfig: [],
     TvBoxConfig: {
       disabled: true,
+      proxyFilterAds: false,
       expireSeconds: 7200,
     },
     FeaturesConfig: {
