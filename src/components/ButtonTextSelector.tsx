@@ -1,13 +1,8 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { ChevronLeft, ChevronRight, LayoutGrid, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface SelectorOption<T> {
   value: T;
@@ -37,17 +32,35 @@ const ButtonTextSelector = <T extends string | number>({
 }: ButtonTextSelectorProps<T>) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const [arrowX, setArrowX] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const [showSub, setShowSub] = useState(false);
+  const [showAllOptions, setShowAllOptions] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
-  const [labelWidth, setLabelWidth] = useState(0);
+  const [arrowX, setArrowX] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const activeParent = useMemo(
     () => options.find((opt) => opt.value === selectedValue),
     [options, selectedValue]
   );
+
+  const centerActiveItem = useCallback(() => {
+    const activeBtn = scrollRef.current?.querySelector(
+      `[data-active="true"]`
+    ) as HTMLElement;
+    if (activeBtn && scrollRef.current) {
+      const container = scrollRef.current;
+      const scrollLeft =
+        activeBtn.offsetLeft -
+        container.offsetWidth / 2 +
+        activeBtn.offsetWidth / 2;
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+  }, []);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -57,99 +70,120 @@ const ButtonTextSelector = <T extends string | number>({
     }
   }, []);
 
-  const updatePointerPosition = useCallback(() => {
+  const updateUI = useCallback(() => {
+    checkScroll();
     if (containerRef.current && selectedValue !== undefined) {
       const activeBtn = containerRef.current.querySelector(
         `[data-active="true"]`
       ) as HTMLElement;
-
-      if (labelRef.current) {
-        setLabelWidth(labelRef.current.offsetWidth);
-      }
-
       if (activeBtn) {
         const parentRect = containerRef.current.getBoundingClientRect();
         const btnRect = activeBtn.getBoundingClientRect();
-        const centerX = btnRect.left - parentRect.left + btnRect.width / 2;
-        setArrowX(centerX);
+        setArrowX(btnRect.left - parentRect.left + btnRect.width / 2);
       }
     }
-    checkScroll();
   }, [selectedValue, checkScroll]);
 
   useEffect(() => {
-    updatePointerPosition();
-    const scrollArea = scrollRef.current;
-
-    const handleResize = () => {
-      checkScroll();
-      updatePointerPosition();
-    };
-
-    if (scrollArea) {
-      scrollArea.addEventListener('scroll', updatePointerPosition);
-      window.addEventListener('resize', handleResize);
-
-      const timer = setTimeout(updatePointerPosition, 100);
-
-      return () => {
-        scrollArea.removeEventListener('scroll', updatePointerPosition);
-        window.removeEventListener('resize', handleResize);
-        clearTimeout(timer);
-      };
-    }
-  }, [updatePointerPosition, checkScroll, options, showSub]);
-
-  const handleArrowScroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const distance = scrollRef.current.clientWidth * 0.7;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -distance : distance,
-        behavior: 'smooth',
-      });
-    }
-  };
+    updateUI();
+    const timer = setTimeout(centerActiveItem, 150);
+    return () => clearTimeout(timer);
+  }, [selectedValue, centerActiveItem, updateUI]);
 
   const handleParentClick = (option: SelectorOption<T>) => {
     const isSameParent = selectedValue === option.value;
-    const hasChildren = option.children && option.children.length > 0;
-
     if (!isSameParent) {
       onChange(option.value, false);
-      if (hasChildren) {
+      if (option.children?.length) {
         setShowSub(true);
-        if (autoSelectFirstChild && option.children) {
-          onChange(option.children[0].value, true);
-        } else {
-          onChange('' as T, true);
-        }
+        if (autoSelectFirstChild) onChange(option.children[0].value, true);
       } else {
         setShowSub(false);
       }
-    } else {
-      if (hasChildren) setShowSub(!showSub);
+    } else if (option.children?.length) {
+      setShowSub(!showSub);
     }
+    setShowAllOptions(false);
+  };
+
+  const renderOverlay = () => {
+    if (!showAllOptions || !mounted) return null;
+
+    return createPortal(
+      <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4'>
+        <div
+          className='absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-200'
+          onClick={() => setShowAllOptions(false)}
+        />
+
+        <div className='relative w-full sm:max-w-2xl bg-white dark:bg-gray-900 shadow-xl rounded-t-2xl sm:rounded-xl flex flex-col max-h-[85vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200'>
+          <div className='w-8 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto my-2 sm:hidden' />
+
+          <div className='flex justify-between items-center px-4 py-2.5 sm:py-3 border-b border-gray-100 dark:border-gray-800'>
+            <span className='text-sm sm:text-base font-bold text-gray-700 dark:text-gray-200'>
+              {label || '分类'}
+            </span>
+            <button
+              onClick={() => setShowAllOptions(false)}
+              className='p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors'
+            >
+              <X size={20} className='text-gray-400' />
+            </button>
+          </div>
+
+          <div className='p-4 sm:p-6 overflow-y-auto'>
+            {/* 网格布局：按钮大小与一级菜单完全一致 */}
+            <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3'>
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleParentClick(opt)}
+                  className={`
+                    px-3 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-sm font-medium rounded-lg border transition-all whitespace-nowrap overflow-hidden text-ellipsis
+                    active:scale-95
+                    ${
+                      selectedValue === opt.value
+                        ? 'bg-green-500 border-green-500 text-white font-semibold shadow-sm'
+                        : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
+                    }
+                  `}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
   };
 
   return (
-    <div className={`flex flex-col ${className}`} ref={containerRef}>
-      <div className='flex items-center gap-1 sm:gap-2 relative z-[60]'>
+    <div className={`flex flex-col ${className} relative`} ref={containerRef}>
+      <div className='flex items-center gap-1.5 sm:gap-2 relative z-[60]'>
         {label && (
-          <span
-            ref={labelRef}
-            className='text-xs sm:text-sm font-semibold text-gray-500 shrink-0 min-w-fit pr-1 sm:pr-0 sm:min-w-[48px]'
+          <button
+            onClick={() => setShowAllOptions(true)}
+            className='flex items-center gap-1 px-1 py-1 text-[12px] sm:text-sm font-bold text-gray-400 hover:text-green-600 transition-colors shrink-0'
           >
             {label}
-          </span>
+            <LayoutGrid size={14} className='sm:size-4' />
+          </button>
         )}
 
-        <div className='relative flex-1 group overflow-hidden h-10 flex items-center'>
+        <div className='relative flex-1 group overflow-hidden h-9 sm:h-10 flex items-center'>
           {showLeftArrow && (
-            <div className='absolute left-0 top-0 bottom-0 z-20 hidden sm:flex items-center pointer-events-none'>
-              <div className='w-10 h-full bg-gradient-to-r from-white via-white/80 to-transparent dark:from-gray-900 dark:via-gray-900/80' />
+            <div className='absolute left-0 z-20 hidden sm:flex items-center h-full pointer-events-none'>
+              <div className='w-10 h-full bg-gradient-to-r from-white dark:from-gray-900 to-transparent' />
               <button
-                onClick={() => handleArrowScroll('left')}
-                className='absolute left-0 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-100 dark:border-gray-700 text-gray-600 hover:text-green-600 pointer-events-auto transition-transform active:scale-90'
+                onClick={() =>
+                  scrollRef.current?.scrollBy({
+                    left: -200,
+                    behavior: 'smooth',
+                  })
+                }
+                className='absolute left-0 p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-100 dark:border-gray-700 pointer-events-auto active:scale-90 transition-transform'
               >
                 <ChevronLeft size={16} />
               </button>
@@ -158,19 +192,19 @@ const ButtonTextSelector = <T extends string | number>({
 
           <div
             ref={scrollRef}
-            className='overflow-x-auto scrollbar-hide flex-1 py-1 px-0.5 sm:px-1 scroll-smooth'
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            onScroll={checkScroll}
+            className='overflow-x-auto scrollbar-hide flex-1 snap-x scroll-smooth'
           >
-            <div className='inline-flex p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50'>
+            <div className='inline-flex p-0.5 sm:p-1 bg-gray-100/60 dark:bg-gray-800/60 rounded-xl border border-gray-200/50 dark:border-gray-700/50'>
               {options.map((option) => (
                 <button
                   key={option.value}
                   data-active={selectedValue === option.value}
                   onClick={() => handleParentClick(option)}
-                  className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all whitespace-nowrap relative z-10 ${
+                  className={`px-3 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap snap-center ${
                     selectedValue === option.value
                       ? 'bg-white dark:bg-gray-700 text-green-600 shadow-sm ring-1 ring-black/5'
-                      : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
                   }`}
                 >
                   {option.shortLabel || option.label}
@@ -180,11 +214,13 @@ const ButtonTextSelector = <T extends string | number>({
           </div>
 
           {showRightArrow && (
-            <div className='absolute right-0 top-0 bottom-0 z-20 hidden sm:flex items-center pointer-events-none'>
-              <div className='w-10 h-full bg-gradient-to-l from-white via-white/80 to-transparent dark:from-gray-900 dark:via-gray-900/80' />
+            <div className='absolute right-0 z-20 hidden sm:flex items-center h-full pointer-events-none'>
+              <div className='w-10 h-full bg-gradient-to-l from-white dark:from-gray-900 to-transparent' />
               <button
-                onClick={() => handleArrowScroll('right')}
-                className='absolute right-0 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-100 dark:border-gray-700 text-gray-600 hover:text-green-600 pointer-events-auto transition-transform active:scale-90'
+                onClick={() =>
+                  scrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })
+                }
+                className='absolute right-0 p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-100 dark:border-gray-700 pointer-events-auto active:scale-90 transition-transform'
               >
                 <ChevronRight size={16} />
               </button>
@@ -193,57 +229,38 @@ const ButtonTextSelector = <T extends string | number>({
         </div>
       </div>
 
-      <div className='relative h-0 z-[100]'>
-        {showSub &&
-          activeParent?.children &&
-          activeParent.children.length > 0 && (
+      <div className='relative'>
+        {showSub && activeParent?.children?.length && (
+          <div className='absolute top-1 left-0 w-full sm:w-auto min-w-[200px] animate-in fade-in slide-in-from-top-1 z-[100]'>
             <div
-              className='absolute -top-1 min-w-[180px] animate-in fade-in zoom-in-95 slide-in-from-top-1 duration-200'
+              className='absolute -top-1 h-2 w-2 rotate-45 border-l border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 hidden sm:block'
               style={{
-                left: label
-                  ? `${
-                      labelWidth +
-                      (typeof window !== 'undefined' && window.innerWidth < 640
-                        ? 4
-                        : 8)
-                    }px`
-                  : 0,
+                left: `${arrowX}px`,
+                transform: 'translateX(-50%) rotate(45deg)',
               }}
-            >
-              <div
-                className='absolute -top-1 h-2.5 w-2.5 rotate-45 border-l border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 z-[80]'
-                style={{
-                  left: `${
-                    arrowX -
-                    (label
-                      ? labelWidth +
-                        (typeof window !== 'undefined' &&
-                        window.innerWidth < 640
-                          ? 4
-                          : 8)
-                      : 0)
-                  }px`,
-                  transition: 'left 0.3s ease-out',
-                }}
-              />
-              <div className='relative flex flex-wrap gap-1.5 p-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xl'>
-                {activeParent.children.map((child) => (
-                  <button
-                    key={child.value}
-                    onClick={() => onChange(child.value, true)}
-                    className={`px-2.5 py-1 text-[11px] sm:text-xs rounded-lg border transition-colors ${
-                      selectedSubValue === child.value
-                        ? 'bg-green-500 text-white border-green-500 shadow-sm'
-                        : 'bg-transparent text-gray-500 border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {child.label}
-                  </button>
-                ))}
-              </div>
+            />
+            <div className='flex flex-wrap gap-1.5 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 shadow-lg mx-2 sm:mx-0'>
+              {activeParent.children.map((child) => (
+                <button
+                  key={child.value}
+                  onClick={() => {
+                    onChange(child.value, true);
+                    setShowSub(false);
+                  }}
+                  className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-md border transition-colors ${
+                    selectedSubValue === child.value
+                      ? 'bg-green-500 text-white border-green-500'
+                      : 'bg-transparent text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {child.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
+        )}
       </div>
+      {renderOverlay()}
     </div>
   );
 };

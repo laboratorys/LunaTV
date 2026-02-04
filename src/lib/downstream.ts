@@ -19,6 +19,7 @@ interface ApiSearchItem {
   vod_actor?: string;
   vod_douban_id?: number;
   type_name?: string;
+  vod_score?: string;
 }
 
 interface ClassItem {
@@ -246,6 +247,7 @@ export async function searchWithNoCache(
         area: item.vod_area,
         actor: item.vod_actor,
         douban_id: item.vod_douban_id,
+        rate: item.vod_score,
       };
     });
     const results = allResults.filter(

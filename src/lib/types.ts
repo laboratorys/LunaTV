@@ -115,6 +115,7 @@ export interface SearchResult {
   desc?: string;
   type_name?: string;
   douban_id?: number;
+  rate?: string;
 }
 
 // 豆瓣数据结构

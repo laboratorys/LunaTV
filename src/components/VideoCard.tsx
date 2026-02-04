@@ -441,7 +441,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           showHeart: false,
           showCheckCircle: false,
           showDoubanLink: false,
-          showRating: false,
+          showRating: rate && rate != '0.0',
           showYear: true,
         },
       };
@@ -841,7 +841,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               actualYear !== 'unknown' &&
               actualYear.trim() !== '' && (
                 <div
-                  className='absolute top-2 bg-black/50 text-white text-xs font-medium px-2 py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90 left-2'
+                  className='absolute top-0 left-0 sm:top-1 sm:left-1 bg-black/50 text-white text-xs font-medium px-2 py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90'
                   style={
                     {
                       WebkitUserSelect: 'none',
@@ -861,7 +861,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-0 right-0 sm:top-1 sm:right-1 bg-pink-500 text-white text-[10px] sm:text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 rounded-bl-xl rounded-tr-none sm:rounded-full flex items-center justify-center shadow-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',
@@ -912,7 +912,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                   target='_blank'
                   rel='noopener noreferrer'
                   onClick={(e) => e.stopPropagation()}
-                  className='absolute top-2 left-2 opacity-0 -translate-x-2 transition-all duration-300 ease-in-out delay-100 sm:group-hover:opacity-100 sm:group-hover:translate-x-0'
+                  className='absolute top-0 left-0 sm:top-1 sm:left-1 opacity-0 -translate-x-2 transition-all duration-300 ease-in-out delay-100 sm:group-hover:opacity-100 sm:group-hover:translate-x-0'
                   style={
                     {
                       WebkitUserSelect: 'none',
@@ -1105,42 +1105,34 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                   </div>
                 );
               })()}
-          </div>
-
-          {/* 进度条 */}
-          {config.showProgress && progress !== undefined && (
-            <div
-              className='mt-1 h-1 w-full bg-gray-200 rounded-full overflow-hidden'
-              style={
-                {
-                  WebkitUserSelect: 'none',
-                  userSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                } as React.CSSProperties
-              }
-              onContextMenu={(e) => {
-                e.preventDefault();
-                return false;
-              }}
-            >
+            {/* 进度条 */}
+            {config.showProgress && progress !== undefined && (
               <div
-                className='h-full bg-green-500 transition-all duration-500 ease-out'
+                className='absolute bottom-0 left-0 right-0 h-[3px] w-full bg-black/40 backdrop-blur-sm z-30'
                 style={
                   {
-                    width: `${progress}%`,
+                    // 关键：确保进度条本身也继承底部的圆角，或者依靠父级的 overflow-hidden
+                    borderBottomLeftRadius: 'inherit',
+                    borderBottomRightRadius: 'inherit',
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
-                    WebkitTouchCallout: 'none',
                   } as React.CSSProperties
                 }
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  return false;
-                }}
-              />
-            </div>
-          )}
-
+              >
+                <div
+                  className='h-full bg-green-500 transition-all duration-500 ease-out'
+                  style={
+                    {
+                      width: `${progress}%`,
+                      // 如果进度接近100%，也给内层条加上圆角防止刺出
+                      borderBottomLeftRadius: 'inherit',
+                      borderBottomRightRadius: progress > 95 ? 'inherit' : '0',
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+            )}
+          </div>
           {/* 标题与来源 */}
           <div
             className='mt-2 text-center'

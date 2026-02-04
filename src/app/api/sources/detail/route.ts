@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       year: item.year,
       douban_id: item.douban_id,
       remarks: item.remarks,
+      rate: item.rate,
     }));
     const cacheTime = await getCacheTime();
     return NextResponse.json(finalResult, {
