@@ -123,7 +123,7 @@ export default function TVBoxSection({
             <ConfigToggle
               label='开启TvBox'
               description='由于开启后无法对配置接口进行认证，请不要暴露你的接口地址给陌生人。'
-              enabled={tvboxConfig.disabled}
+              enabled={!tvboxConfig.disabled}
               onChange={() => handleChange('disabled', !tvboxConfig.disabled)}
             />
           </div>
