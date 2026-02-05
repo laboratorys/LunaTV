@@ -624,7 +624,6 @@ function PlayPageClient() {
       const load = this.load.bind(this);
       this.load = function (context: any, config: any, callbacks: any) {
         // 拦截manifest和level请求
-        console.log(context);
         if (
           (context as any).type === 'manifest' ||
           (context as any).type === 'level'
@@ -1101,26 +1100,31 @@ function PlayPageClient() {
     }
 
     try {
-      await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
-        title: videoTitleRef.current,
-        source_name: detailRef.current?.source_name || '',
-        year: detailRef.current?.year,
-        cover: detailRef.current?.poster || '',
-        index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
-        total_episodes: detailRef.current?.episodes.length || 1,
-        play_time: Math.floor(currentTime),
-        total_time: Math.floor(duration),
-        save_time: Date.now(),
-        search_title: searchTitle,
-      });
-
-      lastSaveTimeRef.current = Date.now();
-      console.log('播放进度已保存:', {
-        title: videoTitleRef.current,
-        episode: currentEpisodeIndexRef.current + 1,
-        year: detailRef.current?.year,
-        progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
-      });
+      const result = await savePlayRecord(
+        currentSourceRef.current,
+        currentIdRef.current,
+        {
+          title: videoTitleRef.current,
+          source_name: detailRef.current?.source_name || '',
+          year: detailRef.current?.year,
+          cover: detailRef.current?.poster || '',
+          index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
+          total_episodes: detailRef.current?.episodes.length || 1,
+          play_time: Math.floor(currentTime),
+          total_time: Math.floor(duration),
+          save_time: Date.now(),
+          search_title: searchTitle,
+        }
+      );
+      if (result) {
+        lastSaveTimeRef.current = Date.now();
+        console.log('播放进度已保存:', {
+          title: videoTitleRef.current,
+          episode: currentEpisodeIndexRef.current + 1,
+          year: detailRef.current?.year,
+          progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
+        });
+      }
     } catch (err) {
       console.error('保存播放进度失败:', err);
     }

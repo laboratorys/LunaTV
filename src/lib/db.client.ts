@@ -570,9 +570,19 @@ export async function savePlayRecord(
   source: string,
   id: string,
   record: PlayRecord
-): Promise<void> {
+): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  try {
+    const incognito = window.localStorage.getItem('incognito_mode') === 'true';
+    if (incognito) {
+      return false;
+    }
+  } catch (e) {
+    console.error('Storage access failed', e);
+  }
   const key = generateStorageKey(source, id);
-
   // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
@@ -601,13 +611,13 @@ export async function savePlayRecord(
       triggerGlobalError('保存播放记录失败');
       throw err;
     }
-    return;
+    return true;
   }
 
   // localstorage 模式
   if (typeof window === 'undefined') {
     console.warn('无法在服务端保存播放记录到 localStorage');
-    return;
+    return false;
   }
 
   try {
@@ -624,6 +634,7 @@ export async function savePlayRecord(
     triggerGlobalError('保存播放记录失败');
     throw err;
   }
+  return true;
 }
 
 /**

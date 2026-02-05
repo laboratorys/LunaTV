@@ -293,7 +293,7 @@ function SourcesPageClient() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSearch();
                 }}
-                placeholder='搜索影片标题、演员...'
+                placeholder='搜索影片标题...'
                 // 这里的 flex-1 会占据剩余空间，但我们要确保它不把按钮挤走
                 className='flex-1 min-w-0 bg-transparent border-none outline-none ring-0 focus:ring-0 px-3 text-sm text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500'
               />
@@ -360,8 +360,7 @@ function SourcesPageClient() {
         </div>
 
         {/* 内容网格 */}
-        {/* 内容网格 */}
-        <div className='max-w-[95%] mx-auto overflow-visible relative z-0'>
+        <div className='max-w-[95%] mx-auto overflow-visible relative'>
           {loading ? (
             // 1. 加载中状态
             <div className='grid grid-cols-3 gap-x-2 gap-y-12 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>

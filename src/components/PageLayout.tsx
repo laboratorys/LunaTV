@@ -2,7 +2,6 @@ import { BackButton } from './BackButton';
 import MobileBottomNav from './MobileBottomNav';
 import MobileHeader from './MobileHeader';
 import Sidebar from './Sidebar';
-import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';
 
 interface PageLayoutProps {
@@ -34,7 +33,6 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
 
           {/* 桌面端顶部按钮 */}
           <div className='absolute top-2 right-4 z-20 hidden md:flex items-center gap-2'>
-            <ThemeToggle />
             <UserMenu />
           </div>
 

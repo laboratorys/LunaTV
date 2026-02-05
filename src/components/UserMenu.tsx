@@ -6,11 +6,14 @@ import {
   Check,
   ChevronDown,
   ExternalLink,
+  Glasses,
   KeyRound,
   LayoutDashboard,
   LogOut,
   Settings,
+  SunMoon,
   User,
+  VenetianMask,
   X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -21,6 +24,8 @@ import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/utils';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 
+import { IncognitoToggle } from './IncognitoToggle';
+import { ThemeToggle } from './ThemeToggle';
 import { VersionPanel } from './VersionPanel';
 
 interface AuthInfo {
@@ -76,7 +81,18 @@ export const UserMenu: React.FC = () => {
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
     useState(false);
+  const [isIncognito, setIsIncognito] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem('incognito_mode') === 'true';
+    setIsIncognito(saved);
+  }, []);
+  const toggleIncognito = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
 
+    const newState = !isIncognito;
+    setIsIncognito(newState);
+    localStorage.setItem('incognito_mode', String(newState));
+  };
   // 豆瓣数据源选项
   const doubanDataSourceOptions = [
     { value: 'direct', label: '直连（服务器直接请求豆瓣）' },
@@ -523,13 +539,35 @@ export const UserMenu: React.FC = () => {
 
         {/* 菜单项 */}
         <div className='py-1'>
+          {/* 主题按钮 */}
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'>
+            <div className='flex items-center gap-2.5'>
+              <SunMoon className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <span className='font-medium'>主题</span>
+            </div>
+            <ThemeToggle size={16} />
+          </div>
+          {/* 无痕式浏览 */}
+          <div
+            onClick={() => toggleIncognito()}
+            className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'
+          >
+            <div className='flex items-center gap-2.5'>
+              <Glasses className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <span className='font-medium'>无痕式浏览</span>
+            </div>
+            <IncognitoToggle
+              active={isIncognito}
+              onToggle={(e) => toggleIncognito(e)}
+            />
+          </div>
           {/* 设置按钮 */}
           <button
             onClick={handleSettings}
             className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
           >
             <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-            <span className='font-medium'>设置</span>
+            <span className='font-medium'>偏好设置</span>
           </button>
 
           {/* 管理面板按钮 */}
@@ -1112,7 +1150,11 @@ export const UserMenu: React.FC = () => {
           className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
           aria-label='User Menu'
         >
-          <User className='w-full h-full' />
+          {isIncognito ? (
+            <VenetianMask className='w-full h-full' />
+          ) : (
+            <User className='w-full h-full' />
+          )}
         </button>
         {updateStatus === UpdateStatus.HAS_UPDATE && (
           <div className='absolute top-[2px] right-[2px] w-2 h-2 bg-yellow-500 rounded-full'></div>
