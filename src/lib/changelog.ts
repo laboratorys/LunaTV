@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.8",
+    date: "2026-02-04",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "【播放源】增加关键字搜索、页面交互优化"
+    ],
+    fixed: [
+    "【TVBox】开关状态显示错误",
+    "【TVBox】优化短剧精准查询",
+    "【TVBox】豆瓣推荐数据过滤榜单类型",
+    "【TVBox】增加代理去广告功能（实验性）"
+    ]
+  },
+  {
     version: "5.0.7",
     date: "2026-01-29",
     added: [
