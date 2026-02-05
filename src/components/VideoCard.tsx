@@ -858,7 +858,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 </div>
               )}
 
-            {/* 徽章 */}
+            {/* 评分徽章 */}
             {config.showRating && rate && (
               <div
                 className='absolute top-0 right-0 sm:top-1 sm:right-1 bg-pink-500 text-white text-[10px] sm:text-xs font-bold w-6 h-6 sm:w-7 sm:h-7 rounded-bl-xl rounded-tr-none sm:rounded-full flex items-center justify-center shadow-md transition-all duration-300 ease-out group-hover:scale-110'
@@ -877,10 +877,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 {rate}
               </div>
             )}
-
+            {/* 进度徽章 */}
             {actualEpisodes && actualEpisodes > 1 && (
               <div
-                className='absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-0 right-0 sm:top-1 sm:right-1 bg-green-500 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',
