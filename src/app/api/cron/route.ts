@@ -196,6 +196,9 @@ async function refreshRecordAndFavorites() {
                 total_time: record.total_time,
                 save_time: record.save_time,
                 search_title: record.search_title,
+                episode_title: record.episode_title,
+                episode_url: record.episode_url,
+                tvbox_record: record.tvbox_record,
               });
               console.log(
                 `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`
