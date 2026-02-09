@@ -894,7 +894,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 }}
               >
                 {currentEpisode
-                  ? `${currentEpisode}/${actualEpisodes}`
+                  ? actualEpisodes === 0
+                    ? currentEpisode
+                    : `${currentEpisode}/${actualEpisodes}`
                   : actualEpisodes}
               </div>
             )}

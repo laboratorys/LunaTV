@@ -64,7 +64,7 @@ export async function fetchDoubanCategoryList(
           urlPrefix
         ) ||
         '',
-      vod_remarks: '',
+      vod_remarks: item.episodes_info,
     }));
     return list;
   } catch (error) {
@@ -206,7 +206,7 @@ export async function fetchDoubanHotList(
         imageProxyUrl,
         urlPrefix
       ),
-      vod_remarks: '',
+      vod_remarks: item.episodes_info,
     }));
 
     return list;

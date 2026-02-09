@@ -3,6 +3,7 @@ import CryptoJS from 'crypto-js';
 import he from 'he';
 import Hls from 'hls.js';
 
+import { PlayRecord, TVBoxRecord } from '@/lib/types';
 import { CURRENT_VERSION as CURRENT_VERSION_DEV } from '@/lib/version-dev';
 import { CURRENT_VERSION as CURRENT_VERSION_MAIN } from '@/lib/version-main';
 
@@ -257,4 +258,152 @@ export const generateShortKey = (username: string) => {
     num = Math.floor(num / 62);
   }
   return key;
+};
+
+/**
+ * 从 TVBox 原始数据创建一个完整的 PlayRecord
+ */
+export function createPlayRecordFromTVBox(tvbox: TVBoxRecord): PlayRecord {
+  const toSeconds = (ms: number) => (ms > 0 ? Math.floor(ms / 1000) : 0);
+  return {
+    title: tvbox.vodName,
+    source_name: tvbox.vodFlag,
+    cover: tvbox.vodPic,
+    year: parseYearFromTVBoxKey(tvbox.key),
+    index: 0,
+    total_episodes: 0,
+    play_time: toSeconds(tvbox.position),
+    total_time: toSeconds(tvbox.duration),
+    save_time: tvbox.createTime,
+    search_title: '',
+    episode_title: tvbox.vodRemarks,
+    episode_url: tvbox.episodeUrl,
+    tvbox_record: tvbox,
+  };
+}
+
+/**
+ * 处理WEB播放记录
+ */
+export const handleWebPlayRecord = (record: PlayRecord): PlayRecord => {
+  const now = Date.now();
+  const updatedRecord: PlayRecord = {
+    ...record,
+    save_time: now,
+  };
+  if (!updatedRecord.tvbox_record) {
+    // 此记录是在 Web 端新创建的，需要初始化 TVBox 结构
+    updatedRecord.tvbox_record = createDefaultTVBoxRecord(updatedRecord);
+  } else {
+    // 已有记录，同步关键进度和时间戳
+    const tb = updatedRecord.tvbox_record;
+    tb.createTime = now;
+    tb.position = updatedRecord.play_time * 1000;
+    tb.duration = updatedRecord.total_time * 1000;
+    tb.vodName = updatedRecord.title;
+    tb.vodPic = updatedRecord.cover;
+    tb.vodRemarks = updatedRecord.episode_title;
+    tb.vodFlag = updatedRecord.source_name;
+    tb.episodeUrl = updatedRecord.episode_url;
+    updatedRecord.tvbox_record = tb;
+  }
+  return updatedRecord;
+};
+
+/**
+ * 处理WEB播放记录
+ */
+export const handleTVBoxPlayRecord = (record: PlayRecord): PlayRecord => {
+  const now = Date.now();
+  const updatedRecord: PlayRecord = {
+    ...record,
+    save_time: now,
+  };
+  if (!updatedRecord.tvbox_record) {
+    // 此记录是在 Web 端新创建的，需要初始化 TVBox 结构
+    updatedRecord.tvbox_record = createDefaultTVBoxRecord(updatedRecord);
+  } else {
+    // 已有记录，同步关键进度和时间戳
+    const tb = updatedRecord.tvbox_record;
+    tb.createTime = now;
+    tb.position = updatedRecord.play_time * 1000;
+    tb.duration = updatedRecord.total_time * 1000;
+    tb.vodName = updatedRecord.title;
+    tb.vodPic = updatedRecord.cover;
+    tb.vodRemarks = updatedRecord.episode_title;
+    tb.vodFlag = updatedRecord.source_name;
+    tb.episodeUrl = updatedRecord.episode_url;
+    updatedRecord.tvbox_record = tb;
+  }
+  return updatedRecord;
+};
+
+/**
+ * 1. 内部私有方法：根据 Web 数据构建 TVBoxRecord
+ * 包含对 TVBox 特殊占位符和毫秒单位的处理
+ */
+const createDefaultTVBoxRecord = (record: PlayRecord): TVBoxRecord => {
+  const ms = (s: number) => Math.floor(s * 1000);
+  const PLACEHOLDER = getPlaceholder();
+  return {
+    cid: 1, //tvbox中配置的标识
+    createTime: record.save_time || Date.now(),
+    duration: ms(record.total_time),
+    position: ms(record.play_time),
+    vodName: record.title,
+    vodPic: record.cover,
+    vodFlag: record.source_name,
+    vodRemarks: `${record.index}/${record.total_episodes}`,
+    key: `csp_Zhuiju@@@${encodeURIComponent(record.title)}&year=${
+      record.year
+    }@@@1`,
+    episodeUrl: '',
+    opening: PLACEHOLDER,
+    ending: PLACEHOLDER,
+    revPlay: false,
+    revSort: false,
+    scale: 0,
+    speed: 1.0,
+  };
+};
+
+const getPlaceholder = (): number => {
+  return Number('-9223372036854775808');
+};
+
+/**
+ * key 字符串中解析年份
+ */
+export function parseYearFromTVBoxKey(key: string): string {
+  if (!key || !key.includes('@@@')) return '';
+  try {
+    const parts = key.split('@@@');
+    const paramsSegment = parts[1];
+    if (!paramsSegment) return '';
+    const decodedParams = decodeURIComponent(paramsSegment);
+    const match = decodedParams.match(/[?&]year=(\d{4})/);
+    const simpleMatch = match || decodedParams.match(/year=(\d{4})/);
+    return simpleMatch ? simpleMatch[1] : '';
+  } catch (error) {
+    console.error('Failed to parse year from TVBox key:', error);
+    return '';
+  }
+}
+
+export interface LifeTreeData {
+  name: string;
+  year: string | null;
+  douban_id: string | null;
+  short_drama: string | null;
+}
+
+export const parseTVBoxId = (input: string): LifeTreeData => {
+  const params = new URLSearchParams(`name=${input}`);
+
+  return {
+    name: params.get('name') || '',
+    year: params.get('year'),
+    douban_id: params.get('douban_id'),
+    short_drama: params.get('short_drama'),
+  };
 };

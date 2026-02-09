@@ -807,15 +807,25 @@ function PlayPageClient() {
   useEffect(() => {
     // 仅在初次挂载时检查播放记录
     const initFromHistory = async () => {
-      if (!currentSource || !currentId) return;
+      if (!detail || !currentSource || !currentId) return;
 
       try {
         const allRecords = await getAllPlayRecords();
         const key = generateStorageKey(currentSource, currentId);
         const record = allRecords[key];
-
         if (record) {
-          const targetIndex = record.index - 1;
+          let targetIndex;
+          if (record.index === 0) {
+            // 如果同步过来的 index 是 0，通过 url 在当前详情中查找
+            targetIndex =
+              detail?.episodes?.findIndex(
+                (url) => url === record.episode_url
+              ) ?? 0;
+            if (targetIndex === -1) targetIndex = 0;
+            console.log(targetIndex);
+          } else {
+            targetIndex = record.index - 1;
+          }
           const targetTime = record.play_time;
 
           // 更新当前选集索引
@@ -832,7 +842,7 @@ function PlayPageClient() {
     };
 
     initFromHistory();
-  }, []);
+  }, [detail]);
 
   // 跳过片头片尾配置处理
   useEffect(() => {
@@ -955,10 +965,11 @@ function PlayPageClient() {
   // 处理集数切换
   const handleEpisodeChange = (episodeNumber: number) => {
     if (episodeNumber >= 0 && episodeNumber < totalEpisodes) {
-      // 在更换集数前保存当前播放进度
+      // 保存当前进度
       if (artPlayerRef.current && artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
+      // 更新索引
       setCurrentEpisodeIndex(episodeNumber);
     }
   };
@@ -1100,6 +1111,7 @@ function PlayPageClient() {
     }
 
     try {
+      console.log(detailRef.current);
       const result = await savePlayRecord(
         currentSourceRef.current,
         currentIdRef.current,
@@ -1114,6 +1126,12 @@ function PlayPageClient() {
           total_time: Math.floor(duration),
           save_time: Date.now(),
           search_title: searchTitle,
+          episode_title:
+            detailRef.current?.episodes_titles[
+              currentEpisodeIndexRef.current
+            ] || '',
+          episode_url:
+            detailRef.current?.episodes[currentEpisodeIndexRef.current] || '',
         }
       );
       if (result) {

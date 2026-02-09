@@ -12,8 +12,30 @@ export interface PlayRecord {
   total_time: number; // 总进度（秒）
   save_time: number; // 记录保存时间（时间戳）
   search_title: string; // 搜索时使用的标题
+  episode_title: string;
+  episode_url: string;
+  tvbox_record?: TVBoxRecord; //TVBox记录
 }
 
+//TVBox播放记录结构
+export interface TVBoxRecord {
+  cid: number; //序号
+  createTime: number; //创建时间
+  duration: number; //时长
+  ending: number | bigint; //跳过片尾：默认占位符（-9223372036854776000）
+  opening: number | bigint; //跳过片头：默认占位符（-9223372036854776000）
+  episodeUrl: string; //视频流具体播放地址
+  key: string; //唯一标识，格式: vod_key@@@id@@@cid
+  position: number; //播放位置
+  revPlay: boolean; //循环播放
+  revSort: boolean; //反向排序
+  scale: number; //画面比例
+  speed: number; //播放倍速
+  vodFlag: string; //播放标志（源）
+  vodName: string; //名称
+  vodPic: string; //海报
+  vodRemarks: string; //播放备注
+}
 // 收藏数据结构
 export interface Favorite {
   source_name: string;
