@@ -59,6 +59,7 @@ export interface AdminConfig {
   }[];
   TvBoxConfig?: {
     disabled: boolean;
+    sync: boolean;
     proxyFilterAds: boolean;
     expireSeconds: number;
   };

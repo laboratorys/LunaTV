@@ -14,6 +14,7 @@ import { styles, useLoadingState } from '@/app/admin/components/UIComponents';
 
 interface TvBoxConfig {
   disabled: boolean;
+  sync: boolean;
   proxyFilterAds: boolean;
   expireSeconds: number;
 }
@@ -27,6 +28,7 @@ export default function TVBoxSection({
 }: SectionConfigProps) {
   const [tvboxConfig, setTvboxConfig] = useState<TvBoxConfig>({
     disabled: config?.TvBoxConfig?.disabled ?? true,
+    sync: config?.TvBoxConfig?.sync ?? false,
     proxyFilterAds: config?.TvBoxConfig?.proxyFilterAds ?? false,
     expireSeconds: config?.TvBoxConfig?.expireSeconds ?? 12 * 60 * 60,
   });
@@ -127,6 +129,14 @@ export default function TVBoxSection({
               description='由于开启后无法对配置接口进行认证，请不要暴露你的接口地址给陌生人。'
               enabled={!tvboxConfig.disabled}
               onChange={() => handleChange('disabled', !tvboxConfig.disabled)}
+            />
+          </div>
+          <div className='grid grid-cols-1 gap-4'>
+            <ConfigToggle
+              label='数据同步'
+              description='开启后可与TVBox的Lab魔改版同步播放记录、收藏、搜索历史'
+              enabled={tvboxConfig.sync}
+              onChange={() => handleChange('sync', !tvboxConfig.sync)}
             />
           </div>
           <div className='grid grid-cols-1 gap-4'>
