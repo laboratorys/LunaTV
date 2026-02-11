@@ -12,10 +12,11 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     version: "5.0.8",
-    date: "2026-02-04",
+    date: "2026-02-11",
     added: [
     "【TVBox】适配TVBOX播放记录同步、收藏、搜索历史",
     "【TVBox】增加代理去广告功能（开发中，请勿开启）",
+    "【TVBox】增加数据同步开关",
     "【WEB】增加无痕浏览，开启后将不会同步播放记录"
     ],
     changed: [
