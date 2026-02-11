@@ -14,9 +14,9 @@ export const changelog: ChangelogEntry[] = [
     version: "5.0.8",
     date: "2026-02-04",
     added: [
-    "【TVBox】适配TVBOX播放记录同步",
+    "【TVBox】适配TVBOX播放记录同步、收藏、搜索历史",
     "【TVBox】增加代理去广告功能（开发中，请勿开启）",
-    "增加无痕浏览，开启后将不会同步播放记录"
+    "【WEB】增加无痕浏览，开启后将不会同步播放记录"
     ],
     changed: [
     "【播放源】增加关键字搜索、页面交互优化",
