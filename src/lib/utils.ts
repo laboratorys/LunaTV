@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 import he from 'he';
 import Hls from 'hls.js';
 
-import { PlayRecord, TVBoxRecord } from '@/lib/types';
+import { Favorite, KeepItem, PlayRecord, TVBoxRecord } from '@/lib/types';
 import { CURRENT_VERSION as CURRENT_VERSION_DEV } from '@/lib/version-dev';
 import { CURRENT_VERSION as CURRENT_VERSION_MAIN } from '@/lib/version-main';
 
@@ -407,3 +407,37 @@ export const parseTVBoxId = (input: string): LifeTreeData => {
     short_drama: params.get('short_drama'),
   };
 };
+
+export function createFavRecordFromTVBox(tvbox: KeepItem): Favorite {
+  return {
+    source_name: tvbox.ext_param,
+    total_episodes: 0, // 总集数
+    title: tvbox.vodName,
+    year: parseYearFromTVBoxKey(tvbox.key),
+    cover: tvbox.vodPic,
+    save_time: tvbox.createTime, // 记录保存时间（时间戳）
+    search_title: '', // 搜索时使用的标题
+    origin: tvbox.type == 0 ? 'vod' : 'live',
+    tvbox_record: tvbox, //TVBox记录
+  };
+}
+export function handleTVBoxFromFavRecord(
+  record: Favorite,
+  siteName: string
+): Favorite {
+  return {
+    ...record,
+    tvbox_record: {
+      cid: 1,
+      createTime: record.save_time,
+      key: `csp_Zhuiju@@@${encodeURIComponent(record.title)}&year=${
+        record.year
+      }@@@1`,
+      siteName: siteName,
+      type: record.origin === 'live' ? 1 : 0,
+      vodName: record.title,
+      vodPic: record.cover,
+      ext_param: record.source_name,
+    },
+  };
+}

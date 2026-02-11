@@ -6,6 +6,7 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { Favorite } from '@/lib/types';
+import { handleTVBoxFromFavRecord } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
@@ -122,9 +123,21 @@ export async function POST(request: NextRequest) {
       ...favorite,
       save_time: favorite.save_time ?? Date.now(),
     } as Favorite;
-
-    await db.saveFavorite(authInfo.username, source, id, finalFavorite);
-
+    const record = await db.getFavorite(authInfo.username, source, id);
+    if (!record?.tvbox_record) {
+      const config = await db.getAdminConfig();
+      await db.saveFavorite(
+        authInfo.username,
+        source,
+        id,
+        handleTVBoxFromFavRecord(
+          finalFavorite,
+          config?.SiteConfig.SiteName ?? ''
+        )
+      );
+    } else {
+      await db.saveFavorite(authInfo.username, source, id, finalFavorite);
+    }
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
     console.error('保存收藏失败', err);

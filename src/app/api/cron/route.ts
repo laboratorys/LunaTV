@@ -250,6 +250,7 @@ async function refreshRecordAndFavorites() {
                 total_episodes: favEpisodeCount,
                 save_time: fav.save_time,
                 search_title: fav.search_title,
+                tvbox_record: fav.tvbox_record,
               });
               console.log(
                 `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`

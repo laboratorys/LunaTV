@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAvailableApiSites } from '@/lib/config';
 import { db } from '@/lib/db';
-import { TVBoxRecord } from '@/lib/types';
-import { createPlayRecordFromTVBox } from '@/lib/utils';
+import { KeepItem } from '@/lib/types';
+import { createFavRecordFromTVBox } from '@/lib/utils';
 
 import { getMatchedVodInfo, validateRequest } from '../common';
 
@@ -20,9 +20,9 @@ export const GET = async (request: NextRequest) => {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const cid = searchParams.get('cid');
-    const records = await db.getAllPlayRecords(auth.user.username);
+    const favs = await db.getAllFavorites(auth.user.username);
 
-    const tvboxRecords = Object.values(records)
+    const favRecords = Object.values(favs)
       .filter((r) => r.tvbox_record)
       .map((r) => {
         const record = { ...r.tvbox_record! };
@@ -32,7 +32,7 @@ export const GET = async (request: NextRequest) => {
         return record;
       });
 
-    return NextResponse.json(tvboxRecords);
+    return NextResponse.json(favRecords);
   } catch (err) {
     console.error('GET Error:', err);
     return NextResponse.json(
@@ -49,29 +49,29 @@ export const POST = async (request: NextRequest) => {
     if ('error' in auth)
       return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    const tvboxRecord: TVBoxRecord = await request.json();
-    if (!tvboxRecord?.key)
+    const keepRecord: KeepItem = await request.json();
+    if (!keepRecord?.key)
       return NextResponse.json(
         { error: 'Missing record key' },
         { status: 400 }
       );
 
     // 存在记录则清理
-    await findAndDeleteRecord(auth.user.username, tvboxRecord.key);
-
+    await findAndDeleteRecord(auth.user.username, keepRecord.key);
     // 解析与匹配
-    const [_, id] = tvboxRecord.key.split('@@@');
+    const [_, id] = keepRecord.key.split('@@@');
     const apiSites = await getAvailableApiSites(auth.user.username);
-    const apiSite = apiSites.find((site) => site.name === tvboxRecord.vodFlag);
+    const apiSite = apiSites.find((site) => site.name === keepRecord.ext_param);
 
     if (apiSite) {
       const result = await getMatchedVodInfo(id, apiSites, auth.config);
+      console.log(result);
       if (result) {
-        await db.savePlayRecord(
+        await db.saveFavorite(
           auth.user.username,
           apiSite.key,
           result.vodId,
-          createPlayRecordFromTVBox(tvboxRecord)
+          createFavRecordFromTVBox(keepRecord)
         );
       }
     }
@@ -96,11 +96,11 @@ export const DELETE = async (request: NextRequest) => {
     if (key) {
       await findAndDeleteRecord(auth.user.username, key);
     } else {
-      const all = await db.getAllPlayRecords(auth.user.username);
+      const all = await db.getAllFavorites(auth.user.username);
       await Promise.all(
         Object.keys(all).map(async (k) => {
           const [s, i] = k.split('+');
-          if (s && i) await db.deletePlayRecord(auth.user.username, s, i);
+          if (s && i) await db.deleteFavorite(auth.user.username, s, i);
         })
       );
     }
@@ -116,7 +116,7 @@ export const DELETE = async (request: NextRequest) => {
 
 // 统一通过 tvbox_record.key 查找并删除记录
 const findAndDeleteRecord = async (username: string, tvboxKey: string) => {
-  const records = await db.getAllPlayRecords(username);
+  const records = await db.getAllFavorites(username);
   const target = Object.entries(records).find(
     ([_, r]) => r.tvbox_record?.key === tvboxKey
   );
@@ -124,7 +124,7 @@ const findAndDeleteRecord = async (username: string, tvboxKey: string) => {
     const [fullKey] = target;
     const [source, id] = fullKey.split('+');
 
-    await db.deletePlayRecord(username, source, id);
+    await db.deleteFavorite(username, source, id);
     return true;
   }
   return false;
