@@ -770,8 +770,6 @@ function PlayPageClient() {
         detailData = await preferBestSource(sourcesInfo);
       }
 
-      console.log(detailData.source, detailData.id);
-
       setNeedPrefer(false);
       setCurrentSource(detailData.source);
       setCurrentId(detailData.id);
@@ -809,15 +807,25 @@ function PlayPageClient() {
   useEffect(() => {
     // 仅在初次挂载时检查播放记录
     const initFromHistory = async () => {
-      if (!currentSource || !currentId) return;
+      if (!detail || !currentSource || !currentId) return;
 
       try {
         const allRecords = await getAllPlayRecords();
         const key = generateStorageKey(currentSource, currentId);
         const record = allRecords[key];
-
         if (record) {
-          const targetIndex = record.index - 1;
+          let targetIndex;
+          if (record.index === 0) {
+            // 如果同步过来的 index 是 0，通过 url 在当前详情中查找
+            targetIndex =
+              detail?.episodes?.findIndex(
+                (url) => url === record.episode_url
+              ) ?? 0;
+            if (targetIndex === -1) targetIndex = 0;
+            console.log(targetIndex);
+          } else {
+            targetIndex = record.index - 1;
+          }
           const targetTime = record.play_time;
 
           // 更新当前选集索引
@@ -834,7 +842,7 @@ function PlayPageClient() {
     };
 
     initFromHistory();
-  }, []);
+  }, [detail]);
 
   // 跳过片头片尾配置处理
   useEffect(() => {
@@ -957,10 +965,11 @@ function PlayPageClient() {
   // 处理集数切换
   const handleEpisodeChange = (episodeNumber: number) => {
     if (episodeNumber >= 0 && episodeNumber < totalEpisodes) {
-      // 在更换集数前保存当前播放进度
+      // 保存当前进度
       if (artPlayerRef.current && artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
+      // 更新索引
       setCurrentEpisodeIndex(episodeNumber);
     }
   };
@@ -1102,26 +1111,38 @@ function PlayPageClient() {
     }
 
     try {
-      await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
-        title: videoTitleRef.current,
-        source_name: detailRef.current?.source_name || '',
-        year: detailRef.current?.year,
-        cover: detailRef.current?.poster || '',
-        index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
-        total_episodes: detailRef.current?.episodes.length || 1,
-        play_time: Math.floor(currentTime),
-        total_time: Math.floor(duration),
-        save_time: Date.now(),
-        search_title: searchTitle,
-      });
-
-      lastSaveTimeRef.current = Date.now();
-      console.log('播放进度已保存:', {
-        title: videoTitleRef.current,
-        episode: currentEpisodeIndexRef.current + 1,
-        year: detailRef.current?.year,
-        progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
-      });
+      console.log(detailRef.current);
+      const result = await savePlayRecord(
+        currentSourceRef.current,
+        currentIdRef.current,
+        {
+          title: videoTitleRef.current,
+          source_name: detailRef.current?.source_name || '',
+          year: detailRef.current?.year,
+          cover: detailRef.current?.poster || '',
+          index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
+          total_episodes: detailRef.current?.episodes.length || 1,
+          play_time: Math.floor(currentTime),
+          total_time: Math.floor(duration),
+          save_time: Date.now(),
+          search_title: searchTitle,
+          episode_title:
+            detailRef.current?.episodes_titles[
+              currentEpisodeIndexRef.current
+            ] || '',
+          episode_url:
+            detailRef.current?.episodes[currentEpisodeIndexRef.current] || '',
+        }
+      );
+      if (result) {
+        lastSaveTimeRef.current = Date.now();
+        console.log('播放进度已保存:', {
+          title: videoTitleRef.current,
+          episode: currentEpisodeIndexRef.current + 1,
+          year: detailRef.current?.year,
+          progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
+        });
+      }
     } catch (err) {
       console.error('保存播放进度失败:', err);
     }

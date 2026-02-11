@@ -6,6 +6,7 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { PlayRecord } from '@/lib/types';
+import { handleWebPlayRecord } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
@@ -90,13 +91,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
+    const dbRecord = await db.getPlayRecord(authInfo.username, source, id);
     const finalRecord = {
       ...record,
       save_time: record.save_time ?? Date.now(),
+      tvbox_record: dbRecord?.tvbox_record,
     } as PlayRecord;
-
-    await db.savePlayRecord(authInfo.username, source, id, finalRecord);
+    await db.savePlayRecord(
+      authInfo.username,
+      source,
+      id,
+      handleWebPlayRecord(finalRecord)
+    );
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {

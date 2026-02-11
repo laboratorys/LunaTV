@@ -7,6 +7,8 @@ import { db } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
 import { TVBOX_DETAIL_KEY } from '@/lib/keys';
 import { yellowWords } from '@/lib/yellow';
+
+import { getUrlPrefix } from '@/app/api/tvbox/common';
 export const runtime = 'nodejs';
 
 interface DetailContentItem {
@@ -25,16 +27,19 @@ interface DetailContentItem {
 }
 
 export async function GET(request: NextRequest) {
+  const urlPrefix = getUrlPrefix(request);
   const { searchParams } = new URL(request.url);
   const name = searchParams.get('id');
   const year = searchParams.get('year');
   const doubanId = searchParams.get('douban_id');
+  const shortDrama = searchParams.get('short_drama');
 
   if (!name) {
     return NextResponse.json({ list: [] });
   }
   const config = await getConfig();
   const isCached = (config.TvBoxConfig?.expireSeconds ?? 0) > 0;
+  const isProxyFilterAds = config.TvBoxConfig?.proxyFilterAds;
   if (isCached) {
     const cacheData = await db.getCacheByKey(`${TVBOX_DETAIL_KEY}${name}`);
     if (cacheData) {
@@ -79,7 +84,11 @@ export async function GET(request: NextRequest) {
       // no cache if empty
       return NextResponse.json({ list: [] }, { status: 200 });
     }
-    flattenedResults = flattenedResults.filter((result) => {
+    const filteredResults = flattenedResults.filter((result) => {
+      if (shortDrama === '1') {
+        const isShortDrama = (result.class || '').includes('短剧');
+        if (!isShortDrama) return false;
+      }
       const yearMatch = !year || !result.year || result.year === year;
       const doubanIdMatch =
         !doubanId ||
@@ -87,6 +96,19 @@ export async function GET(request: NextRequest) {
         String(result.douban_id) === String(doubanId);
       return yearMatch && doubanIdMatch;
     });
+    // 使用 Map 确保每个 source_name 只保留一个对象
+    const uniqueResults = Array.from(
+      filteredResults
+        .reduce((map, item) => {
+          // 如果 map 中还没有这个 source_name，则存入
+          if (item.source_name && !map.has(item.source_name)) {
+            map.set(item.source_name, item);
+          }
+          return map;
+        }, new Map())
+        .values()
+    );
+    flattenedResults = uniqueResults;
     //处理成tvbox支持的数据格式
     const baseInfo = flattenedResults[0];
     //取出播放源集合
@@ -97,7 +119,11 @@ export async function GET(request: NextRequest) {
       .map((item) => {
         const pairedEpisodes = item.episodes_titles.map(
           (title: string, index: number) => {
-            return `${title}$${item.episodes[index]}`;
+            let url = `${item.episodes[index]}`;
+            if (isProxyFilterAds) {
+              url = urlPrefix + '/api/proxy/ad?url=' + url;
+            }
+            return `${title}$${url}`;
           }
         );
 

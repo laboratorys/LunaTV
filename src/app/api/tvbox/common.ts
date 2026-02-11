@@ -1,8 +1,11 @@
+/* eslint-disable no-console */
 import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminConfig } from '@/lib/admin.types';
+import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { fetchWithTimeout } from '@/lib/douban.client';
+import { searchFromApi } from '@/lib/downstream';
 import { TvboxContentItem } from '@/lib/types';
 
 export async function commonReturn(
@@ -64,7 +67,7 @@ export async function fetchDoubanCategoryList(
           urlPrefix
         ) ||
         '',
-      vod_remarks: '',
+      vod_remarks: item.episodes_info,
     }));
     return list;
   } catch (error) {
@@ -75,7 +78,9 @@ export function parseId(item: any): string {
   const year = parseYearFromSubtitle(item.card_subtitle);
   const title = item.title || '';
   const doubanId = item.id || '';
-  return `${encodeURIComponent(title)}&year=${year}&douban_id=${doubanId}`;
+  return `${encodeURIComponent(
+    title
+  )}&year=${year}&douban_id=${doubanId}&short_drama=0`;
 }
 export function parseYearFromSubtitle(subtitle: string): string {
   if (!subtitle || typeof subtitle !== 'string') return '';
@@ -134,25 +139,27 @@ export async function fetchDoubanRecommendList(
 
     const doubanData = await response.json();
     // 转换数据格式
-    const list: TvboxContentItem[] = doubanData.items.map((item: any) => ({
-      vod_id: parseId(item),
-      vod_name: item.title,
-      vod_pic:
-        processImageUrl(
-          item.pic?.normal,
-          imageProxyType,
-          imageProxyUrl,
-          urlPrefix
-        ) ||
-        processImageUrl(
-          item.pic?.large,
-          imageProxyType,
-          imageProxyUrl,
-          urlPrefix
-        ) ||
-        '',
-      vod_remarks: '',
-    }));
+    const list: TvboxContentItem[] = doubanData.items
+      .filter((item: any) => item.type == 'movie' || item.type == 'tv')
+      .map((item: any) => ({
+        vod_id: parseId(item),
+        vod_name: item.title,
+        vod_pic:
+          processImageUrl(
+            item.pic?.normal,
+            imageProxyType,
+            imageProxyUrl,
+            urlPrefix
+          ) ||
+          processImageUrl(
+            item.pic?.large,
+            imageProxyType,
+            imageProxyUrl,
+            urlPrefix
+          ) ||
+          '',
+        vod_remarks: '',
+      }));
     return list;
   } catch (error) {
     throw new Error(`获取豆瓣热门数据失败: ${(error as Error).message}`);
@@ -202,7 +209,7 @@ export async function fetchDoubanHotList(
         imageProxyUrl,
         urlPrefix
       ),
-      vod_remarks: '',
+      vod_remarks: item.episodes_info,
     }));
 
     return list;
@@ -318,4 +325,117 @@ export function processImageUrl(
 export const getUrlPrefix = (request: NextRequest) => {
   const { protocol, host } = request.nextUrl;
   return `${protocol}//${request.headers.get('host') || host}`;
+};
+// 统一鉴权
+export const validateRequest = async (k: string | null) => {
+  if (!k) return { error: 'Unauthorized', status: 401 };
+  const config = await getConfig();
+  const user = config.UserConfig.Users.find((u) => u.key === k);
+  if (!user) return { error: '用户不存在', status: 401 };
+  if (user.banned) return { error: '用户已被封禁', status: 401 };
+  return { user, config, ok: true };
+};
+/**
+ * 从解析 ID 到搜索 API 并返回最终匹配结果的封装方法
+ * @param id 原始字符串，如 "生命树&year=2026&douban_id=123"
+ * @param apiSites 资源站配置列表
+ * @param config 全局配置，包含 SiteConfig.DisableYellowFilter
+ * @param yellowWords 敏感词过滤数组
+ */
+export const getMatchedVodInfo = async (
+  id: string,
+  apiSites: any[],
+  config: any,
+  yellowWords: string[] = []
+) => {
+  // 1. 解析原始 ID 信息
+  const params = new URLSearchParams(`name=${decodeURIComponent(id)}`);
+  const searchCriteria = {
+    name: params.get('name') || '',
+    year: params.get('year'),
+    douban_id: params.get('douban_id'),
+    short_drama: params.get('short_drama'),
+  };
+
+  if (!searchCriteria.name) return null;
+
+  // 2. 并发搜索并处理超时
+  const searchPromises = apiSites.map((site) =>
+    Promise.race([
+      searchFromApi(site, searchCriteria.name),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
+      ),
+    ]).catch((err) => {
+      console.warn(`查询失败 ${site.name}:`, err.message);
+      return [];
+    })
+  );
+
+  try {
+    const results = await Promise.allSettled(searchPromises);
+    const successResults = results
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => (result as PromiseFulfilledResult<any>).value);
+
+    let flattenedResults = successResults.flat();
+
+    // 3. 敏感词过滤 (Yellow Filter)
+    if (!config.SiteConfig.DisableYellowFilter) {
+      flattenedResults = flattenedResults.filter((result) => {
+        const typeName = result.type_name || '';
+        return !yellowWords.some((word) => typeName.includes(word));
+      });
+    }
+
+    // 4. 精准匹配过滤 (年份、豆瓣ID、短剧)
+    const filteredResults = flattenedResults.filter((result) => {
+      // 短剧匹配
+      if (searchCriteria.short_drama === '1') {
+        const isShortDrama =
+          (result.class || '').includes('短剧') ||
+          (result.type_name || '').includes('短剧');
+        if (!isShortDrama) return false;
+      }
+      // 年份匹配 (兼容 vod_year 或 year 字段)
+      const rYear = String(result.vod_year || result.year || '');
+      const yearMatch =
+        !searchCriteria.year || rYear === String(searchCriteria.year);
+
+      // 豆瓣 ID 匹配
+      const rDoubanId = String(result.vod_douban_id || result.douban_id || '0');
+      const doubanIdMatch =
+        !searchCriteria.douban_id ||
+        rDoubanId === '0' ||
+        rDoubanId === String(searchCriteria.douban_id);
+
+      return yearMatch && doubanIdMatch;
+    });
+
+    // 5. 按 source_name 去重并提取
+    const uniqueResults = Array.from(
+      filteredResults
+        .reduce((map, item) => {
+          if (item.source_name && !map.has(item.source_name)) {
+            map.set(item.source_name, item);
+          }
+          return map;
+        }, new Map())
+        .values()
+    ) as any[];
+
+    if (uniqueResults.length === 0) return null;
+
+    // 6. 返回核心信息
+    const baseInfo = uniqueResults[0];
+    return {
+      vodId: baseInfo.vod_id || baseInfo.id,
+      sourceName: baseInfo.source_name,
+      raw: baseInfo, // 保留原始数据以备后续使用
+      searchCriteria, // 返回解析出的搜索条件
+    };
+  } catch (error) {
+    console.error('解析与搜索流程异常:', error);
+    return null;
+  }
 };
