@@ -769,6 +769,17 @@ export async function getSearchHistory(): Promise<string[]> {
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function addSearchHistory(keyword: string): Promise<void> {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    const incognito = window.localStorage.getItem('incognito_mode') === 'true';
+    if (incognito) {
+      return;
+    }
+  } catch (e) {
+    console.error('Storage access failed', e);
+  }
   const trimmed = keyword.trim();
   if (!trimmed) return;
 
