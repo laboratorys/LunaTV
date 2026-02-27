@@ -17,7 +17,7 @@ export const changelog: ChangelogEntry[] = [
       // 无新增内容
     ],
     changed: [
-      // 无变更内容
+    "【APP】替换下载链接"
     ],
     fixed: [
     "解决无痕模式对搜索历史不生效"
