@@ -1012,7 +1012,8 @@ function LivePageClient() {
       )}&lunatv-source=${currentSourceRef.current?.key || ''}`;
       try {
         // 创建新的播放器实例
-        Artplayer.USE_RAF = true;
+        Artplayer.USE_RAF = false;
+        Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
         artPlayerRef.current = new Artplayer({
           container: artRef.current,
@@ -1780,7 +1781,38 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
 export default function LivePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <LivePageClient />
+      <LivePageGuard />
     </Suspense>
   );
+}
+
+function LivePageGuard() {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const runtimeConfig = (window as any).RUNTIME_CONFIG;
+    setEnabled(!!runtimeConfig?.SHOW_LIVE);
+  }, []);
+
+  if (enabled === null) {
+    return <div>Loading...</div>;
+  }
+
+  if (!enabled) {
+    return (
+      <PageLayout activePath='/live'>
+        <div className='flex flex-col items-center justify-center min-h-[60vh] text-center px-4'>
+          <Radio className='h-16 w-16 text-gray-300 dark:text-gray-600 mb-4' />
+          <h2 className='text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2'>
+            网页直播未开启
+          </h2>
+          <p className='text-gray-500 dark:text-gray-400 max-w-md'>
+            当前站点未启用网页直播功能，请联系站点管理员开启。
+          </p>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  return <LivePageClient />;
 }

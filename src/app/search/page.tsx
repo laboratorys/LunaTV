@@ -27,6 +27,7 @@ import SearchResultFilter, {
 } from '@/components/SearchResultFilter';
 import SearchSuggestions from '@/components/SearchSuggestions';
 import VideoCard, { VideoCardHandle } from '@/components/VideoCard';
+import VirtualGrid from '@/components/VirtualGrid';
 
 function SearchPageClient() {
   // 搜索历史
@@ -831,12 +832,14 @@ function SearchPageClient() {
                   </div>
                 )
               ) : (
-                <div
-                  key={`search-results-${viewMode}`}
-                  className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
-                >
-                  {viewMode === 'agg'
-                    ? filteredAggResults.map(([mapKey, group]) => {
+                <div key={`search-results-${viewMode}`}>
+                  {viewMode === 'agg' ? (
+                    <VirtualGrid
+                      items={filteredAggResults}
+                      className='grid-cols-3 gap-x-2 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
+                      rowGapClass='pb-14 sm:pb-20'
+                      estimateRowHeight={320}
+                      renderItem={([mapKey, group]) => {
                         const title = group[0]?.title || '';
                         const poster = group[0]?.poster || '';
                         const year = group[0]?.year || 'unknown';
@@ -844,7 +847,6 @@ function SearchPageClient() {
                           computeGroupStats(group);
                         const type = episodes === 1 ? 'movie' : 'tv';
 
-                        // 如果该聚合第一次出现，写入初始统计
                         if (!groupStatsRef.current.has(mapKey)) {
                           groupStatsRef.current.set(mapKey, {
                             episodes,
@@ -874,8 +876,15 @@ function SearchPageClient() {
                             />
                           </div>
                         );
-                      })
-                    : filteredAllResults.map((item) => (
+                      }}
+                    />
+                  ) : (
+                    <VirtualGrid
+                      items={filteredAllResults}
+                      className='grid-cols-3 gap-x-2 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
+                      rowGapClass='pb-14 sm:pb-20'
+                      estimateRowHeight={320}
+                      renderItem={(item) => (
                         <div
                           key={`all-${item.source}-${item.id}`}
                           className='w-full'
@@ -898,7 +907,9 @@ function SearchPageClient() {
                             type={item.episodes.length > 1 ? 'tv' : 'movie'}
                           />
                         </div>
-                      ))}
+                      )}
+                    />
+                  )}
                 </div>
               )}
             </section>

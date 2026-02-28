@@ -177,6 +177,13 @@ export class SqliteStorage implements IStorage {
     stmt.run(userName, key);
   }
 
+  async deleteAllPlayRecords(userName: string): Promise<void> {
+    const stmt = this.db.prepare(
+      'DELETE FROM play_records WHERE user_name = ?'
+    );
+    stmt.run(userName);
+  }
+
   // ---------- 收藏 ----------
   private favKey(user: string, key: string) {
     return { user_name: user, key };
@@ -219,6 +226,11 @@ export class SqliteStorage implements IStorage {
       'DELETE FROM favorites WHERE user_name = ? AND key = ?'
     );
     stmt.run(userName, key);
+  }
+
+  async deleteAllFavorites(userName: string): Promise<void> {
+    const stmt = this.db.prepare('DELETE FROM favorites WHERE user_name = ?');
+    stmt.run(userName);
   }
 
   // ---------- 用户注册 / 登录 ----------
@@ -486,6 +498,10 @@ export class SqliteStorage implements IStorage {
       configs[`${row.source}+${row.id}`] = JSON.parse(row.config) as SkipConfig;
     }
     return configs;
+  }
+
+  async migrateData(): Promise<void> {
+    return;
   }
 
   // 清空所有数据
