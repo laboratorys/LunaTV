@@ -43,7 +43,7 @@ export default function DownloadPage() {
     {
       name: 'leanback-arm64_v8a.apk',
       label: 'TV端 (arm64)',
-      size: '48 MB',
+      size: 'TV',
       icon: <Tv className='w-6 h-6' />,
       desc: '适配高性能电视/盒子',
       config: DOWNLOAD_LINKS.tv_arm64,
@@ -51,7 +51,7 @@ export default function DownloadPage() {
     {
       name: 'leanback-armeabi_v7a.apk',
       label: 'TV端 (v7a)',
-      size: '41.1 MB',
+      size: 'TV',
       icon: <Box className='w-6 h-6' />,
       desc: '适配老旧机型/投影仪',
       config: DOWNLOAD_LINKS.tv_v7a,
@@ -59,7 +59,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-arm64_v8a.apk',
       label: '手机端 (arm64)',
-      size: '47.9 MB',
+      size: 'mobile',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '新款主流 Android 手机',
       config: DOWNLOAD_LINKS.mobile_arm64,
@@ -67,7 +67,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-armeabi_v7a.apk',
       label: '手机端 (v7a)',
-      size: '41.1 MB',
+      size: 'mobile',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '老款机型或 32 位系统',
       config: DOWNLOAD_LINKS.mobile_v7a,
