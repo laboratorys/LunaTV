@@ -1,6 +1,5 @@
 'use client';
 
-import { Box } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -43,14 +42,6 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
 
         {/* 右侧：下载按钮 + 用户菜单 */}
         <div className='flex items-center gap-1'>
-          <Link
-            href='/app'
-            className='w-10 h-10 p-2.5 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 transition-colors'
-            title='下载 APP'
-          >
-            <Box className='w-5 h-5' />
-          </Link>
-
           <UserMenu />
         </div>
       </div>

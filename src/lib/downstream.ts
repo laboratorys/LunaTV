@@ -263,7 +263,7 @@ export async function searchWithNoCache(
 /**
  * 不带缓存搜索函数
  */
-export async function getClassWithCache(
+export async function getClassWithNoCache(
   apiSite: ApiSite,
   timeoutMs = 8000
 ): Promise<CategoryNode[]> {

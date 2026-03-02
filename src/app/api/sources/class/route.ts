@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getAvailableApiSites, getCacheTime } from '@/lib/config';
-import { getClassWithCache } from '@/lib/downstream';
+import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
+import { getClassWithNoCache } from '@/lib/downstream';
+import { CategoryNode } from '@/lib/types';
+import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
 
@@ -20,8 +22,12 @@ export async function GET(request: NextRequest) {
     if (!apiSite) {
       return NextResponse.json({ error: '无效的API来源' }, { status: 400 });
     }
-    const classTree = await getClassWithCache(apiSite);
+    let classTree = await getClassWithNoCache(apiSite);
+    const config = await getConfig();
     const cacheTime = await getCacheTime();
+    if (!config.SiteConfig.DisableYellowFilter) {
+      classTree = filterTree(classTree);
+    }
     return NextResponse.json(classTree, {
       headers: {
         'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
@@ -37,3 +43,22 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+const filterTree = (nodes: CategoryNode[]): CategoryNode[] => {
+  return nodes
+    .filter((node) => {
+      // 检查当前节点名称是否包含敏感词
+      const typeName = node.name || '';
+      return !yellowWords.some((word: string) => typeName.includes(word));
+    })
+    .map((node) => {
+      // 如果当前节点有子节点，递归过滤子节点
+      if (node.children && node.children.length > 0) {
+        return {
+          ...node,
+          children: filterTree(node.children),
+        };
+      }
+      return node;
+    });
+};

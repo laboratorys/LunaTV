@@ -3,6 +3,7 @@ export const tvboxConfig = {
   spider: '/api/tvbox/jar',
   wallpaper: '/api/tvbox/wallpapers',
   logo: 'https://raw.githubusercontent.com/laboratorys/LunaTV/refs/heads/dev/public/favicon.ico',
+  notice: '请勿相信视频中的任何广告',
   warningText: '',
   sites: [
     {

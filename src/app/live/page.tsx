@@ -1790,8 +1790,12 @@ function LivePageGuard() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    setEnabled(!!runtimeConfig?.SHOW_LIVE);
+    if (typeof window !== 'undefined') {
+      const runtimeConfig = (window as any).RUNTIME_CONFIG;
+      setEnabled(!!runtimeConfig?.SHOW_LIVE);
+    } else {
+      setEnabled(false);
+    }
   }, []);
 
   if (enabled === null) {

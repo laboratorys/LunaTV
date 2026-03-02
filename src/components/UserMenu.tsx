@@ -5,6 +5,8 @@
 import {
   Check,
   ChevronDown,
+  Copy,
+  Download,
   ExternalLink,
   Glasses,
   KeyRound,
@@ -12,6 +14,7 @@ import {
   LogOut,
   Settings,
   SunMoon,
+  Tv,
   User,
   VenetianMask,
   X,
@@ -23,6 +26,13 @@ import { createPortal } from 'react-dom';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/utils';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
+
+import {
+  AlertModal,
+  showError,
+  showSuccess,
+  useAlertModal,
+} from '@/app/admin/components/UIComponents';
 
 import { IncognitoToggle } from './IncognitoToggle';
 import { ThemeToggle } from './ThemeToggle';
@@ -42,7 +52,7 @@ export const UserMenu: React.FC = () => {
   const [authInfo, setAuthInfo] = useState<AuthInfo | null>(null);
   const [storageType, setStorageType] = useState<string>('localstorage');
   const [mounted, setMounted] = useState(false);
-
+  const { alertModal, showAlert, hideAlert } = useAlertModal();
   // Body 滚动锁定 - 使用 overflow 方式避免布局问题
   useEffect(() => {
     if (isSettingsOpen || isChangePasswordOpen) {
@@ -494,7 +504,51 @@ export const UserMenu: React.FC = () => {
         return '';
     }
   };
+  const handleCopyTVBoxUrl = async (e: React.MouseEvent) => {
+    e.stopPropagation();
 
+    try {
+      const response = await fetch('/api/tvbox/userKey');
+      const data = await response.json();
+
+      if (!response.ok || !data.key) {
+        showError('复制失败，TVBOX 功能可能尚未开启，请联系管理员', showAlert);
+        return;
+      }
+
+      const tvBoxUrl = `${window.location.origin}/api/tvbox?k=${data.key}`;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(tvBoxUrl);
+        showSuccess('TVBox API URL 已复制到剪贴板', showAlert);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = tvBoxUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            showSuccess('TVBox API URL 已复制到剪贴板', showAlert);
+          } else {
+            throw new Error();
+          }
+        } catch (err) {
+          showError(err instanceof Error ? err.message : '操作失败', showAlert);
+        }
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      showError('网络请求失败，请稍后重试', showAlert);
+    } finally {
+      handleCloseMenu();
+    }
+  };
   // 菜单面板内容
   const menuPanel = (
     <>
@@ -560,6 +614,43 @@ export const UserMenu: React.FC = () => {
               active={isIncognito}
               onToggle={(e) => toggleIncognito(e)}
             />
+          </div>
+          {/* TVBOX 功能项 */}
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px] group'>
+            {/* 左侧：点击跳转 */}
+            <button
+              onClick={() => {
+                router.push('/app');
+                handleCloseMenu();
+              }}
+              className='flex items-center gap-2.5 flex-1 h-full'
+            >
+              <Tv className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <span className='font-medium'>TVBOX</span>
+            </button>
+
+            {/* 右侧：操作按钮组 */}
+            <div className='flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity'>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push('/app');
+                  handleCloseMenu();
+                }}
+                className='p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors'
+                title='下载 APP'
+              >
+                <Download className='w-3.5 h-3.5' />
+              </button>
+              <div className='w-[1px] h-3 bg-gray-300 dark:bg-gray-600 mx-0.5' />
+              <button
+                onClick={handleCopyTVBoxUrl}
+                className='p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors'
+                title='复制接口'
+              >
+                <Copy className='w-3.5 h-3.5' />
+              </button>
+            </div>
           </div>
           {/* 设置按钮 */}
           <button
@@ -1177,6 +1268,7 @@ export const UserMenu: React.FC = () => {
         isOpen={isVersionPanelOpen}
         onClose={() => setIsVersionPanelOpen(false)}
       />
+      <AlertModal {...alertModal} onClose={hideAlert} />
     </>
   );
 };

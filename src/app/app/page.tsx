@@ -59,7 +59,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-arm64_v8a.apk',
       label: '手机端 (arm64)',
-      size: 'mobile',
+      size: 'MOBILE',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '新款主流 Android 手机',
       config: DOWNLOAD_LINKS.mobile_arm64,
@@ -67,7 +67,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-armeabi_v7a.apk',
       label: '手机端 (v7a)',
-      size: 'mobile',
+      size: 'MOBILE',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '老款机型或 32 位系统',
       config: DOWNLOAD_LINKS.mobile_v7a,
