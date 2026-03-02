@@ -29,7 +29,7 @@ class DB {
       if (!fs.existsSync(path.dirname(dbPath))) {
         fs.mkdirSync(path.dirname(dbPath), { recursive: true });
       }
-      DB.instance = new Database(dbPath);
+      DB.instance = new Database(dbPath, { timeout: 7000 });
       DB.instance.pragma('journal_mode = WAL');
       const migrations = [
         {
