@@ -31,6 +31,7 @@ class DB {
       }
       DB.instance = new Database(dbPath, { timeout: 7000 });
       DB.instance.pragma('journal_mode = WAL');
+      DB.instance.pragma('synchronous = NORMAL');
       const migrations = [
         {
           table: 'users',
