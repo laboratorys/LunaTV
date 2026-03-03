@@ -8,6 +8,8 @@ import { fetchWithTimeout } from '@/lib/douban.client';
 import { searchFromApi } from '@/lib/downstream';
 import { TvboxContentItem } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function commonReturn(
   items: TvboxContentItem[],
   pageSize: number
@@ -323,12 +325,29 @@ export function processImageUrl(
   }
 }
 export const getUrlPrefix = (request: NextRequest) => {
-  const siteBase = process.env.SITE_BASE || '';
+  const siteBase = (
+    process.env.SITE_BASE ||
+    process.env.NEXT_PUBLIC_SITE_BASE ||
+    ''
+  ).trim();
+
   if (siteBase) {
-    return siteBase;
+    return siteBase.replace(/\/+$/, '');
   }
-  const { protocol, host } = request.nextUrl;
-  return `${protocol}//${request.headers.get('host') || host}`;
+
+  try {
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+    const protocol = (forwardedProto || request.nextUrl.protocol).replace(
+      ':',
+      ''
+    );
+    const host = request.headers.get('host') || request.nextUrl.host;
+    const cleanProtocol = protocol.split(':')[0];
+
+    return `${cleanProtocol}://${host}`;
+  } catch (e) {
+    return '';
+  }
 };
 // 统一鉴权
 export const validateRequest = async (k: string | null) => {
