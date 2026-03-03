@@ -323,6 +323,10 @@ export function processImageUrl(
   }
 }
 export const getUrlPrefix = (request: NextRequest) => {
+  const siteBase = process.env.SITE_BASE || '';
+  if (siteBase) {
+    return siteBase;
+  }
   const { protocol, host } = request.nextUrl;
   return `${protocol}//${request.headers.get('host') || host}`;
 };
