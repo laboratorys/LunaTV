@@ -8,8 +8,6 @@ import { fetchWithTimeout } from '@/lib/douban.client';
 import { searchFromApi } from '@/lib/downstream';
 import { TvboxContentItem } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
-
 export async function commonReturn(
   items: TvboxContentItem[],
   pageSize: number
