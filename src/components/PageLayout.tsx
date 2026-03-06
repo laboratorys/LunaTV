@@ -7,13 +7,18 @@ import { UserMenu } from './UserMenu';
 interface PageLayoutProps {
   children: React.ReactNode;
   activePath?: string;
+  title?: string;
 }
 
-const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
+const PageLayout = ({ children, activePath = '/', title }: PageLayoutProps) => {
+  const isDetailView = ['/play', '/live'].includes(activePath);
   return (
     <div className='w-full min-h-screen'>
       {/* 移动端头部 */}
-      <MobileHeader showBackButton={['/play', '/live'].includes(activePath)} />
+      <MobileHeader
+        showBackButton={isDetailView}
+        title={isDetailView ? title : undefined}
+      />
 
       {/* 主要布局容器 */}
       <div className='flex md:grid md:grid-cols-[auto_1fr] w-full min-h-screen md:min-h-auto'>

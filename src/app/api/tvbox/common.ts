@@ -323,8 +323,29 @@ export function processImageUrl(
   }
 }
 export const getUrlPrefix = (request: NextRequest) => {
-  const { protocol, host } = request.nextUrl;
-  return `${protocol}//${request.headers.get('host') || host}`;
+  const siteBase = (
+    process.env.SITE_BASE ||
+    process.env.NEXT_PUBLIC_SITE_BASE ||
+    ''
+  ).trim();
+
+  if (siteBase) {
+    return siteBase.replace(/\/+$/, '');
+  }
+
+  try {
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+    const protocol = (forwardedProto || request.nextUrl.protocol).replace(
+      ':',
+      ''
+    );
+    const host = request.headers.get('host') || request.nextUrl.host;
+    const cleanProtocol = protocol.split(':')[0];
+
+    return `${cleanProtocol}://${host}`;
+  } catch (e) {
+    return '';
+  }
 };
 // 统一鉴权
 export const validateRequest = async (k: string | null) => {

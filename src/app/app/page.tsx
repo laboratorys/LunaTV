@@ -3,9 +3,9 @@
 import {
   Box,
   Cpu,
+  Database,
   Download,
   ExternalLink,
-  Heart,
   History,
   RefreshCw,
   Smartphone,
@@ -17,24 +17,24 @@ import PageLayout from '@/components/PageLayout';
 
 const REPO_BASE =
   'https://github.com/laboratorys/TV-Release/releases/latest/download';
-const MIRROR_BASE = 'https://down.npee.cn/?';
+const MIRROR_BASE = 'https://apk.vxsx.eu.org/tv';
 
 const DOWNLOAD_LINKS = {
   tv_arm64: {
-    url: `${REPO_BASE}/leanback-arm64_v8a.apk`,
-    mirror: `${MIRROR_BASE}${REPO_BASE}/leanback-arm64_v8a.apk`,
+    url: `${MIRROR_BASE}/leanback-arm64_v8a.apk`,
+    mirror: `${REPO_BASE}/leanback-arm64_v8a.apk`,
   },
   tv_v7a: {
-    url: `${REPO_BASE}/leanback-armeabi_v7a.apk`,
-    mirror: `${MIRROR_BASE}${REPO_BASE}/leanback-armeabi_v7a.apk`,
+    url: `${MIRROR_BASE}/leanback-armeabi_v7a.apk`,
+    mirror: `${REPO_BASE}/leanback-armeabi_v7a.apk`,
   },
   mobile_arm64: {
-    url: `${REPO_BASE}/mobile-arm64_v8a.apk`,
-    mirror: `${MIRROR_BASE}${REPO_BASE}/mobile-arm64_v8a.apk`,
+    url: `${MIRROR_BASE}/mobile-arm64_v8a.apk`,
+    mirror: `${REPO_BASE}/mobile-arm64_v8a.apk`,
   },
   mobile_v7a: {
-    url: `${REPO_BASE}/mobile-armeabi_v7a.apk`,
-    mirror: `${MIRROR_BASE}${REPO_BASE}/mobile-armeabi_v7a.apk`,
+    url: `${MIRROR_BASE}/mobile-armeabi_v7a.apk`,
+    mirror: `${REPO_BASE}/mobile-armeabi_v7a.apk`,
   },
 };
 
@@ -43,7 +43,7 @@ export default function DownloadPage() {
     {
       name: 'leanback-arm64_v8a.apk',
       label: 'TV端 (arm64)',
-      size: '48 MB',
+      size: 'TV',
       icon: <Tv className='w-6 h-6' />,
       desc: '适配高性能电视/盒子',
       config: DOWNLOAD_LINKS.tv_arm64,
@@ -51,7 +51,7 @@ export default function DownloadPage() {
     {
       name: 'leanback-armeabi_v7a.apk',
       label: 'TV端 (v7a)',
-      size: '41.1 MB',
+      size: 'TV',
       icon: <Box className='w-6 h-6' />,
       desc: '适配老旧机型/投影仪',
       config: DOWNLOAD_LINKS.tv_v7a,
@@ -59,7 +59,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-arm64_v8a.apk',
       label: '手机端 (arm64)',
-      size: '47.9 MB',
+      size: 'MOBILE',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '新款主流 Android 手机',
       config: DOWNLOAD_LINKS.mobile_arm64,
@@ -67,7 +67,7 @@ export default function DownloadPage() {
     {
       name: 'mobile-armeabi_v7a.apk',
       label: '手机端 (v7a)',
-      size: '41.1 MB',
+      size: 'MOBILE',
       icon: <Smartphone className='w-6 h-6' />,
       desc: '老款机型或 32 位系统',
       config: DOWNLOAD_LINKS.mobile_v7a,
@@ -214,14 +214,14 @@ export default function DownloadPage() {
           <div className='space-y-4'>
             {[
               {
-                title: '播放记录同步',
+                title: '同步播放记录、收藏、搜索历史',
                 icon: <History size={18} />,
                 desc: 'Lab 修改版核心特性',
               },
               {
-                title: '全量同步收藏',
-                icon: <Heart size={18} />,
-                desc: '账号多端数据实时互通',
+                title: '内置多仓源',
+                icon: <Database size={18} />,
+                desc: '开箱即用，无需额外配置',
               },
               {
                 title: '上游代码同步',
