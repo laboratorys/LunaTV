@@ -23,6 +23,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const config = await getConfig();
+    let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
+    const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+    if (storageType !== 'localstorage') {
+      siteName = config.SiteConfig.SiteName;
+    }
     const validKey = config.UserConfig.Users.some(
       (user) => user.key === k && !user.banned
     );
@@ -45,6 +50,7 @@ export async function GET(request: NextRequest) {
         playerType: 1,
       };
     }) as any;
+    tvboxConfig.sites[0].name = siteName;
     tvboxConfig.lives = lives;
     tvboxConfig.sites[0].ext = `${url}/api/tvbox`;
     tvboxConfig.wallpaper = `${url}/api/tvbox/wallpapers`;
