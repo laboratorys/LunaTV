@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -9,58 +10,61 @@ import { UserMenu } from './UserMenu';
 
 interface MobileHeaderProps {
   showBackButton?: boolean;
+  title?: string;
 }
 
-const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
+const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
   const { siteName } = useSite();
+  const displayTitle = title || siteName;
+  const titleColorClass = title
+    ? 'text-gray-900 dark:text-white'
+    : 'text-green-600';
+
   return (
-    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/70 dark:border-gray-700/50'>
-      <div className='h-12 flex items-center justify-between px-4'>
-        {/* 左侧：搜索按钮、返回按钮和设置按钮 */}
-        <div className='flex items-center gap-2'>
+    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-800/50 transition-colors duration-300'>
+      <div className='h-14 flex items-center justify-between px-3'>
+        {/* 左侧：返回按钮 或 站点标识 (导航区) */}
+        <div className='flex items-center min-w-0'>
+          {showBackButton ? (
+            <div className='flex items-center gap-1'>
+              <BackButton />
+              <span
+                className={`text-lg font-bold truncate max-w-[180px] ${titleColorClass}`}
+              >
+                {displayTitle}
+              </span>
+            </div>
+          ) : (
+            <Link
+              href='/'
+              className='flex items-center ml-1 transition-all duration-200 active:opacity-70'
+            >
+              <div className='relative w-7 h-7 flex-shrink-0'>
+                <Image
+                  src='/logo.png'
+                  alt='Logo'
+                  fill
+                  className='object-contain'
+                />
+              </div>
+              <span className='ml-2 text-xl font-bold text-green-600 tracking-tight truncate'>
+                {siteName}
+              </span>
+            </Link>
+          )}
+        </div>
+
+        {/* 右侧：搜索 + 用户菜单 (操作区) */}
+        <div className='flex items-center gap-1'>
           <Link
             href='/search'
-            className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+            className='w-10 h-10 flex items-center justify-center rounded-full text-gray-600 active:bg-gray-100 dark:text-gray-300 dark:active:bg-gray-800 transition-colors'
+            aria-label='Search'
           >
-            <svg
-              className='w-full h-full'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-              xmlns='http://www.w3.org/2000/svg'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-              />
-            </svg>
+            <Search size={22} strokeWidth={2.5} />
           </Link>
-          {showBackButton && <BackButton />}
-        </div>
-
-        {/* 右侧：下载按钮 + 用户菜单 */}
-        <div className='flex items-center gap-1'>
           <UserMenu />
         </div>
-      </div>
-
-      {/* 中间：Logo（绝对居中） */}
-      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2'>
-        <Link
-          href='/'
-          className='flex items-center text-2xl font-bold text-green-600 tracking-tight hover:opacity-80 transition-opacity'
-        >
-          <Image
-            src='/logo.png'
-            alt='Logo'
-            width={16}
-            height={16}
-            className='h-[1em] w-[1em] mr-2 align-text-bottom'
-          />
-          {siteName}
-        </Link>
       </div>
     </header>
   );
