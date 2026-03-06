@@ -12,9 +12,10 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     version: "5.0.9",
-    date: "2026-02-26",
+    date: "2026-03-06",
     added: [
-      // 无新增内容
+    "【播放源】记住筛选条件",
+    "移动端顶部导航优化"
     ],
     changed: [
     "上游分支同步修改，主要影响Redis作为存储的用户，使用该版本前最好先备份数据，以免造成任何损失",
@@ -26,7 +27,9 @@ export const changelog: ChangelogEntry[] = [
     fixed: [
     "解决无痕模式对搜索历史不生效",
     "【APP】替换下载链接",
-    "【播放源】敏感词过滤"
+    "【播放源】敏感词过滤",
+    "在播放和直播页引入动态加载以消除 'length' 属性错误",
+    "【TVBOX】站点名称修改不刷新"
     ]
   },
   {
