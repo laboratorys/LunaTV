@@ -1,7 +1,7 @@
 /* eslint-disable no-console,react-hooks/exhaustive-deps,@typescript-eslint/no-explicit-any */
 'use client';
 
-import { Search, X } from 'lucide-react';
+import { RotateCcw, Search, X } from 'lucide-react';
 import {
   Suspense,
   useCallback,
@@ -54,17 +54,23 @@ interface SourceDetailItem {
   remarks: string;
   rate: string;
 }
-
+const STORAGE_KEY = 'sources_filter_state';
 function SourcesPageClient() {
+  const [isInitialized, setIsInitialized] = useState(false);
+
   const [sources, setSources] = useState<Source[]>([]);
   const [allCategories, setAllCategories] = useState<CategoryNode[]>([]);
   const [isClassLoading, setIsClassLoading] = useState(false);
 
+  // 基础筛选状态
   const [selectedSource, setSelectedSource] = useState<string>('');
   const [parentCat, setParentCat] = useState<string | number>('');
   const [subCat, setSubCat] = useState<string | number>('');
   const [selectedHour, setSelectedHour] = useState<string>('24');
+  const [keyword, setKeyword] = useState<string>('');
+  const [searchInput, setSearchInput] = useState<string>('');
 
+  // 列表数据状态
   const [videoData, setVideoData] = useState<SourceDetailItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -72,31 +78,64 @@ function SourcesPageClient() {
   const [hasMore, setHasMore] = useState(true);
 
   const loadingRef = useRef<HTMLDivElement>(null);
-  const [keyword, setKeyword] = useState<string>('');
-  const [searchInput, setSearchInput] = useState<string>('');
-
-  // 核心控制：触发器与模式引用
   const [trigger, setTrigger] = useState(0);
   const isAppendMode = useRef(false);
 
-  // 1. 初始化获取源列表
+  // 2. 页面加载时：从 localStorage 恢复状态
   useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSelectedSource(parsed.selectedSource || '');
+        setParentCat(parsed.parentCat || '');
+        setSubCat(parsed.subCat || '');
+        setSelectedHour(parsed.selectedHour || '24');
+        setKeyword(parsed.keyword || '');
+        setSearchInput(parsed.keyword || '');
+      } catch (e) {
+        console.error('解析本地存储失败', e);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // 3. 状态变化时：同步到 localStorage
+  useEffect(() => {
+    if (!isInitialized) return;
+    const stateToSave = {
+      selectedSource,
+      parentCat,
+      subCat,
+      selectedHour,
+      keyword,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [selectedSource, parentCat, subCat, selectedHour, keyword, isInitialized]);
+
+  // 4. 获取源列表 (修改: 只有在初始化完成后才执行)
+  useEffect(() => {
+    if (!isInitialized) return;
+
     const fetchSources = async () => {
       try {
         const res = await fetch('/api/sources/list');
         const data = await res.json();
         setSources(data);
-        if (data.length > 0) {
-          // 这里是关键：设置初始源的同时触发第一次请求
+
+        // 如果本地没有存过 source，才默认选第一个
+        if (data.length > 0 && !selectedSource) {
           setSelectedSource(data[0].key);
-          handleFilterChange(true); // 👈 显式触发初始数据加载
         }
+
+        // 初始加载触发
+        handleFilterChange(true);
       } catch (err) {
         console.error('获取源列表失败:', err);
       }
     };
     fetchSources();
-  }, []);
+  }, [isInitialized]);
 
   // 2. 获取分类树
   useEffect(() => {
@@ -254,6 +293,21 @@ function SourcesPageClient() {
     { label: '全部', value: '' },
   ];
 
+  const handleResetAll = () => {
+    // 恢复默认状态
+    const firstSource = sources[0]?.key || '';
+    setSelectedSource(firstSource);
+    setParentCat('');
+    setSubCat('');
+    setSelectedHour('24');
+    setKeyword('');
+    setSearchInput('');
+
+    // 触发重新加载
+    setCurrentPage(1);
+    isAppendMode.current = false;
+    setTrigger((prev) => prev + 1);
+  };
   return (
     <PageLayout activePath='/sources'>
       <div className='px-4 sm:px-10 py-4 sm:py-8'>
@@ -268,6 +322,21 @@ function SourcesPageClient() {
 
         {/* --- 筛选器区域 --- */}
         <div className='bg-white/60 dark:bg-gray-800/40 rounded-2xl p-3 sm:p-5 border border-gray-200/30 dark:border-gray-700/30 backdrop-blur-sm mb-6 sm:mb-10 space-y-3 sm:space-y-4 relative z-50'>
+          <div className='flex items-center justify-between mb-1'>
+            <span className='text-xs font-medium text-gray-400 uppercase tracking-wider'>
+              筛选过滤
+            </span>
+            <button
+              onClick={handleResetAll}
+              className='flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-500 hover:text-emerald-500 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors group'
+            >
+              <RotateCcw
+                size={14}
+                className='group-active:rotate-[-120deg] transition-transform duration-300'
+              />
+              重置全部
+            </button>
+          </div>
           {/* 搜索框 */}
           <div className='relative group w-full mb-2'>
             <div
