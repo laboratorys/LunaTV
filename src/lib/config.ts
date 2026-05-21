@@ -32,6 +32,7 @@ interface ConfigFileStruct {
   lives?: {
     [key: string]: LiveCfg;
   };
+  ad_rules?: string;
 }
 
 export const API_CONFIG = {
@@ -179,7 +180,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   // 将 Map 转换回数组
   adminConfig.LiveConfig = Array.from(currentLives.values());
-
+  adminConfig.AdRules = fileConfig.ad_rules || '';
   return adminConfig;
 }
 
@@ -242,6 +243,7 @@ async function getInitConfig(
       source: false,
       live: false,
     },
+    AdRules: cfgFile.ad_rules || '',
   };
 
   // 补充用户信息

@@ -376,7 +376,8 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
       "type": "movie",
       "query": "华语"
     }
-  ]
+  ],
+  "ad_rules": ""
 }
 ```
 
@@ -390,6 +391,8 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
   - `name`：分类显示名称（可选，如不提供则使用 query 作为显示名）
   - `type`：分类类型，支持 `movie`（电影）或 `tv`（电视剧）
   - `query`：搜索关键词，用于在豆瓣 API 中搜索相关内容
+- `live`: （可选）直播
+- `ad_rules`: （可选）广告规则订阅地址
 
 custom_category 支持的自定义分类已知如下：
 

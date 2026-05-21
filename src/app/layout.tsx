@@ -65,6 +65,7 @@ export default async function RootLayout({
   let shortDrama = true;
   let source = false;
   let live = false;
+  let adRules = '';
   if (storageType !== 'localstorage') {
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
@@ -88,6 +89,7 @@ export default async function RootLayout({
     shortDrama = config.FeaturesConfig?.shortDrama ?? true;
     source = config.FeaturesConfig?.source ?? false;
     live = config.FeaturesConfig?.live ?? false;
+    adRules = config.AdRules || '';
   }
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取
@@ -105,6 +107,7 @@ export default async function RootLayout({
     SHOW_SHORT_DRAMA: shortDrama,
     SHOW_SOURCE: source,
     SHOW_LIVE: live,
+    AD_RULES: adRules,
   };
 
   return (

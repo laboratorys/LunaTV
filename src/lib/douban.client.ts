@@ -446,7 +446,6 @@ async function fetchDoubanRecommends(
     reqParams.append('sort', sort);
   }
   const target = `${baseUrl}?${reqParams.toString()}`;
-  console.log(target);
   try {
     const response = await fetchWithTimeout(
       target,

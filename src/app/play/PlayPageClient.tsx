@@ -22,7 +22,11 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
-import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
+import {
+  filterAdsFromM3U8Common,
+  getVideoResolutionFromM3u8,
+  processImageUrl,
+} from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
@@ -95,6 +99,17 @@ export default function PlayPageClient() {
   useEffect(() => {
     blockAdEnabledRef.current = blockAdEnabled;
   }, [blockAdEnabled]);
+  const [blockAdRules] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const runtimeConfig = (window as any).RUNTIME_CONFIG;
+      return runtimeConfig?.AD_RULES || '';
+    }
+    return '';
+  });
+  const blockAdRulesRef = useRef(blockAdRules);
+  useEffect(() => {
+    blockAdRulesRef.current = blockAdRules;
+  }, [blockAdRules]);
 
   // 视频基本信息
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
@@ -207,6 +222,12 @@ export default function PlayPageClient() {
   // Wake Lock 相关
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
+  //广告相关
+  const adRuleJson = useRef<any>({});
+  const adM3u8Ref = useRef<string>(''); // 存储广告 M3U8 文本
+  const adNoticeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showAdNotice, setShowAdNotice] = useState<boolean>(false); // 控制提示显示
+  const [adCount, setAdCount] = useState<number>(0);
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
   // -----------------------------------------------------------------------------
@@ -497,7 +518,7 @@ export default function PlayPageClient() {
   };
 
   // 去广告相关函数
-  function filterAdsFromM3U8(m3u8Content: string): string {
+  /**function filterAdsFromM3U8(m3u8Content: string): string {
     if (!m3u8Content) return '';
 
     // 按行分割M3U8内容
@@ -514,7 +535,7 @@ export default function PlayPageClient() {
     }
 
     return filteredLines.join('\n');
-  }
+  }*/
 
   // 跳过片头片尾配置相关函数
   const handleSkipConfigChange = async (newConfig: {
@@ -617,7 +638,9 @@ export default function PlayPageClient() {
         .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
   };
-
+  const remoteFilterFnRef = useRef<
+    ((blocks: any[], baseUrl: string) => any) | null
+  >(null);
   class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
     constructor(config: any) {
       super(config);
@@ -629,6 +652,7 @@ export default function PlayPageClient() {
           (context as any).type === 'level'
         ) {
           const onSuccess = callbacks.onSuccess;
+          const currentM3u8Url = context.url;
           callbacks.onSuccess = function (
             response: any,
             stats: any,
@@ -637,7 +661,46 @@ export default function PlayPageClient() {
             // 如果是m3u8文件，处理内容以移除广告分段
             if (response.data && typeof response.data === 'string') {
               // 过滤掉广告段 - 实现更精确的广告过滤逻辑
-              response.data = filterAdsFromM3U8(response.data);
+              // response.data = filterAdsFromM3U8(response.data);
+              if (response.data.includes('#EXT-X-STREAM-INF')) {
+                return onSuccess(response, stats, context, null);
+              }
+              if (
+                context.url.startsWith('blob:') ||
+                response.data.includes('#EXT-X-DISCONTINUITY') === false
+              ) {
+                onSuccess(response, stats, context);
+                return;
+              }
+              if (adRuleJson.current[currentSourceRef.current]) {
+                remoteFilterFnRef.current = new Function(
+                  'blocks',
+                  'baseUrl',
+                  adRuleJson.current[currentSourceRef.current]
+                ) as (blocks: any[], baseUrl: string) => any;
+                console.log('✅ 广告过滤规则已就绪');
+              } else {
+                remoteFilterFnRef.current = null;
+                console.log('⚠️ 当前源没有广告过滤规则');
+              }
+              const filterFn = remoteFilterFnRef.current;
+              const { main, ads, adCount } = filterAdsFromM3U8Common(
+                response.data,
+                currentM3u8Url,
+                filterFn,
+                false
+              );
+              if (ads) {
+                setAdCount(adCount || 0);
+                adM3u8Ref.current = ads;
+                if (adNoticeTimerRef.current)
+                  clearTimeout(adNoticeTimerRef.current);
+                setShowAdNotice(true);
+                adNoticeTimerRef.current = setTimeout(() => {
+                  setShowAdNotice(false);
+                }, 5000);
+              }
+              response.data = main;
             }
             return onSuccess(response, stats, context, null);
           };
@@ -781,7 +844,17 @@ export default function PlayPageClient() {
       if (currentEpisodeIndex >= detailData.episodes.length) {
         setCurrentEpisodeIndex(0);
       }
-
+      if (blockAdRulesRef.current) {
+        // 初始化去广告脚本 ---
+        setLoadingMessage('🛡️ 正在加载广告规则...');
+        try {
+          const res = await fetch(blockAdRulesRef.current);
+          const json = await res.json();
+          adRuleJson.current = json;
+        } catch (error) {
+          console.error('广告过滤规则加载失败，将使用默认播放逻辑:', error);
+        }
+      }
       // 规范URL参数
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('source', detailData.source);
@@ -822,7 +895,6 @@ export default function PlayPageClient() {
                 (url) => url === record.episode_url
               ) ?? 0;
             if (targetIndex === -1) targetIndex = 0;
-            console.log(targetIndex);
           } else {
             targetIndex = record.index - 1;
           }
@@ -1197,6 +1269,7 @@ export default function PlayPageClient() {
     (async () => {
       try {
         const fav = await isFavorited(currentSource, currentId);
+        console.log(fav);
         setFavorited(fav);
       } catch (err) {
         console.error('检查收藏状态失败:', err);
@@ -1755,7 +1828,34 @@ export default function PlayPageClient() {
       cleanupPlayer();
     };
   }, []);
-
+  const playAdTest = async () => {
+    if (!adM3u8Ref.current || !artPlayerRef.current) return;
+    setShowAdNotice(false);
+    if (adNoticeTimerRef.current) {
+      clearTimeout(adNoticeTimerRef.current);
+      adNoticeTimerRef.current = null;
+    }
+    const art = artPlayerRef.current;
+    const hls = art.video.hls;
+    if (hls) {
+      hls.config.lowLatencyMode = true;
+      hls.config.backBufferLength = 0;
+      hls.config.maxBufferHole = 1.0;
+      hls.config.nudgeOffset = 0.2;
+      hls.config.nudgeMaxRetry = 20;
+      hls.config.appendErrorMaxRetry = 15;
+    }
+    const blob = new Blob([adM3u8Ref.current], {
+      type: 'application/x-mpegURL',
+    });
+    const adUrl = URL.createObjectURL(blob);
+    try {
+      await artPlayerRef.current.switchUrl(adUrl);
+      art.play();
+    } catch (err) {
+      console.error('切换失败:', err);
+    }
+  };
   if (loading) {
     return (
       <PageLayout activePath='/play'>
@@ -2194,6 +2294,50 @@ export default function PlayPageClient() {
           </div>
         </div>
       </div>
+      {showAdNotice && (
+        <div className='fixed top-20 left-1/2 -translate-x-1/2 z-[9999] bg-black/90 text-white px-4 py-3 rounded-full shadow-2xl border border-yellow-500/30 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 backdrop-blur-md whitespace-nowrap min-w-[300px] justify-between'>
+          <div className='flex items-center gap-2'>
+            <span className='relative flex h-2 w-2'>
+              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75'></span>
+              <span className='relative inline-flex rounded-full h-2 w-2 bg-yellow-500'></span>
+            </span>
+            <span className='text-xs sm:text-sm font-medium'>
+              🛡️ 已过滤插播广告{adCount}条
+            </span>
+          </div>
+
+          <div className='flex items-center gap-2 pl-2'>
+            <button
+              onClick={playAdTest}
+              className='bg-yellow-600 hover:bg-yellow-500 text-[10px] sm:text-xs px-3 py-1.5 rounded-full transition-colors font-bold text-black'
+            >
+              点击测试
+            </button>
+            <button
+              onClick={() => {
+                setShowAdNotice(false);
+                if (adNoticeTimerRef.current)
+                  clearTimeout(adNoticeTimerRef.current);
+              }}
+              className='text-gray-400 hover:text-white transition-colors p-1'
+            >
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }

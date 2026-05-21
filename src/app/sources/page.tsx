@@ -90,7 +90,7 @@ function SourcesPageClient() {
         setSelectedSource(parsed.selectedSource || '');
         setParentCat(parsed.parentCat || '');
         setSubCat(parsed.subCat || '');
-        setSelectedHour(parsed.selectedHour || '24');
+        setSelectedHour(parsed.selectedHour ?? '24');
         setKeyword(parsed.keyword || '');
         setSearchInput(parsed.keyword || '');
       } catch (e) {

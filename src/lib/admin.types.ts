@@ -69,6 +69,7 @@ export interface AdminConfig {
     source: boolean;
     live: boolean;
   };
+  AdRules?: string;
 }
 
 export interface AdminConfigResult {
