@@ -141,8 +141,8 @@ export default function TVBoxSection({
           </div>
           <div className='grid grid-cols-1 gap-4'>
             <ConfigToggle
-              label='M3U8代理去广告（实验性）'
-              description='代理播放源的M3U8地址，实现广告过滤'
+              label='M3U8代理去广告（需在配置文件中包含广告规则）'
+              description='代理播放源的M3U8地址，实现插播广告过滤'
               enabled={tvboxConfig.proxyFilterAds}
               onChange={() =>
                 handleChange('proxyFilterAds', !tvboxConfig.proxyFilterAds)

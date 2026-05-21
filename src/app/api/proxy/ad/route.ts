@@ -1,48 +1,80 @@
 /* eslint-disable no-console,@typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 
+import { getConfig } from '@/lib/config';
 import { getBaseUrl, resolveUrl } from '@/lib/live';
+import { filterAdsFromM3U8Common, getFormattedRuleJson } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
-  const allowCORS = searchParams.get('allowCORS') === 'true';
-
   if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
 
+  const decodedUrl = decodeURIComponent(url);
+  const urlLower = decodedUrl.toLowerCase();
+
+  // --- 🛡️ 解决“连接重置”的关键：对 Key 进行强制伪造 Referer 代理 ---
+  if (urlLower.includes('.key')) {
+    try {
+      const keyRes = await fetch(decodedUrl, {
+        headers: {
+          Referer: 'https://www.360zy.com/',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...',
+        },
+        next: { revalidate: 3600 }, // 缓存 Key，防止频繁请求导致重置
+      });
+
+      if (!keyRes.ok) return new Response(null, { status: keyRes.status });
+
+      const keyBody = await keyRes.arrayBuffer(); // 使用 arrayBuffer 处理二进制
+      return new Response(keyBody, {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
+    } catch (e) {
+      return new Response(null, { status: 502 });
+    }
+  }
+
+  // --- M3U8 处理逻辑 ---
+  const source = searchParams.get('source') || '';
+  const allowCORS = searchParams.get('allowCORS') === 'true';
+
   try {
-    const decodedUrl = decodeURIComponent(url);
-    console.log(decodedUrl);
     const response = await fetch(decodedUrl, {
-      cache: 'no-cache',
-      redirect: 'follow',
+      next: { revalidate: 10 },
+      headers: {
+        Referer: 'https://www.360zy.com/',
+        'User-Agent': 'Mozilla/5.0...',
+      },
     });
+
     if (!response.ok)
       return NextResponse.json({ error: 'Fetch failed' }, { status: 500 });
 
     const contentType = response.headers.get('Content-Type') || '';
-    const isM3U8 =
-      contentType.toLowerCase().includes('mpegurl') ||
-      contentType.toLowerCase().includes('octet-stream') ||
-      decodedUrl.includes('.m3u8');
-
-    if (isM3U8) {
+    if (contentType.includes('mpegurl') || urlLower.includes('.m3u8')) {
+      const config = await getConfig();
       const m3u8Content = await response.text();
-      const baseUrl = getBaseUrl(response.url);
-      const modifiedContent = processM3U8(
+      const modifiedContent = await processM3U8(
+        source,
         m3u8Content,
-        baseUrl,
+        response.url,
         request,
-        allowCORS
+        allowCORS,
+        config.AdRules || ''
       );
 
       return new Response(modifiedContent, {
         headers: {
           'Content-Type': 'application/vnd.apple.mpegurl',
           'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'no-cache',
         },
       });
     }
@@ -53,30 +85,42 @@ export async function GET(request: Request) {
         'Access-Control-Allow-Origin': '*',
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: 'Server Error' }, { status: 500 });
   }
 }
 
-function processM3U8(
+async function processM3U8(
+  source: string,
   content: string,
-  baseUrl: string,
+  fullUrl: string,
   req: Request,
-  allowCORS: boolean
+  allowCORS: boolean,
+  adRules: string
 ) {
   const host = req.headers.get('host');
   const protocol = req.headers.get('x-forwarded-proto') || 'http';
-  const proxyBase = `${protocol}://${host}/api/proxy`;
+  const proxyBase = `${protocol}://${host}/api/proxy/ad`; // 确保指向自己
+  const baseUrl = getBaseUrl(fullUrl);
 
-  // 如果是多码率列表 (Master Playlist)
-  if (content.includes('#EXT-X-STREAM-INF')) {
-    return content
+  // 修改 Key 的指向，让它经过我们的代理
+  const modifiedContent = content.replace(
+    /#EXT-X-KEY:METHOD=AES-128,URI="([^"]+)"/g,
+    (match, p1) => {
+      const absoluteKeyUrl = resolveUrl(baseUrl, p1);
+      return `#EXT-X-KEY:METHOD=AES-128,URI="${proxyBase}?url=${encodeURIComponent(
+        absoluteKeyUrl
+      )}&source=${source}"`;
+    }
+  );
+
+  if (modifiedContent.includes('#EXT-X-STREAM-INF')) {
+    return modifiedContent
       .split('\n')
       .map((line) => {
         const trimmed = line.trim();
         if (trimmed && !trimmed.startsWith('#')) {
-          // 这里指向的是 /ad 路由，请确保你的路由路径正确
-          return `${proxyBase}/ad?url=${encodeURIComponent(
+          return `${proxyBase}?source=${source}&url=${encodeURIComponent(
             resolveUrl(baseUrl, trimmed)
           )}&allowCORS=${allowCORS}`;
         }
@@ -85,94 +129,24 @@ function processM3U8(
       .join('\n');
   }
 
-  // 如果是切片列表 (Media Playlist)，调用智能过滤
-  return smartFilterAds(content, baseUrl);
-}
+  const ruleJson = await getFormattedRuleJson(adRules);
+  if (!ruleJson || !ruleJson[source]) return modifiedContent;
+  const ruleString = (ruleJson && ruleJson[source]) || '';
+  const remoteFilterFn = ruleString
+    ? (new Function('blocks', 'baseUrl', ruleString) as (
+        blocks: string[][],
+        baseUrl: string
+      ) => any)
+    : null;
 
-function smartFilterAds(m3u8Content: string, baseUrl: string): string {
-  if (typeof m3u8Content !== 'string') return '';
-
-  const lines = m3u8Content
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l !== '');
-  const headerLines: string[] = [];
-  const bodyLines: string[] = [];
-
-  // 1. 严格分离头部和主体
-  lines.forEach((line) => {
-    if (
-      line.startsWith('#EXTM3U') ||
-      line.startsWith('#EXT-X-VERSION') ||
-      line.startsWith('#EXT-X-TARGETDURATION') ||
-      line.startsWith('#EXT-X-PLAYLIST-TYPE') ||
-      line.startsWith('#EXT-X-MEDIA-SEQUENCE')
-    ) {
-      headerLines.push(line);
-    } else {
-      bodyLines.push(line);
-    }
-  });
-
-  // 2. 分组
-  const groups: any[] = [];
-  let currentGroup: any = { isDiscontinuous: false, lines: [], duration: 0 };
-
-  for (let i = 0; i < bodyLines.length; i++) {
-    const line = bodyLines[i];
-    if (line.startsWith('#EXT-X-DISCONTINUITY')) {
-      if (currentGroup.lines.length > 0) groups.push(currentGroup);
-      currentGroup = { isDiscontinuous: true, lines: [], duration: 0 };
-    } else if (line.startsWith('#EXTINF:')) {
-      const match = line.match(/#EXTINF:([\d.]+)/);
-      const dur = match ? parseFloat(match[1]) : 0;
-      currentGroup.duration += dur;
-      currentGroup.lines.push({ type: 'INF', val: line });
-      if (i + 1 < bodyLines.length && !bodyLines[i + 1].startsWith('#')) {
-        currentGroup.lines.push({ type: 'TS', val: bodyLines[++i] });
-      }
-    } else {
-      currentGroup.lines.push({ type: 'OTHER', val: line });
-    }
-  }
-  groups.push(currentGroup);
-
-  // 3. 过滤逻辑 (针对你的文件特别优化)
-  const finalBody: string[] = [];
-  groups.forEach((group, index) => {
-    const tsCount = group.lines.filter((l: any) => l.type === 'TS').length;
-
-    // --- 更加保守的过滤逻辑 ---
-    let shouldFilter = false;
-
-    if (group.isDiscontinuous && tsCount > 0) {
-      // 只有同时满足以下条件才判定为广告：
-      // 1. 不是第一组 (index 0)
-      // 2. 总时长极其接近 15s 或 30s (正负误差极小)
-      // 3. 切片数量非常少 (通常广告切片多为 3-5 个)
-      const isExactly15s = Math.abs(group.duration - 15.0) < 0.05;
-      const isExactly30s = Math.abs(group.duration - 30.0) < 0.05;
-
-      if (index > 0 && (isExactly15s || isExactly30s) && tsCount <= 5) {
-        shouldFilter = true;
-      }
-    }
-
-    if (shouldFilter) {
-      console.log(`[已拦截真实广告] 索引:${index}, 时长:${group.duration}s`);
-      return;
-    }
-
-    // 4. 还原
-    if (group.isDiscontinuous) finalBody.push('#EXT-X-DISCONTINUITY');
-    group.lines.forEach((l: any) => {
-      if (l.type === 'TS') {
-        finalBody.push(resolveUrl(baseUrl, l.val));
-      } else {
-        finalBody.push(l.val);
-      }
-    });
-  });
-
-  return [...headerLines, ...finalBody].join('\n');
+  const { main, adCount, adDuration } = filterAdsFromM3U8Common(
+    modifiedContent,
+    fullUrl,
+    remoteFilterFn,
+    true
+  );
+  console.log(
+    `✅ 广告过滤完成，源: ${source}, 广告数量: ${adCount}, 广告总时长: ${adDuration}秒`
+  );
+  return main;
 }

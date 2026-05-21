@@ -441,3 +441,102 @@ export function handleTVBoxFromFavRecord(
     },
   };
 }
+
+export function filterAdsFromM3U8Common(
+  m3u8Content: string,
+  m3u8Url: string,
+  filterFn: ((...args: any[]) => any) | null,
+  proxyTs = false
+) {
+  if (!m3u8Content) return { main: '', ads: '' };
+  const baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
+  const lines = m3u8Content.split(/\r?\n/).map((l) => l.trim());
+  const headerLines: string[] = [];
+  const blocks: string[][] = [];
+  let currentBlock: string[] = [];
+  for (const line of lines) {
+    if (line === '#EXT-X-DISCONTINUITY') {
+      if (currentBlock.length > 0) blocks.push(currentBlock);
+      currentBlock = [];
+    } else if (
+      line.startsWith('#EXTINF') ||
+      line.startsWith('#EXT-X-KEY') ||
+      (!line.startsWith('#') && line.length > 0)
+    ) {
+      currentBlock.push(line);
+    } else if (
+      line.startsWith('#EXTM3U') ||
+      line.startsWith('#EXT-X-VERSION') ||
+      line.startsWith('#EXT-X-TARGETDURATION') ||
+      line.startsWith('#EXT-X-MEDIA-SEQUENCE')
+    ) {
+      headerLines.push(line);
+    }
+  }
+  if (currentBlock.length > 0) blocks.push(currentBlock);
+  let validBlocks = blocks;
+  let adSegments: string[] = [];
+  let totalAdDuration = 0;
+  if (typeof filterFn === 'function') {
+    try {
+      const result = filterFn(blocks, baseUrl);
+      if (result) {
+        validBlocks = result.validBlocks || blocks;
+        adSegments = result.adSegments || [];
+        adSegments.forEach((line) => {
+          if (line.startsWith('#EXTINF:')) {
+            // 匹配数字，例如 #EXTINF:10.000, 提取出 10.000
+            const match = line.match(/#EXTINF:([\d.]+)/);
+            if (match && match[1]) {
+              totalAdDuration += parseFloat(match[1]);
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.error('执行远程过滤逻辑出错:', e);
+    }
+  }
+  const mainLines = [...headerLines];
+  validBlocks.forEach((block, index) => {
+    if (index > 0 || m3u8Content.includes('#EXT-X-DISCONTINUITY')) {
+      mainLines.push('#EXT-X-DISCONTINUITY');
+    }
+    const processedBlock = block.map((line) => {
+      const isTsLine = !line.startsWith('#') && line.length > 0;
+      // 如果开启了 proxyTs 且当前行是 TS 地址，进行还原
+      if (proxyTs && isTsLine) {
+        try {
+          return line.startsWith('http') ? line : new URL(line, baseUrl).href;
+        } catch {
+          return line;
+        }
+      }
+      return line;
+    });
+    mainLines.push(...processedBlock);
+  });
+  if (mainLines[mainLines.length - 1] !== '#EXT-X-ENDLIST') {
+    mainLines.push('#EXT-X-ENDLIST');
+  }
+  let adPlaylist = '';
+  if (adSegments.length > 0) {
+    adPlaylist = [...headerLines, ...adSegments, '#EXT-X-ENDLIST'].join('\n');
+  }
+
+  return {
+    main: mainLines.join('\n'),
+    ads: adPlaylist,
+    adCount: adSegments.length,
+    adDuration: parseFloat(totalAdDuration.toFixed(2)),
+  };
+}
+export async function getFormattedRuleJson(url: string) {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}

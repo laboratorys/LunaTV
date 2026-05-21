@@ -182,11 +182,12 @@ export async function fetchDoubanHotList(
   }
   const { proxyUrl, useTencentCDN, useAliCDN } = await getDoubanProxyConfig();
   const { imageProxyType, imageProxyUrl } = await getDoubanImageProxyConfig();
-  const target = useTencentCDN
-    ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
-    : useAliCDN
-    ? `https://movie.douban.cmliussss.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
-    : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
+  //const target = useTencentCDN
+  //  ? `https://movie.douban.cmliussss.net/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
+  //  : useAliCDN
+  //  ? `https://movie.douban.cmliussss.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`
+  //  : `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=$//{pageStart}`;
+  const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=$//{pageStart}`;
   try {
     const response = await fetchWithTimeout(
       target,
