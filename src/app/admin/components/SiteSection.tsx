@@ -10,7 +10,6 @@ import CustomDropdown from '@/components/CustomDropdown';
 
 import ConfigToggle from '@/app/admin/components/ConfigToggle';
 import { styles, useLoadingState } from '@/app/admin/components/UIComponents';
-
 // 豆瓣代理预设选项
 const DOUBAN_PROXIES = [
   { value: 'direct', label: '直连（服务器直接请求豆瓣）' },
@@ -36,7 +35,7 @@ export default function SiteSection({
 }: SectionConfigProps) {
   const [siteConfig, setSiteConfig] = useState(config?.SiteConfig);
   const { isLoading, withLoading } = useLoadingState();
-
+  const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const handleUpdateConfig = async () => {
     return withLoading(`SiteConfig`, async () => {
       try {
@@ -93,7 +92,11 @@ export default function SiteSection({
           </div>
 
           {/* 豆瓣设置 */}
-          <div className={`${styles.roundedCard}`}>
+          <div
+            className={`${styles.roundedCard} relative ${
+              isDoubanDropdownOpen ? 'z-30' : 'z-10'
+            }`}
+          >
             <div className='flex items-center gap-2'>
               <Link2 className='text-green-500 w-5 h-5' />
               <h3 className='font-bold dark:text-white text-lg'>
@@ -112,6 +115,7 @@ export default function SiteSection({
                   onChange={(val: string) =>
                     handleChange('DoubanProxyType', val)
                   }
+                  onOpenChange={(isOpen) => setIsDoubanDropdownOpen(isOpen)}
                   className='w-full'
                 />
                 {siteConfig?.DoubanProxyType === 'custom' && (
@@ -140,6 +144,7 @@ export default function SiteSection({
                   onChange={(val: string) =>
                     handleChange('DoubanImageProxyType', val)
                   }
+                  onOpenChange={(isOpen) => setIsDoubanDropdownOpen(isOpen)}
                   className='w-full'
                 />
                 {siteConfig?.DoubanImageProxyType === 'custom' && (
@@ -186,7 +191,7 @@ export default function SiteSection({
         </div>
 
         {/* 系统策略 */}
-        <div className={`${styles.roundedCard}`}>
+        <div className={`${styles.roundedCard} relative z-0`}>
           <div className='flex items-center gap-2 mb-2'>
             <ShieldCheck className='text-green-500 w-5 h-5' />
             <h3 className='font-bold dark:text-white text-lg'>系统策略</h3>

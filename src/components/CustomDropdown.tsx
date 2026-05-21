@@ -60,13 +60,19 @@ const CustomDropdown = ({
   return (
     // 注意：将 ref 移到最外层 div 以确保 handleClickOutside 逻辑准确
     <div
-      className={`relative z-50 ${className}`}
+      className={`relative ${isOpen ? 'z-50' : 'z-40'} ${className}`}
       data-dropdown
       ref={dropdownRef}
     >
       <button
         type='button'
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!disabled) {
+            const nextOpen = !isOpen;
+            setIsOpen(nextOpen);
+            onOpenChange?.(nextOpen);
+          }
+        }}
         disabled={disabled}
         className={`w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left ${
           disabled ? 'cursor-not-allowed opacity-50' : ''
