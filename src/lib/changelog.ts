@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.1.0",
+    date: "2026-05-20",
+    added: [
+    "增加去广告规则"
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "收藏、播放记录重复",
+    "【播放源】时间筛选无法记住【全部】选项",
+    "【TVBOX】解决播放详情匹配不准确的问题",
+    "【TVBOX】避免豆瓣缓存导致的热播数据更新不及时"
+    ]
+  },
+  {
     version: "5.0.9",
     date: "2026-03-06",
     added: [
