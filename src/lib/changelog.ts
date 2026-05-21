@@ -11,6 +11,19 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "5.1.1",
+    date: "2026-05-20",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "【100.1.2】移除豆瓣图片代理中的「直连」和「豆瓣官方精品 CDN」选项，历史数据自动兼容为服务器代理"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "5.1.0",
     date: "2026-05-20",
     added: [
