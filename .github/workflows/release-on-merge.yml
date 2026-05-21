@@ -76,4 +76,3 @@ jobs:
           body: ${{ steps.extract-notes.outputs.notes }}
           draft: false
           prerelease: ${{ github.event.release.prerelease }}
-          release_id: ${{ github.event.release.id }}
