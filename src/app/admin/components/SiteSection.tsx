@@ -21,9 +21,7 @@ const DOUBAN_PROXIES = [
 ];
 
 const DOUBAN_IMAGE_PROXIES = [
-  { value: 'direct', label: '直连（浏览器直接请求豆瓣）', disabled: true },
   { value: 'server', label: '服务器代理（由服务器代理请求豆瓣）' },
-  { value: 'img3', label: '豆瓣官方精品 CDN（阿里云）' },
   { value: 'cmliussss-cdn-tencent', label: '豆瓣 CDN By CMLiussss（腾讯云）' },
   { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
   { value: 'custom', label: '自定义代理' },

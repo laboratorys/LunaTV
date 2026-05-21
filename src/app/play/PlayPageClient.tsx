@@ -684,6 +684,7 @@ export default function PlayPageClient() {
                 console.log('⚠️ 当前源没有广告过滤规则');
               }
               const filterFn = remoteFilterFnRef.current;
+              //  const filterFn = processM3u8;
               const { main, ads, adCount } = filterAdsFromM3U8Common(
                 response.data,
                 currentM3u8Url,
@@ -1269,7 +1270,6 @@ export default function PlayPageClient() {
     (async () => {
       try {
         const fav = await isFavorited(currentSource, currentId);
-        console.log(fav);
         setFavorited(fav);
       } catch (err) {
         console.error('检查收藏状态失败:', err);
@@ -1486,7 +1486,7 @@ export default function PlayPageClient() {
             ensureVideoSource(video, url);
 
             hls.on(Hls.Events.ERROR, function (event: any, data: any) {
-              console.error('HLS Error:', event, data);
+              //console.error('HLS Error:', event, data);
               if (data.fatal) {
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
