@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion,react-hooks/exhaustive-deps,@typescript-eslint/no-empty-function */
+/* eslint-disable no-console,react-hooks/exhaustive-deps */
 
 'use client';
 
@@ -34,12 +34,12 @@ import {
   ExternalLink,
   FileText,
   FolderOpen,
+  GripVertical,
   Settings,
   Tv,
   Users,
   Video,
 } from 'lucide-react';
-import { GripVertical } from 'lucide-react';
 import {
   Suspense,
   useCallback,
@@ -183,7 +183,7 @@ const AlertModal = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >
@@ -214,7 +214,7 @@ const AlertModal = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
@@ -277,7 +277,7 @@ const useLoadingState = () => {
 
   const withLoading = async (
     key: string,
-    operation: () => Promise<any>
+    operation: () => Promise<any>,
   ): Promise<any> => {
     setLoading(key, true);
     try {
@@ -453,7 +453,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         (user) =>
           role === 'owner' ||
           (role === 'admin' &&
-            (user.role === 'user' || user.username === currentUsername))
+            (user.role === 'user' || user.username === currentUsername)),
       ).length || 0;
     return selectedUsers.size === selectableUserCount && selectedUsers.size > 0;
   }, [selectedUsers.size, config?.UserConfig?.Users, role, currentUsername]);
@@ -465,7 +465,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
   const handleUserGroupAction = async (
     action: 'add' | 'edit' | 'delete',
     groupName: string,
-    enabledApis?: string[]
+    enabledApis?: string[],
   ) => {
     return withLoading(`userGroup_${action}_${groupName}`, async () => {
       try {
@@ -499,9 +499,9 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
           action === 'add'
             ? '用户组添加成功'
             : action === 'edit'
-            ? '用户组更新成功'
-            : '用户组删除成功',
-          showAlert
+              ? '用户组更新成功'
+              : '用户组删除成功',
+          showAlert,
         );
       } catch (err) {
         showError(err instanceof Error ? err.message : '操作失败', showAlert);
@@ -520,7 +520,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     handleUserGroupAction(
       'edit',
       editingUserGroup.name,
-      editingUserGroup.enabledApis
+      editingUserGroup.enabledApis,
     );
   };
 
@@ -528,7 +528,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     // 计算会受影响的用户数量
     const affectedUsers =
       config?.UserConfig?.Users?.filter(
-        (user) => user.tags && user.tags.includes(groupName)
+        (user) => user.tags && user.tags.includes(groupName),
       ) || [];
 
     setDeletingUserGroup({
@@ -565,7 +565,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
   // 为用户分配用户组
   const handleAssignUserGroup = async (
     username: string,
-    userGroups: string[]
+    userGroups: string[],
   ) => {
     return withLoading(`assignUserGroup_${username}`, async () => {
       try {
@@ -599,19 +599,19 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
   const handleUnbanUser = async (uname: string) => {
     await withLoading(`unbanUser_${uname}`, () =>
-      handleUserAction('unban', uname)
+      handleUserAction('unban', uname),
     );
   };
 
   const handleSetAdmin = async (uname: string) => {
     await withLoading(`setAdmin_${uname}`, () =>
-      handleUserAction('setAdmin', uname)
+      handleUserAction('setAdmin', uname),
     );
   };
 
   const handleRemoveAdmin = async (uname: string) => {
     await withLoading(`removeAdmin_${uname}`, () =>
-      handleUserAction('cancelAdmin', uname)
+      handleUserAction('cancelAdmin', uname),
     );
   };
 
@@ -622,7 +622,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         'add',
         newUser.username,
         newUser.password,
-        newUser.userGroup
+        newUser.userGroup,
       );
       setNewUser({ username: '', password: '', userGroup: '' });
       setShowAddUserForm(false);
@@ -637,11 +637,11 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         await handleUserAction(
           'changePassword',
           changePasswordUser.username,
-          changePasswordUser.password
+          changePasswordUser.password,
         );
         setChangePasswordUser({ username: '', password: '' });
         setShowChangePasswordForm(false);
-      }
+      },
     );
   };
 
@@ -703,7 +703,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         try {
           await handleAssignUserGroup(
             selectedUserForGroup.username,
-            selectedUserGroups
+            selectedUserGroups,
           );
           setShowConfigureUserGroupModal(false);
           setSelectedUserForGroup(null);
@@ -711,7 +711,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         } catch (err) {
           // 错误处理已在 handleAssignUserGroup 中处理
         }
-      }
+      },
     );
   };
 
@@ -737,14 +737,14 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
             (user) =>
               role === 'owner' ||
               (role === 'admin' &&
-                (user.role === 'user' || user.username === currentUsername))
+                (user.role === 'user' || user.username === currentUsername)),
           ).map((u) => u.username) || [];
         setSelectedUsers(new Set(selectableUsernames));
       } else {
         setSelectedUsers(new Set());
       }
     },
-    [config?.UserConfig?.Users, role, currentUsername]
+    [config?.UserConfig?.Users, role, currentUsername],
   );
 
   // 批量设置用户组
@@ -774,7 +774,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         setSelectedUserGroup('');
         showSuccess(
           `已为 ${userCount} 个用户设置用户组: ${userGroup}`,
-          showAlert
+          showAlert,
         );
 
         // 刷新配置
@@ -872,7 +872,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
       | 'deleteUser',
     targetUsername: string,
     targetPassword?: string,
-    userGroup?: string
+    userGroup?: string,
   ) => {
     try {
       const res = await fetch('/api/admin/user', {
@@ -1230,7 +1230,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                         role === 'owner' ||
                         (role === 'admin' &&
                           (user.role === 'user' ||
-                            user.username === currentUsername))
+                            user.username === currentUsername)),
                     );
 
                     return hasAnyPermission ? (
@@ -1340,7 +1340,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                               onChange={(e) =>
                                 handleSelectUser(
                                   user.username,
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                               className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
@@ -1361,15 +1361,15 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                               user.role === 'owner'
                                 ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
                                 : user.role === 'admin'
-                                ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                  ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             {user.role === 'owner'
                               ? '站长'
                               : user.role === 'admin'
-                              ? '管理员'
-                              : '普通用户'}
+                                ? '管理员'
+                                : '普通用户'}
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
@@ -1450,7 +1450,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                 <button
                                   onClick={() => handleSetAdmin(user.username)}
                                   disabled={isLoading(
-                                    `setAdmin_${user.username}`
+                                    `setAdmin_${user.username}`,
                                   )}
                                   className={`${buttonStyles.roundedPurple} ${
                                     isLoading(`setAdmin_${user.username}`)
@@ -1467,7 +1467,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                     handleRemoveAdmin(user.username)
                                   }
                                   disabled={isLoading(
-                                    `removeAdmin_${user.username}`
+                                    `removeAdmin_${user.username}`,
                                   )}
                                   className={`${
                                     buttonStyles.roundedSecondary
@@ -1485,7 +1485,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                   <button
                                     onClick={() => handleBanUser(user.username)}
                                     disabled={isLoading(
-                                      `banUser_${user.username}`
+                                      `banUser_${user.username}`,
                                     )}
                                     className={`${buttonStyles.roundedDanger} ${
                                       isLoading(`banUser_${user.username}`)
@@ -1501,7 +1501,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                       handleUnbanUser(user.username)
                                     }
                                     disabled={isLoading(
-                                      `unbanUser_${user.username}`
+                                      `unbanUser_${user.username}`,
                                     )}
                                     className={`${
                                       buttonStyles.roundedSuccess
@@ -1541,7 +1541,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         selectedUser &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowConfigureApisModal(false);
               setSelectedUser(null);
@@ -1626,7 +1626,9 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                               setSelectedApis([...selectedApis, source.key]);
                             } else {
                               setSelectedApis(
-                                selectedApis.filter((api) => api !== source.key)
+                                selectedApis.filter(
+                                  (api) => api !== source.key,
+                                ),
                               );
                             }
                           }}
@@ -1660,7 +1662,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                       onClick={() => {
                         const allApis =
                           config?.SourceConfig?.filter(
-                            (source) => !source.disabled
+                            (source) => !source.disabled,
                           ).map((s) => s.key) || [];
                         setSelectedApis(allApis);
                       }}
@@ -1694,7 +1696,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   <button
                     onClick={handleSaveUserApis}
                     disabled={isLoading(
-                      `saveUserApis_${selectedUser?.username}`
+                      `saveUserApis_${selectedUser?.username}`,
                     )}
                     className={`px-6 py-2.5 text-sm font-medium ${
                       isLoading(`saveUserApis_${selectedUser?.username}`)
@@ -1710,14 +1712,14 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 添加用户组弹窗 */}
       {showAddUserGroupForm &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowAddUserGroupForm(false);
               setNewUserGroup({ name: '', enabledApis: [] });
@@ -1789,7 +1791,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                           <input
                             type='checkbox'
                             checked={newUserGroup.enabledApis.includes(
-                              source.key
+                              source.key,
                             )}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -1804,7 +1806,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                 setNewUserGroup((prev) => ({
                                   ...prev,
                                   enabledApis: prev.enabledApis.filter(
-                                    (api) => api !== source.key
+                                    (api) => api !== source.key,
                                   ),
                                 }));
                               }
@@ -1842,7 +1844,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                         onClick={() => {
                           const allApis =
                             config?.SourceConfig?.filter(
-                              (source) => !source.disabled
+                              (source) => !source.disabled,
                             ).map((s) => s.key) || [];
                           setNewUserGroup((prev) => ({
                             ...prev,
@@ -1889,7 +1891,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 编辑用户组弹窗 */}
@@ -1897,7 +1899,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         editingUserGroup &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowEditUserGroupForm(false);
               setEditingUserGroup(null);
@@ -1950,7 +1952,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                           <input
                             type='checkbox'
                             checked={editingUserGroup.enabledApis.includes(
-                              source.key
+                              source.key,
                             )}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -1963,7 +1965,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                           source.key,
                                         ],
                                       }
-                                    : null
+                                    : null,
                                 );
                               } else {
                                 setEditingUserGroup((prev) =>
@@ -1971,10 +1973,10 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                     ? {
                                         ...prev,
                                         enabledApis: prev.enabledApis.filter(
-                                          (api) => api !== source.key
+                                          (api) => api !== source.key,
                                         ),
                                       }
-                                    : null
+                                    : null,
                                 );
                               }
                             }}
@@ -1999,7 +2001,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                       <button
                         onClick={() =>
                           setEditingUserGroup((prev) =>
-                            prev ? { ...prev, enabledApis: [] } : null
+                            prev ? { ...prev, enabledApis: [] } : null,
                           )
                         }
                         className={buttonStyles.quickAction}
@@ -2010,10 +2012,10 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                         onClick={() => {
                           const allApis =
                             config?.SourceConfig?.filter(
-                              (source) => !source.disabled
+                              (source) => !source.disabled,
                             ).map((s) => s.key) || [];
                           setEditingUserGroup((prev) =>
-                            prev ? { ...prev, enabledApis: allApis } : null
+                            prev ? { ...prev, enabledApis: allApis } : null,
                           );
                         }}
                         className={buttonStyles.quickAction}
@@ -2037,7 +2039,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                     <button
                       onClick={handleEditUserGroup}
                       disabled={isLoading(
-                        `userGroup_edit_${editingUserGroup?.name}`
+                        `userGroup_edit_${editingUserGroup?.name}`,
                       )}
                       className={`px-6 py-2.5 text-sm font-medium ${
                         isLoading(`userGroup_edit_${editingUserGroup?.name}`)
@@ -2054,7 +2056,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 配置用户组弹窗 */}
@@ -2062,7 +2064,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         selectedUserForGroup &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowConfigureUserGroupModal(false);
               setSelectedUserForGroup(null);
@@ -2173,18 +2175,18 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   <button
                     onClick={handleSaveUserGroups}
                     disabled={isLoading(
-                      `saveUserGroups_${selectedUserForGroup?.username}`
+                      `saveUserGroups_${selectedUserForGroup?.username}`,
                     )}
                     className={`px-6 py-2.5 text-sm font-medium ${
                       isLoading(
-                        `saveUserGroups_${selectedUserForGroup?.username}`
+                        `saveUserGroups_${selectedUserForGroup?.username}`,
                       )
                         ? buttonStyles.disabled
                         : buttonStyles.primary
                     }`}
                   >
                     {isLoading(
-                      `saveUserGroups_${selectedUserForGroup?.username}`
+                      `saveUserGroups_${selectedUserForGroup?.username}`,
                     )
                       ? '配置中...'
                       : '确认配置'}
@@ -2193,7 +2195,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 删除用户组确认弹窗 */}
@@ -2201,7 +2203,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         deletingUserGroup &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowDeleteUserGroupModal(false);
               setDeletingUserGroup(null);
@@ -2338,7 +2340,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   <button
                     onClick={handleConfirmDeleteUserGroup}
                     disabled={isLoading(
-                      `userGroup_delete_${deletingUserGroup?.name}`
+                      `userGroup_delete_${deletingUserGroup?.name}`,
                     )}
                     className={`px-6 py-2.5 text-sm font-medium ${
                       isLoading(`userGroup_delete_${deletingUserGroup?.name}`)
@@ -2354,7 +2356,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 删除用户确认弹窗 */}
@@ -2362,7 +2364,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         deletingUser &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowDeleteUserModal(false);
               setDeletingUser(null);
@@ -2448,14 +2450,14 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 批量设置用户组弹窗 */}
       {showBatchUserGroupModal &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => {
               setShowBatchUserGroupModal(false);
               setSelectedUserGroup('');
@@ -2570,7 +2572,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 通用弹窗组件 */}
@@ -2611,7 +2613,7 @@ const VideoSourceConfig = ({
 
   // 批量操作相关状态
   const [selectedSources, setSelectedSources] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // 使用 useMemo 计算全选状态，避免每次渲染都重新计算
@@ -2660,7 +2662,7 @@ const VideoSourceConfig = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -2701,7 +2703,7 @@ const VideoSourceConfig = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleSource_${key}`, () =>
-      callSourceApi({ action, key })
+      callSourceApi({ action, key }),
     ).catch(() => {
       console.error('操作失败', action, key);
     });
@@ -2709,7 +2711,7 @@ const VideoSourceConfig = ({
 
   const handleDelete = (key: string) => {
     withLoading(`deleteSource_${key}`, () =>
-      callSourceApi({ action: 'delete', key })
+      callSourceApi({ action: 'delete', key }),
     ).catch(() => {
       console.error('操作失败', 'delete', key);
     });
@@ -2751,7 +2753,7 @@ const VideoSourceConfig = ({
   const handleSaveOrder = () => {
     const order = sources.map((s) => s.key);
     withLoading('saveSourceOrder', () =>
-      callSourceApi({ action: 'sort', order })
+      callSourceApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -2791,8 +2793,8 @@ const VideoSourceConfig = ({
         // 使用EventSource接收流式数据
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
-            searchKeyword.trim()
-          )}`
+            searchKeyword.trim(),
+          )}`,
         );
 
         eventSource.onmessage = (event) => {
@@ -2822,11 +2824,11 @@ const VideoSourceConfig = ({
                               data.status === 'valid'
                                 ? '搜索正常'
                                 : data.status === 'no_results'
-                                ? '无法搜索到结果'
-                                : '连接失败',
+                                  ? '无法搜索到结果'
+                                  : '连接失败',
                             resultCount: data.status === 'valid' ? 1 : 0,
                           }
-                        : r
+                        : r,
                     );
                   } else {
                     return [
@@ -2841,8 +2843,8 @@ const VideoSourceConfig = ({
                           data.status === 'valid'
                             ? '搜索正常'
                             : data.status === 'no_results'
-                            ? '无法搜索到结果'
-                            : '连接失败',
+                              ? '无法搜索到结果'
+                              : '连接失败',
                         resultCount: data.status === 'valid' ? 1 : 0,
                       },
                     ];
@@ -2852,7 +2854,7 @@ const VideoSourceConfig = ({
 
               case 'complete':
                 console.log(
-                  `检测完成，共检测 ${data.completedSources} 个视频源`
+                  `检测完成，共检测 ${data.completedSources} 个视频源`,
                 );
                 eventSource.close();
                 setIsValidating(false);
@@ -3066,7 +3068,7 @@ const VideoSourceConfig = ({
         setSelectedSources(new Set());
       }
     },
-    [sources]
+    [sources],
   );
 
   // 单个选择
@@ -3084,7 +3086,7 @@ const VideoSourceConfig = ({
 
   // 批量操作
   const handleBatchOperation = async (
-    action: 'batch_enable' | 'batch_disable' | 'batch_delete'
+    action: 'batch_enable' | 'batch_disable' | 'batch_delete',
   ) => {
     if (selectedSources.size === 0) {
       showAlert({
@@ -3122,7 +3124,7 @@ const VideoSourceConfig = ({
       onConfirm: async () => {
         try {
           await withLoading(`batchSource_${action}`, () =>
-            callSourceApi({ action, keys })
+            callSourceApi({ action, keys }),
           );
           showAlert({
             type: 'success',
@@ -3404,7 +3406,7 @@ const VideoSourceConfig = ({
       {showValidationModal &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+            className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'
             onClick={() => setShowValidationModal(false)}
           >
             <div
@@ -3450,7 +3452,7 @@ const VideoSourceConfig = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 通用弹窗组件 */}
@@ -3468,7 +3470,7 @@ const VideoSourceConfig = ({
       {confirmModal.isOpen &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={confirmModal.onCancel}
           >
             <div
@@ -3539,7 +3541,7 @@ const VideoSourceConfig = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );
@@ -3578,7 +3580,7 @@ const CategoryConfig = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -3617,7 +3619,7 @@ const CategoryConfig = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleCategory_${query}_${type}`, () =>
-      callCategoryApi({ action, query, type })
+      callCategoryApi({ action, query, type }),
     ).catch(() => {
       console.error('操作失败', action, query, type);
     });
@@ -3625,7 +3627,7 @@ const CategoryConfig = ({
 
   const handleDelete = (query: string, type: 'movie' | 'tv') => {
     withLoading(`deleteCategory_${query}_${type}`, () =>
-      callCategoryApi({ action: 'delete', query, type })
+      callCategoryApi({ action: 'delete', query, type }),
     ).catch(() => {
       console.error('操作失败', 'delete', query, type);
     });
@@ -3657,10 +3659,10 @@ const CategoryConfig = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = categories.findIndex(
-      (c) => `${c.query}:${c.type}` === active.id
+      (c) => `${c.query}:${c.type}` === active.id,
     );
     const newIndex = categories.findIndex(
-      (c) => `${c.query}:${c.type}` === over.id
+      (c) => `${c.query}:${c.type}` === over.id,
     );
     setCategories((prev) => arrayMove(prev, oldIndex, newIndex));
     setOrderChanged(true);
@@ -3669,7 +3671,7 @@ const CategoryConfig = ({
   const handleSaveOrder = () => {
     const order = categories.map((c) => `${c.query}:${c.type}`);
     withLoading('saveCategoryOrder', () =>
-      callCategoryApi({ action: 'sort', order })
+      callCategoryApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -3737,7 +3739,7 @@ const CategoryConfig = ({
           <button
             onClick={() => handleToggleEnable(category.query, category.type)}
             disabled={isLoading(
-              `toggleCategory_${category.query}_${category.type}`
+              `toggleCategory_${category.query}_${category.type}`,
             )}
             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
               !category.disabled
@@ -3755,7 +3757,7 @@ const CategoryConfig = ({
             <button
               onClick={() => handleDelete(category.query, category.type)}
               disabled={isLoading(
-                `deleteCategory_${category.query}_${category.type}`
+                `deleteCategory_${category.query}_${category.type}`,
               )}
               className={`${buttonStyles.roundedSecondary} ${
                 isLoading(`deleteCategory_${category.query}_${category.type}`)
@@ -4393,7 +4395,7 @@ const SiteConfigComponent = ({
             >
               {
                 doubanDataSourceOptions.find(
-                  (option) => option.value === siteSettings.DoubanProxyType
+                  (option) => option.value === siteSettings.DoubanProxyType,
                 )?.label
               }
             </button>
@@ -4445,7 +4447,7 @@ const SiteConfigComponent = ({
                 onClick={() =>
                   window.open(
                     getThanksInfo(siteSettings.DoubanProxyType)!.url,
-                    '_blank'
+                    '_blank',
                   )
                 }
                 className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
@@ -4496,14 +4498,15 @@ const SiteConfigComponent = ({
               type='button'
               onClick={() =>
                 setIsDoubanImageProxyDropdownOpen(
-                  !isDoubanImageProxyDropdownOpen
+                  !isDoubanImageProxyDropdownOpen,
                 )
               }
               className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
             >
               {
                 doubanImageProxyTypeOptions.find(
-                  (option) => option.value === siteSettings.DoubanImageProxyType
+                  (option) =>
+                    option.value === siteSettings.DoubanImageProxyType,
                 )?.label
               }
             </button>
@@ -4562,7 +4565,7 @@ const SiteConfigComponent = ({
                 onClick={() =>
                   window.open(
                     getThanksInfo(siteSettings.DoubanImageProxyType)!.url,
-                    '_blank'
+                    '_blank',
                   )
                 }
                 className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
@@ -4814,7 +4817,7 @@ const LiveSourceConfig = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -4853,7 +4856,7 @@ const LiveSourceConfig = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleLiveSource_${key}`, () =>
-      callLiveSourceApi({ action, key })
+      callLiveSourceApi({ action, key }),
     ).catch(() => {
       console.error('操作失败', action, key);
     });
@@ -4861,7 +4864,7 @@ const LiveSourceConfig = ({
 
   const handleDelete = (key: string) => {
     withLoading(`deleteLiveSource_${key}`, () =>
-      callLiveSourceApi({ action: 'delete', key })
+      callLiveSourceApi({ action: 'delete', key }),
     ).catch(() => {
       console.error('操作失败', 'delete', key);
     });
@@ -4961,7 +4964,7 @@ const LiveSourceConfig = ({
   const handleSaveOrder = () => {
     const order = liveSources.map((s) => s.key);
     withLoading('saveLiveSourceOrder', () =>
-      callLiveSourceApi({ action: 'sort', order })
+      callLiveSourceApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -5221,7 +5224,7 @@ const LiveSourceConfig = ({
                 value={editingLiveSource.name}
                 onChange={(e) =>
                   setEditingLiveSource((prev) =>
-                    prev ? { ...prev, name: e.target.value } : null
+                    prev ? { ...prev, name: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -5247,7 +5250,7 @@ const LiveSourceConfig = ({
                 value={editingLiveSource.url}
                 onChange={(e) =>
                   setEditingLiveSource((prev) =>
-                    prev ? { ...prev, url: e.target.value } : null
+                    prev ? { ...prev, url: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -5262,7 +5265,7 @@ const LiveSourceConfig = ({
                 value={editingLiveSource.epg}
                 onChange={(e) =>
                   setEditingLiveSource((prev) =>
-                    prev ? { ...prev, epg: e.target.value } : null
+                    prev ? { ...prev, epg: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -5277,7 +5280,7 @@ const LiveSourceConfig = ({
                 value={editingLiveSource.ua}
                 onChange={(e) =>
                   setEditingLiveSource((prev) =>
-                    prev ? { ...prev, ua: e.target.value } : null
+                    prev ? { ...prev, ua: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -5458,7 +5461,7 @@ const TvBoxConfigComponent = ({
   const getTvBoxApiUrl = () => {
     const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
     const userMatch = config?.UserConfig.Users.find(
-      (u) => u.username === currentUsername
+      (u) => u.username === currentUsername,
     );
     const userKey = userMatch ? userMatch.key : '';
     return `${window.location.protocol}//${window.location.host}/api/tvbox?k=${userKey}`;
@@ -5906,7 +5909,7 @@ function AdminPageClient() {
       {showResetConfigModal &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => setShowResetConfigModal(false)}
           >
             <div
@@ -5987,7 +5990,7 @@ function AdminPageClient() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </PageLayout>
   );

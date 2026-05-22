@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -88,7 +87,7 @@ const AlertModal = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={onClose}
@@ -148,7 +147,7 @@ const AlertModal = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
@@ -215,7 +214,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
       // 获取文件名
       const contentDisposition = response.headers.get('content-disposition');
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch?.[1] || 'lunatv-backup.dat';
+      const filename = filenameMatch?.[1] || 'labtv-backup.dat';
 
       // 下载文件
       const blob = await response.blob();
@@ -305,7 +304,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
             <p><strong>导入完成！</strong></p>
             <p class="mt-2">导入的用户数量: ${result.importedUsers}</p>
             <p>备份时间: ${new Date(result.timestamp).toLocaleString(
-              'zh-CN'
+              'zh-CN',
             )}</p>
             <p>服务器版本: ${result.serverVersion || '未知版本'}</p>
             <p class="mt-3 text-orange-600">请刷新页面以查看最新数据。</p>

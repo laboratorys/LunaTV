@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any,@typescript-eslint/no-non-null-assertion*/
+/* eslint-disable no-console*/
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig, setCachedConfig } from '@/lib/config';

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 import { Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -87,7 +86,7 @@ export default function TVBoxSection({
   const getTvBoxApiUrl = () => {
     const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
     const userMatch = config?.UserConfig.Users.find(
-      (u: any) => u.username === currentUsername
+      (u: any) => u.username === currentUsername,
     );
     const userKey = userMatch ? userMatch.key : '';
     return `${window.location.protocol}//${window.location.host}/api/tvbox?k=${userKey}`;
@@ -165,7 +164,7 @@ export default function TVBoxSection({
                   setCacheTimeValue(newVal);
                   handleChange(
                     'expireSeconds',
-                    calculateSeconds(newVal, cacheTimeUnit)
+                    calculateSeconds(newVal, cacheTimeUnit),
                   );
                 }}
               />
@@ -183,7 +182,7 @@ export default function TVBoxSection({
                   setCacheTimeUnit(newUnit);
                   handleChange(
                     'expireSeconds',
-                    calculateSeconds(cacheTimeValue, newUnit)
+                    calculateSeconds(cacheTimeValue, newUnit),
                   );
                 }}
               />

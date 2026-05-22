@@ -134,7 +134,7 @@ export const AlertModal = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >
@@ -165,7 +165,7 @@ export const AlertModal = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 // 弹窗状态管理
@@ -197,7 +197,7 @@ export const useAlertModal = () => {
 // 统一弹窗方法（必须在首次使用前定义）
 export const showError = (
   message: string,
-  showAlert?: (config: any) => void
+  showAlert?: (config: any) => void,
 ) => {
   if (showAlert) {
     showAlert({ type: 'error', title: '错误', message, showConfirm: true });
@@ -208,7 +208,7 @@ export const showError = (
 
 export const showSuccess = (
   message: string,
-  showAlert?: (config: any) => void
+  showAlert?: (config: any) => void,
 ) => {
   if (showAlert) {
     showAlert({ type: 'success', title: '成功', message, timer: 2000 });
@@ -233,7 +233,7 @@ export const useLoadingState = () => {
 
   const withLoading = async (
     key: string,
-    operation: () => Promise<any>
+    operation: () => Promise<any>,
   ): Promise<any> => {
     setLoading(key, true);
     try {

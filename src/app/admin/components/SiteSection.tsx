@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 
 import { ExternalLink, Globe, Link2, Save, ShieldCheck } from 'lucide-react';
@@ -63,9 +62,11 @@ export default function SiteSection({
         <div className='space-y-8'>
           {/* 基本设置 */}
           <div className={`${styles.roundedCard}`}>
-            <div className='flex items-center gap-2 mb-2'>
+            <div className='flex items-center gap-2 mb-5'>
               <Globe className='text-green-500 w-5 h-5' />
-              <h3 className='font-bold dark:text-white text-lg'>基本设置</h3>
+              <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
+                基本设置
+              </h3>
             </div>
             <div className='space-y-5'>
               <div>
@@ -97,9 +98,9 @@ export default function SiteSection({
               isDoubanDropdownOpen ? 'z-30' : 'z-10'
             }`}
           >
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2  mb-5'>
               <Link2 className='text-green-500 w-5 h-5' />
-              <h3 className='font-bold dark:text-white text-lg'>
+              <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                 豆瓣数据代理
               </h3>
             </div>
@@ -191,10 +192,14 @@ export default function SiteSection({
         </div>
 
         {/* 系统策略 */}
-        <div className={`${styles.roundedCard} relative z-0`}>
-          <div className='flex items-center gap-2 mb-2'>
+        <div
+          className={`${styles.roundedCard} relative ${isDoubanDropdownOpen ? '' : 'z-0'}`}
+        >
+          <div className='flex items-center gap-2 mb-5'>
             <ShieldCheck className='text-green-500 w-5 h-5' />
-            <h3 className='font-bold dark:text-white text-lg'>系统策略</h3>
+            <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
+              系统策略
+            </h3>
           </div>
           <div className='grid grid-cols-1 gap-4'>
             <div>
@@ -232,7 +237,7 @@ export default function SiteSection({
               onChange={() =>
                 handleChange(
                   'DisableYellowFilter',
-                  !siteConfig?.DisableYellowFilter
+                  !siteConfig?.DisableYellowFilter,
                 )
               }
             />

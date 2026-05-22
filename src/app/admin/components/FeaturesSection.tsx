@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 import { Save } from 'lucide-react';
 import { useState } from 'react';

@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 
 import { NextResponse } from 'next/server';
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     if (!response.ok) {
       return NextResponse.json(
         { error: 'Failed to fetch key' },
-        { status: 500 }
+        { status: 500 },
       );
     }
     const keyData = await response.arrayBuffer();

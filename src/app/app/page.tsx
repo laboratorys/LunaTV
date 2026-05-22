@@ -101,7 +101,7 @@ export default function DownloadPage() {
 
           <h1 className='text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4'>
             TVBox{' '}
-            <span className='bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent'>
+            <span className='bg-linear-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent'>
               魔改版
             </span>
           </h1>
@@ -121,7 +121,7 @@ export default function DownloadPage() {
               className='relative group bg-white/80 dark:bg-gray-800/50 rounded-[2rem] p-6 border border-gray-200 dark:border-gray-700/50 backdrop-blur-md hover:border-green-500/50 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.15)]'
             >
               <div className='flex justify-between items-start mb-6'>
-                <div className='p-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/10 rounded-2xl text-green-600 dark:text-green-400 shadow-sm group-hover:scale-110 transition-transform duration-300'>
+                <div className='p-3 bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/10 rounded-2xl text-green-600 dark:text-green-400 shadow-sm group-hover:scale-110 transition-transform duration-300'>
                   {pkg.icon}
                 </div>
                 <div className='px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-lg tracking-wider'>
@@ -153,7 +153,7 @@ export default function DownloadPage() {
               <div className='space-y-3'>
                 <button
                   onClick={() => handleDownload(pkg.config.url)}
-                  className='w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/20 active:scale-[0.96] transition-all'
+                  className='w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/20 active:scale-[0.96] transition-all'
                 >
                   <Download size={18} strokeWidth={2.5} /> 立即下载
                 </button>
@@ -170,7 +170,7 @@ export default function DownloadPage() {
 
         {/* 3. 底部特性区 */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          <div className='lg:col-span-2 bg-gradient-to-br from-white/50 to-green-50/30 dark:from-gray-800/50 dark:to-green-900/5 rounded-[2.5rem] p-8 border border-gray-200 dark:border-gray-700/50 shadow-sm'>
+          <div className='lg:col-span-2 bg-linear-to-br from-white/50 to-green-50/30 dark:from-gray-800/50 dark:to-green-900/5 rounded-[2.5rem] p-8 border border-gray-200 dark:border-gray-700/50 shadow-sm'>
             <h2 className='flex items-center gap-2 font-bold text-gray-900 dark:text-gray-100 mb-8'>
               <div className='p-2 bg-green-500 rounded-lg text-white'>
                 <Cpu size={20} />

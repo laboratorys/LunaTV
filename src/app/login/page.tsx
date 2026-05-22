@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 'use client';
 
 import {
@@ -46,7 +44,7 @@ function VersionDisplay() {
       onClick={() =>
         window.open(
           `https://github.com/${process.env.GIT_USER}/${process.env.GIT_REPO}`,
-          '_blank'
+          '_blank',
         )
       }
       className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
@@ -58,8 +56,8 @@ function VersionDisplay() {
             updateStatus === UpdateStatus.HAS_UPDATE
               ? 'text-yellow-600 dark:text-yellow-400'
               : updateStatus === UpdateStatus.NO_UPDATE
-              ? 'text-green-600 dark:text-green-400'
-              : ''
+                ? 'text-green-600 dark:text-green-400'
+                : ''
           }`}
         >
           {updateStatus === UpdateStatus.HAS_UPDATE && (
@@ -157,7 +155,7 @@ function LoginPageClient() {
         <ThemeToggle size={24} />
       </div>
 
-      <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 transition-all duration-300'>
+      <div className='relative z-10 w-full max-w-md rounded-3xl bg-linear-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800 transition-all duration-300'>
         <div className='flex flex-col items-center justify-center mb-8'>
           <div className='flex items-center mb-2'>
             <Image

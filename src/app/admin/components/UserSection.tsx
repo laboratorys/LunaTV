@@ -81,7 +81,7 @@ const UserSection = ({
         (user) =>
           role === 'owner' ||
           (role === 'admin' &&
-            (user.role === 'user' || user.username === currentUsername))
+            (user.role === 'user' || user.username === currentUsername)),
       ).length || 0;
     return selectedUsers.size === selectableUserCount && selectedUsers.size > 0;
   }, [selectedUsers.size, config?.UserConfig?.Users, role, currentUsername]);
@@ -93,7 +93,7 @@ const UserSection = ({
   const handleUserGroupAction = async (
     action: 'add' | 'edit' | 'delete',
     groupName: string,
-    enabledApis?: string[]
+    enabledApis?: string[],
   ) => {
     return withLoading(`userGroup_${action}_${groupName}`, async () => {
       try {
@@ -127,9 +127,9 @@ const UserSection = ({
           action === 'add'
             ? '用户组添加成功'
             : action === 'edit'
-            ? '用户组更新成功'
-            : '用户组删除成功',
-          showAlert
+              ? '用户组更新成功'
+              : '用户组删除成功',
+          showAlert,
         );
       } catch (err) {
         showError(err instanceof Error ? err.message : '操作失败', showAlert);
@@ -148,7 +148,7 @@ const UserSection = ({
     handleUserGroupAction(
       'edit',
       editingUserGroup.name,
-      editingUserGroup.enabledApis
+      editingUserGroup.enabledApis,
     );
   };
 
@@ -156,7 +156,7 @@ const UserSection = ({
     // 计算会受影响的用户数量
     const affectedUsers =
       config?.UserConfig?.Users?.filter(
-        (user) => user.tags && user.tags.includes(groupName)
+        (user) => user.tags && user.tags.includes(groupName),
       ) || [];
 
     setDeletingUserGroup({
@@ -193,7 +193,7 @@ const UserSection = ({
   // 为用户分配用户组
   const handleAssignUserGroup = async (
     username: string,
-    userGroups: string[]
+    userGroups: string[],
   ) => {
     return withLoading(`assignUserGroup_${username}`, async () => {
       try {
@@ -227,19 +227,19 @@ const UserSection = ({
 
   const handleUnbanUser = async (uname: string) => {
     await withLoading(`unbanUser_${uname}`, () =>
-      handleUserAction('unban', uname)
+      handleUserAction('unban', uname),
     );
   };
 
   const handleSetAdmin = async (uname: string) => {
     await withLoading(`setAdmin_${uname}`, () =>
-      handleUserAction('setAdmin', uname)
+      handleUserAction('setAdmin', uname),
     );
   };
 
   const handleRemoveAdmin = async (uname: string) => {
     await withLoading(`removeAdmin_${uname}`, () =>
-      handleUserAction('cancelAdmin', uname)
+      handleUserAction('cancelAdmin', uname),
     );
   };
 
@@ -250,7 +250,7 @@ const UserSection = ({
         'add',
         newUser.username,
         newUser.password,
-        newUser.userGroup
+        newUser.userGroup,
       );
       setNewUser({ username: '', password: '', userGroup: '' });
       setShowAddUserForm(false);
@@ -265,11 +265,11 @@ const UserSection = ({
         await handleUserAction(
           'changePassword',
           changePasswordUser.username,
-          changePasswordUser.password
+          changePasswordUser.password,
         );
         setChangePasswordUser({ username: '', password: '' });
         setShowChangePasswordForm(false);
-      }
+      },
     );
   };
 
@@ -331,7 +331,7 @@ const UserSection = ({
         try {
           await handleAssignUserGroup(
             selectedUserForGroup.username,
-            selectedUserGroups
+            selectedUserGroups,
           );
           setShowConfigureUserGroupModal(false);
           setSelectedUserForGroup(null);
@@ -339,7 +339,7 @@ const UserSection = ({
         } catch (err) {
           // 错误处理已在 handleAssignUserGroup 中处理
         }
-      }
+      },
     );
   };
 
@@ -365,14 +365,14 @@ const UserSection = ({
             (user) =>
               role === 'owner' ||
               (role === 'admin' &&
-                (user.role === 'user' || user.username === currentUsername))
+                (user.role === 'user' || user.username === currentUsername)),
           ).map((u) => u.username) || [];
         setSelectedUsers(new Set(selectableUsernames));
       } else {
         setSelectedUsers(new Set());
       }
     },
-    [config?.UserConfig?.Users, role, currentUsername]
+    [config?.UserConfig?.Users, role, currentUsername],
   );
 
   // 批量设置用户组
@@ -402,7 +402,7 @@ const UserSection = ({
         setSelectedUserGroup('');
         showSuccess(
           `已为 ${userCount} 个用户设置用户组: ${userGroup}`,
-          showAlert
+          showAlert,
         );
 
         // 刷新配置
@@ -500,7 +500,7 @@ const UserSection = ({
       | 'deleteUser',
     targetUsername: string,
     targetPassword?: string,
-    userGroup?: string
+    userGroup?: string,
   ) => {
     try {
       const res = await fetch('/api/admin/user', {
@@ -750,20 +750,20 @@ const UserSection = ({
                         disabled={
                           !changePasswordUser.password ||
                           isLoading(
-                            `changePassword_${changePasswordUser.username}`
+                            `changePassword_${changePasswordUser.username}`,
                           )
                         }
                         className={`w-full sm:w-auto ${
                           !changePasswordUser.password ||
                           isLoading(
-                            `changePassword_${changePasswordUser.username}`
+                            `changePassword_${changePasswordUser.username}`,
                           )
                             ? styles.disabled
                             : styles.primary
                         }`}
                       >
                         {isLoading(
-                          `changePassword_${changePasswordUser.username}`
+                          `changePassword_${changePasswordUser.username}`,
                         )
                           ? '修改中...'
                           : '修改密码'}
@@ -799,7 +799,7 @@ const UserSection = ({
                                   role === 'owner' ||
                                   (role === 'admin' &&
                                     (user.role === 'user' ||
-                                      user.username === currentUsername))
+                                      user.username === currentUsername)),
                               );
 
                             return hasAnyPermission ? (
@@ -873,7 +873,7 @@ const UserSection = ({
                             return 3;
                           };
                           return priority(a) - priority(b);
-                        }
+                        },
                       );
                       return (
                         <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
@@ -914,7 +914,7 @@ const UserSection = ({
                                       onChange={(e) =>
                                         handleSelectUser(
                                           user.username,
-                                          e.target.checked
+                                          e.target.checked,
                                         )
                                       }
                                       className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
@@ -935,15 +935,15 @@ const UserSection = ({
                                       user.role === 'owner'
                                         ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
                                         : user.role === 'admin'
-                                        ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                          ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
+                                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                                     }`}
                                   >
                                     {user.role === 'owner'
                                       ? '站长'
                                       : user.role === 'admin'
-                                      ? '管理员'
-                                      : '普通用户'}
+                                        ? '管理员'
+                                        : '普通用户'}
                                   </span>
                                 </td>
                                 <td className='px-6 py-4 whitespace-nowrap'>
@@ -1018,7 +1018,7 @@ const UserSection = ({
                                     <button
                                       onClick={() =>
                                         handleShowChangePasswordForm(
-                                          user.username
+                                          user.username,
                                         )
                                       }
                                       className={styles.roundedPrimary}
@@ -1035,11 +1035,11 @@ const UserSection = ({
                                             handleSetAdmin(user.username)
                                           }
                                           disabled={isLoading(
-                                            `setAdmin_${user.username}`
+                                            `setAdmin_${user.username}`,
                                           )}
                                           className={`${styles.roundedPurple} ${
                                             isLoading(
-                                              `setAdmin_${user.username}`
+                                              `setAdmin_${user.username}`,
                                             )
                                               ? 'opacity-50 cursor-not-allowed'
                                               : ''
@@ -1054,13 +1054,13 @@ const UserSection = ({
                                             handleRemoveAdmin(user.username)
                                           }
                                           disabled={isLoading(
-                                            `removeAdmin_${user.username}`
+                                            `removeAdmin_${user.username}`,
                                           )}
                                           className={`${
                                             styles.roundedSecondary
                                           } ${
                                             isLoading(
-                                              `removeAdmin_${user.username}`
+                                              `removeAdmin_${user.username}`,
                                             )
                                               ? 'opacity-50 cursor-not-allowed'
                                               : ''
@@ -1076,13 +1076,13 @@ const UserSection = ({
                                               handleBanUser(user.username)
                                             }
                                             disabled={isLoading(
-                                              `banUser_${user.username}`
+                                              `banUser_${user.username}`,
                                             )}
                                             className={`${
                                               styles.roundedDanger
                                             } ${
                                               isLoading(
-                                                `banUser_${user.username}`
+                                                `banUser_${user.username}`,
                                               )
                                                 ? 'opacity-50 cursor-not-allowed'
                                                 : ''
@@ -1096,13 +1096,13 @@ const UserSection = ({
                                               handleUnbanUser(user.username)
                                             }
                                             disabled={isLoading(
-                                              `unbanUser_${user.username}`
+                                              `unbanUser_${user.username}`,
                                             )}
                                             className={`${
                                               styles.roundedSuccess
                                             } ${
                                               isLoading(
-                                                `unbanUser_${user.username}`
+                                                `unbanUser_${user.username}`,
                                               )
                                                 ? 'opacity-50 cursor-not-allowed'
                                                 : ''
@@ -1196,7 +1196,7 @@ const UserSection = ({
                             <button
                               onClick={() => handleStartEditUserGroup(group)}
                               disabled={isLoading(
-                                `userGroup_edit_${group.name}`
+                                `userGroup_edit_${group.name}`,
                               )}
                               className={`${styles.roundedPrimary} ${
                                 isLoading(`userGroup_edit_${group.name}`)
@@ -1238,7 +1238,7 @@ const UserSection = ({
           selectedUser &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowConfigureApisModal(false);
                 setSelectedUser(null);
@@ -1324,8 +1324,8 @@ const UserSection = ({
                               } else {
                                 setSelectedApis(
                                   selectedApis.filter(
-                                    (api) => api !== source.key
-                                  )
+                                    (api) => api !== source.key,
+                                  ),
                                 );
                               }
                             }}
@@ -1359,7 +1359,7 @@ const UserSection = ({
                         onClick={() => {
                           const allApis =
                             config?.SourceConfig?.filter(
-                              (source) => !source.disabled
+                              (source) => !source.disabled,
                             ).map((s) => s.key) || [];
                           setSelectedApis(allApis);
                         }}
@@ -1393,7 +1393,7 @@ const UserSection = ({
                     <button
                       onClick={handleSaveUserApis}
                       disabled={isLoading(
-                        `saveUserApis_${selectedUser?.username}`
+                        `saveUserApis_${selectedUser?.username}`,
                       )}
                       className={`px-6 py-2.5 text-sm font-medium ${
                         isLoading(`saveUserApis_${selectedUser?.username}`)
@@ -1409,14 +1409,14 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 添加用户组弹窗 */}
         {showAddUserGroupForm &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowAddUserGroupForm(false);
                 setNewUserGroup({ name: '', enabledApis: [] });
@@ -1488,7 +1488,7 @@ const UserSection = ({
                             <input
                               type='checkbox'
                               checked={newUserGroup.enabledApis.includes(
-                                source.key
+                                source.key,
                               )}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -1503,7 +1503,7 @@ const UserSection = ({
                                   setNewUserGroup((prev) => ({
                                     ...prev,
                                     enabledApis: prev.enabledApis.filter(
-                                      (api) => api !== source.key
+                                      (api) => api !== source.key,
                                     ),
                                   }));
                                 }
@@ -1541,7 +1541,7 @@ const UserSection = ({
                           onClick={() => {
                             const allApis =
                               config?.SourceConfig?.filter(
-                                (source) => !source.disabled
+                                (source) => !source.disabled,
                               ).map((s) => s.key) || [];
                             setNewUserGroup((prev) => ({
                               ...prev,
@@ -1588,7 +1588,7 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 编辑用户组弹窗 */}
@@ -1596,7 +1596,7 @@ const UserSection = ({
           editingUserGroup &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowEditUserGroupForm(false);
                 setEditingUserGroup(null);
@@ -1649,7 +1649,7 @@ const UserSection = ({
                             <input
                               type='checkbox'
                               checked={editingUserGroup.enabledApis.includes(
-                                source.key
+                                source.key,
                               )}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -1662,7 +1662,7 @@ const UserSection = ({
                                             source.key,
                                           ],
                                         }
-                                      : null
+                                      : null,
                                   );
                                 } else {
                                   setEditingUserGroup((prev) =>
@@ -1670,10 +1670,10 @@ const UserSection = ({
                                       ? {
                                           ...prev,
                                           enabledApis: prev.enabledApis.filter(
-                                            (api) => api !== source.key
+                                            (api) => api !== source.key,
                                           ),
                                         }
-                                      : null
+                                      : null,
                                   );
                                 }
                               }}
@@ -1698,7 +1698,7 @@ const UserSection = ({
                         <button
                           onClick={() =>
                             setEditingUserGroup((prev) =>
-                              prev ? { ...prev, enabledApis: [] } : null
+                              prev ? { ...prev, enabledApis: [] } : null,
                             )
                           }
                           className={styles.quickAction}
@@ -1709,10 +1709,10 @@ const UserSection = ({
                           onClick={() => {
                             const allApis =
                               config?.SourceConfig?.filter(
-                                (source) => !source.disabled
+                                (source) => !source.disabled,
                               ).map((s) => s.key) || [];
                             setEditingUserGroup((prev) =>
-                              prev ? { ...prev, enabledApis: allApis } : null
+                              prev ? { ...prev, enabledApis: allApis } : null,
                             );
                           }}
                           className={styles.quickAction}
@@ -1736,7 +1736,7 @@ const UserSection = ({
                       <button
                         onClick={handleEditUserGroup}
                         disabled={isLoading(
-                          `userGroup_edit_${editingUserGroup?.name}`
+                          `userGroup_edit_${editingUserGroup?.name}`,
                         )}
                         className={`px-6 py-2.5 text-sm font-medium ${
                           isLoading(`userGroup_edit_${editingUserGroup?.name}`)
@@ -1753,7 +1753,7 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 配置用户组弹窗 */}
@@ -1761,7 +1761,7 @@ const UserSection = ({
           selectedUserForGroup &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowConfigureUserGroupModal(false);
                 setSelectedUserForGroup(null);
@@ -1874,18 +1874,18 @@ const UserSection = ({
                     <button
                       onClick={handleSaveUserGroups}
                       disabled={isLoading(
-                        `saveUserGroups_${selectedUserForGroup?.username}`
+                        `saveUserGroups_${selectedUserForGroup?.username}`,
                       )}
                       className={`px-6 py-2.5 text-sm font-medium ${
                         isLoading(
-                          `saveUserGroups_${selectedUserForGroup?.username}`
+                          `saveUserGroups_${selectedUserForGroup?.username}`,
                         )
                           ? styles.disabled
                           : styles.primary
                       }`}
                     >
                       {isLoading(
-                        `saveUserGroups_${selectedUserForGroup?.username}`
+                        `saveUserGroups_${selectedUserForGroup?.username}`,
                       )
                         ? '配置中...'
                         : '确认配置'}
@@ -1894,7 +1894,7 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 删除用户组确认弹窗 */}
@@ -1902,7 +1902,7 @@ const UserSection = ({
           deletingUserGroup &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowDeleteUserGroupModal(false);
                 setDeletingUserGroup(null);
@@ -1996,7 +1996,7 @@ const UserSection = ({
                               >
                                 • {user.username} ({user.role})
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                         <p className='text-xs text-yellow-600 dark:text-yellow-400 mt-2'>
@@ -2041,7 +2041,7 @@ const UserSection = ({
                     <button
                       onClick={handleConfirmDeleteUserGroup}
                       disabled={isLoading(
-                        `userGroup_delete_${deletingUserGroup?.name}`
+                        `userGroup_delete_${deletingUserGroup?.name}`,
                       )}
                       className={`px-6 py-2.5 text-sm font-medium ${
                         isLoading(`userGroup_delete_${deletingUserGroup?.name}`)
@@ -2057,7 +2057,7 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 删除用户确认弹窗 */}
@@ -2065,7 +2065,7 @@ const UserSection = ({
           deletingUser &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowDeleteUserModal(false);
                 setDeletingUser(null);
@@ -2151,14 +2151,14 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 批量设置用户组弹窗 */}
         {showBatchUserGroupModal &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={() => {
                 setShowBatchUserGroupModal(false);
                 setSelectedUserGroup('');
@@ -2275,7 +2275,7 @@ const UserSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
       </div>
     </div>

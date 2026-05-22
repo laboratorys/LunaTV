@@ -1,5 +1,3 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
-
 import { NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
@@ -34,7 +32,7 @@ export async function GET(request: Request) {
     if (!response.ok) {
       return NextResponse.json(
         { error: 'Failed to fetch segment' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -44,12 +42,12 @@ export async function GET(request: Request) {
     headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     headers.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Range, Origin, Accept'
+      'Content-Type, Range, Origin, Accept',
     );
     headers.set('Accept-Ranges', 'bytes');
     headers.set(
       'Access-Control-Expose-Headers',
-      'Content-Length, Content-Range'
+      'Content-Length, Content-Range',
     );
     const contentLength = response.headers.get('content-length');
     if (contentLength) {
@@ -151,7 +149,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { error: 'Failed to fetch segment' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

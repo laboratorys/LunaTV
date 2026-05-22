@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
 import { getCachedSearchPage, setCachedSearchPage } from '@/lib/search-cache';
 import { CategoryNode, SearchResult } from '@/lib/types';
@@ -36,7 +34,7 @@ async function searchWithCache(
   query: string,
   page: number,
   url: string,
-  timeoutMs = 8000
+  timeoutMs = 8000,
 ): Promise<{ results: SearchResult[]; pageCount?: number }> {
   // 先查缓存
   const cached = getCachedSearchPage(apiSite.key, query, page);
@@ -133,7 +131,7 @@ async function searchWithCache(
 
     // 过滤掉集数为 0 的结果
     const results = allResults.filter(
-      (result: SearchResult) => result.episodes.length > 0
+      (result: SearchResult) => result.episodes.length > 0,
     );
 
     const pageCount = page === 1 ? data.pagecount || 1 : undefined;
@@ -161,7 +159,7 @@ export async function searchWithNoCache(
   pg: number,
   t: string,
   h: string,
-  timeoutMs = 8000
+  timeoutMs = 8000,
 ): Promise<SearchResult[]> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -251,7 +249,7 @@ export async function searchWithNoCache(
       };
     });
     const results = allResults.filter(
-      (result: SearchResult) => result.episodes.length > 0
+      (result: SearchResult) => result.episodes.length > 0,
     );
     return results;
   } catch (error: any) {
@@ -265,7 +263,7 @@ export async function searchWithNoCache(
  */
 export async function getClassWithNoCache(
   apiSite: ApiSite,
-  timeoutMs = 8000
+  timeoutMs = 8000,
 ): Promise<CategoryNode[]> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -333,7 +331,7 @@ export async function getClassWithNoCache(
 export async function searchFromApi(
   apiSite: ApiSite,
   query: string,
-  id?: string
+  id?: string,
 ): Promise<SearchResult[]> {
   try {
     const apiBaseUrl = apiSite.api;
@@ -348,7 +346,7 @@ export async function searchFromApi(
       query,
       1,
       apiUrl,
-      8000
+      8000,
     );
     const results = firstPageResult.results;
     const pageCountFromFirst = firstPageResult.pageCount;
@@ -382,7 +380,7 @@ export async function searchFromApi(
             query,
             page,
             pageUrl,
-            8000
+            8000,
           );
           return pageResult.results;
         })();
@@ -412,7 +410,7 @@ const M3U8_PATTERN = /(https?:\/\/[^"'\s]+?\.m3u8)/g;
 
 export async function getDetailFromApi(
   apiSite: ApiSite,
-  id: string
+  id: string,
 ): Promise<SearchResult> {
   if (apiSite.detail) {
     return handleSpecialSourceDetail(id, apiSite);
@@ -501,7 +499,7 @@ export async function getDetailFromApi(
 
 async function handleSpecialSourceDetail(
   id: string,
-  apiSite: ApiSite
+  apiSite: ApiSite,
 ): Promise<SearchResult> {
   const detailUrl = `${apiSite.detail}/index.php/vod/detail/id/${id}.html`;
 
@@ -542,7 +540,7 @@ async function handleSpecialSourceDetail(
 
   // 根据 matches 数量生成剧集标题
   const episodes_titles = Array.from({ length: matches.length }, (_, i) =>
-    (i + 1).toString()
+    (i + 1).toString(),
   );
 
   // 提取标题
@@ -551,7 +549,7 @@ async function handleSpecialSourceDetail(
 
   // 提取描述
   const descMatch = html.match(
-    /<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/
+    /<div[^>]*class=["']sketch["'][^>]*>([\s\S]*?)<\/div>/,
   );
   const descText = descMatch ? cleanHtmlTags(descMatch[1]) : '';
 
