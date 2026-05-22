@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -37,7 +37,7 @@ export const GET = async (request: NextRequest) => {
     console.error('GET Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -53,7 +53,7 @@ export const POST = async (request: NextRequest) => {
     if (!tvboxRecord?.key)
       return NextResponse.json(
         { error: 'Missing record key' },
-        { status: 400 }
+        { status: 400 },
       );
 
     // 存在记录则清理
@@ -71,7 +71,7 @@ export const POST = async (request: NextRequest) => {
           auth.user.username,
           apiSite.key,
           result.vodId,
-          createPlayRecordFromTVBox(tvboxRecord)
+          createPlayRecordFromTVBox(tvboxRecord),
         );
       }
     }
@@ -80,7 +80,7 @@ export const POST = async (request: NextRequest) => {
     console.error('POST Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -101,7 +101,7 @@ export const DELETE = async (request: NextRequest) => {
         Object.keys(all).map(async (k) => {
           const [s, i] = k.split('+');
           if (s && i) await db.deletePlayRecord(auth.user.username, s, i);
-        })
+        }),
       );
     }
     return NextResponse.json({ ok: true });
@@ -109,7 +109,7 @@ export const DELETE = async (request: NextRequest) => {
     console.error('DELETE Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -118,7 +118,7 @@ export const DELETE = async (request: NextRequest) => {
 const findAndDeleteRecord = async (username: string, tvboxKey: string) => {
   const records = await db.getAllPlayRecords(username);
   const target = Object.entries(records).find(
-    ([_, r]) => r.tvbox_record?.key === tvboxKey
+    ([_, r]) => r.tvbox_record?.key === tvboxKey,
   );
   if (target) {
     const [fullKey] = target;

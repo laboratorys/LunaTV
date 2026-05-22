@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,react-hooks/exhaustive-deps,@typescript-eslint/no-empty-function */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import {
   ExternalLink,
@@ -87,29 +87,29 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       origin = 'vod',
       remark = '',
     }: VideoCardProps,
-    ref
+    ref,
   ) {
     const router = useRouter();
     const [favorited, setFavorited] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showMobileActions, setShowMobileActions] = useState(false);
     const [searchFavorited, setSearchFavorited] = useState<boolean | null>(
-      null
+      null,
     ); // 搜索结果的收藏状态
 
     // 可外部修改的可控字段
     const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
-      episodes
+      episodes,
     );
     const [dynamicSourceNames, setDynamicSourceNames] = useState<
       string[] | undefined
     >(source_names);
     const [dynamicDoubanId, setDynamicDoubanId] = useState<number | undefined>(
-      douban_id
+      douban_id,
     );
 
     const [dynamicRemark, setDynamicRemark] = useState<string>(remark);
-
+    const [retryTrigger, setRetryTrigger] = useState(0);
     useEffect(() => {
       setDynamicEpisodes(episodes);
     }, [episodes]);
@@ -177,7 +177,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           // 检查当前项目是否在新的收藏列表中
           const isNowFavorited = !!newFavorites[storageKey];
           setFavorited(isNowFavorited);
-        }
+        },
       );
 
       return unsubscribe;
@@ -233,7 +233,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         actualEpisodes,
         favorited,
         searchFavorited,
-      ]
+      ],
     );
 
     const handleDeleteRecord = useCallback(
@@ -248,7 +248,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           throw new Error('删除播放记录失败');
         }
       },
-      [from, actualSource, actualId, onDelete]
+      [from, actualSource, actualId, onDelete],
     );
 
     const handleClick = useCallback(() => {
@@ -256,7 +256,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         // 直播内容跳转到直播页面
         const url = `/live?source=${actualSource.replace(
           'live_',
-          ''
+          '',
         )}&id=${actualId.replace('live_', '')}`;
         router.push(url);
       } else if (
@@ -273,7 +273,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         router.push(url);
       } else if (actualSource && actualId) {
         const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
-          actualTitle
+          actualTitle,
         )}${actualYear ? `&year=${actualYear}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
@@ -302,7 +302,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         // 直播内容跳转到直播页面
         const url = `/live?source=${actualSource.replace(
           'live_',
-          ''
+          '',
         )}&id=${actualId.replace('live_', '')}`;
         window.open(url, '_blank');
       } else if (
@@ -319,7 +319,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         window.open(url, '_blank');
       } else if (actualSource && actualId) {
         const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
-          actualTitle
+          actualTitle,
         )}${actualYear ? `&year=${actualYear}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
@@ -594,7 +594,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     return (
       <>
         <div
-          className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]'
+          className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-500'
           onClick={handleClick}
           {...longPressProps}
           style={
@@ -659,6 +659,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
             {/* 图片 */}
             <Image
+              key={`${actualPoster}-${retryTrigger}`}
               src={processImageUrl(actualPoster)}
               alt={actualTitle}
               fill
@@ -666,13 +667,10 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               referrerPolicy='no-referrer'
               loading='lazy'
               onLoad={() => setIsLoading(true)}
-              onError={(e) => {
-                // 图片加载失败时的重试机制
-                const img = e.target as HTMLImageElement;
-                if (!img.dataset.retried) {
-                  img.dataset.retried = 'true';
+              onError={() => {
+                if (retryTrigger === 0) {
                   setTimeout(() => {
-                    img.src = processImageUrl(actualPoster);
+                    setRetryTrigger(1); // 触发组件重新挂载，自动重新调用 processImageUrl
                   }, 2000);
                 }
               }}
@@ -697,7 +695,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
             {/* 悬浮遮罩 */}
             <div
-              className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 ease-in-out opacity-0 group-hover:opacity-100'
+              className='absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 ease-in-out opacity-0 group-hover:opacity-100'
               style={
                 {
                   WebkitUserSelect: 'none',
@@ -1033,7 +1031,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                         const maxDisplayCount = 6; // 最多显示6个
                         const displaySources = sortedSources.slice(
                           0,
-                          maxDisplayCount
+                          maxDisplayCount,
                         );
                         const hasMore = sortedSources.length > maxDisplayCount;
                         const remainingCount =
@@ -1266,7 +1264,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         />
       </>
     );
-  }
+  },
 );
 
 export default memo(VideoCard);

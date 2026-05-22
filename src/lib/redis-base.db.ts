@@ -1,4 +1,4 @@
-/* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 import { createClient, RedisClientType } from 'redis';
 
@@ -28,11 +28,11 @@ export interface RedisConnectionConfig {
 // 添加Redis操作重试包装器
 function createRetryWrapper(
   clientName: string,
-  getClient: () => RedisClientType
+  getClient: () => RedisClientType,
 ) {
   return async function withRetry<T>(
     operation: () => Promise<T>,
-    maxRetries = 3
+    maxRetries = 3,
   ): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
       try {
@@ -50,7 +50,7 @@ function createRetryWrapper(
           console.log(
             `${clientName} operation failed, retrying... (${
               i + 1
-            }/${maxRetries})`
+            }/${maxRetries})`,
           );
           console.error('Error:', err.message);
 
@@ -81,7 +81,7 @@ function createRetryWrapper(
 // 创建客户端的工厂函数
 export function createRedisClient(
   config: RedisConnectionConfig,
-  globalSymbol: symbol
+  globalSymbol: symbol,
 ): RedisClientType {
   let client: RedisClientType | undefined = (global as any)[globalSymbol];
 
@@ -97,11 +97,11 @@ export function createRedisClient(
         // 重连策略：指数退避，最大30秒
         reconnectStrategy: (retries: number) => {
           console.log(
-            `${config.clientName} reconnection attempt ${retries + 1}`
+            `${config.clientName} reconnection attempt ${retries + 1}`,
           );
           if (retries > 10) {
             console.error(
-              `${config.clientName} max reconnection attempts exceeded`
+              `${config.clientName} max reconnection attempts exceeded`,
             );
             return false; // 停止重连
           }
@@ -159,7 +159,7 @@ export abstract class BaseRedisStorage implements IStorage {
   protected client: RedisClientType;
   protected withRetry: <T>(
     operation: () => Promise<T>,
-    maxRetries?: number
+    maxRetries?: number,
   ) => Promise<T>;
 
   constructor(config: RedisConnectionConfig, globalSymbol: symbol) {
@@ -174,10 +174,10 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getPlayRecord(
     userName: string,
-    key: string
+    key: string,
   ): Promise<PlayRecord | null> {
     const val = await this.withRetry(() =>
-      this.client.hGet(this.prHashKey(userName), key)
+      this.client.hGet(this.prHashKey(userName), key),
     );
     return val ? (JSON.parse(val) as PlayRecord) : null;
   }
@@ -185,18 +185,18 @@ export abstract class BaseRedisStorage implements IStorage {
   async setPlayRecord(
     userName: string,
     key: string,
-    record: PlayRecord
+    record: PlayRecord,
   ): Promise<void> {
     await this.withRetry(() =>
-      this.client.hSet(this.prHashKey(userName), key, JSON.stringify(record))
+      this.client.hSet(this.prHashKey(userName), key, JSON.stringify(record)),
     );
   }
 
   async getAllPlayRecords(
-    userName: string
+    userName: string,
   ): Promise<Record<string, PlayRecord>> {
     const all = await this.withRetry(() =>
-      this.client.hGetAll(this.prHashKey(userName))
+      this.client.hGetAll(this.prHashKey(userName)),
     );
     const result: Record<string, PlayRecord> = {};
     for (const [field, raw] of Object.entries(all)) {
@@ -222,7 +222,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getFavorite(userName: string, key: string): Promise<Favorite | null> {
     const val = await this.withRetry(() =>
-      this.client.hGet(this.favHashKey(userName), key)
+      this.client.hGet(this.favHashKey(userName), key),
     );
     return val ? (JSON.parse(val) as Favorite) : null;
   }
@@ -230,16 +230,20 @@ export abstract class BaseRedisStorage implements IStorage {
   async setFavorite(
     userName: string,
     key: string,
-    favorite: Favorite
+    favorite: Favorite,
   ): Promise<void> {
     await this.withRetry(() =>
-      this.client.hSet(this.favHashKey(userName), key, JSON.stringify(favorite))
+      this.client.hSet(
+        this.favHashKey(userName),
+        key,
+        JSON.stringify(favorite),
+      ),
     );
   }
 
   async getAllFavorites(userName: string): Promise<Record<string, Favorite>> {
     const all = await this.withRetry(() =>
-      this.client.hGetAll(this.favHashKey(userName))
+      this.client.hGetAll(this.favHashKey(userName)),
     );
     const result: Record<string, Favorite> = {};
     for (const [field, raw] of Object.entries(all)) {
@@ -252,7 +256,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async deleteFavorite(userName: string, key: string): Promise<void> {
     await this.withRetry(() =>
-      this.client.hDel(this.favHashKey(userName), key)
+      this.client.hDel(this.favHashKey(userName), key),
     );
   }
 
@@ -273,7 +277,7 @@ export abstract class BaseRedisStorage implements IStorage {
     };
 
     await this.withRetry(() =>
-      this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
+      this.client.set(this.userPwdKey(userName), JSON.stringify(userData)),
     );
     await this.withRetry(() => this.client.sAdd(this.usersSetKey(), userName));
 
@@ -288,7 +292,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getUser(userName: string): Promise<DbUser | null> {
     const stored = await this.withRetry(() =>
-      this.client.get(this.userPwdKey(userName))
+      this.client.get(this.userPwdKey(userName)),
     );
     if (stored === null) return null;
     return JSON.parse(ensureString(stored));
@@ -300,7 +304,7 @@ export abstract class BaseRedisStorage implements IStorage {
     if (userData) {
       userData.key = key;
       await this.withRetry(() =>
-        this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
+        this.client.set(this.userPwdKey(userName), JSON.stringify(userData)),
       );
     }
   }
@@ -309,7 +313,7 @@ export abstract class BaseRedisStorage implements IStorage {
   async checkUserExist(userName: string): Promise<boolean> {
     // 使用 EXISTS 判断 key 是否存在
     const exists = await this.withRetry(() =>
-      this.client.exists(this.userPwdKey(userName))
+      this.client.exists(this.userPwdKey(userName)),
     );
     return exists === 1;
   }
@@ -321,7 +325,7 @@ export abstract class BaseRedisStorage implements IStorage {
       userData.password = await hashPassword(newPassword);
       // 简单存储明文密码，生产环境应加密
       await this.withRetry(() =>
-        this.client.set(this.userPwdKey(userName), JSON.stringify(userData))
+        this.client.set(this.userPwdKey(userName), JSON.stringify(userData)),
       );
     }
   }
@@ -354,7 +358,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getSearchHistory(userName: string): Promise<string[]> {
     const result = await this.withRetry(() =>
-      this.client.lRange(this.shKey(userName), 0, -1)
+      this.client.lRange(this.shKey(userName), 0, -1),
     );
     // 确保返回的都是字符串类型
     return ensureStringArray(result as any[]);
@@ -368,7 +372,7 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() => this.client.lPush(key, ensureString(keyword)));
     // 限制最大长度
     await this.withRetry(() =>
-      this.client.lTrim(key, 0, SEARCH_HISTORY_LIMIT - 1)
+      this.client.lTrim(key, 0, SEARCH_HISTORY_LIMIT - 1),
     );
   }
 
@@ -376,7 +380,7 @@ export abstract class BaseRedisStorage implements IStorage {
     const key = this.shKey(userName);
     if (keyword) {
       await this.withRetry(() =>
-        this.client.lRem(key, 0, ensureString(keyword))
+        this.client.lRem(key, 0, ensureString(keyword)),
       );
     } else {
       await this.withRetry(() => this.client.del(key));
@@ -423,7 +427,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getAllUsers(): Promise<DbUser[]> {
     const userNames = await this.withRetry(() =>
-      this.client.sMembers(this.usersSetKey())
+      this.client.sMembers(this.usersSetKey()),
     );
 
     if (!userNames || userNames.length === 0) return [];
@@ -459,14 +463,14 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getAdminConfig(): Promise<AdminConfig | null> {
     const val = await this.withRetry(() =>
-      this.client.get(this.adminConfigKey())
+      this.client.get(this.adminConfigKey()),
     );
     return val ? (JSON.parse(val) as AdminConfig) : null;
   }
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
     await this.withRetry(() =>
-      this.client.set(this.adminConfigKey(), JSON.stringify(config))
+      this.client.set(this.adminConfigKey(), JSON.stringify(config)),
     );
   }
 
@@ -482,10 +486,10 @@ export abstract class BaseRedisStorage implements IStorage {
   async getSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<SkipConfig | null> {
     const val = await this.withRetry(() =>
-      this.client.hGet(this.skipHashKey(userName), this.skipField(source, id))
+      this.client.hGet(this.skipHashKey(userName), this.skipField(source, id)),
     );
     return val ? (JSON.parse(val) as SkipConfig) : null;
   }
@@ -494,32 +498,32 @@ export abstract class BaseRedisStorage implements IStorage {
     userName: string,
     source: string,
     id: string,
-    config: SkipConfig
+    config: SkipConfig,
   ): Promise<void> {
     await this.withRetry(() =>
       this.client.hSet(
         this.skipHashKey(userName),
         this.skipField(source, id),
-        JSON.stringify(config)
-      )
+        JSON.stringify(config),
+      ),
     );
   }
 
   async deleteSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<void> {
     await this.withRetry(() =>
-      this.client.hDel(this.skipHashKey(userName), this.skipField(source, id))
+      this.client.hDel(this.skipHashKey(userName), this.skipField(source, id)),
     );
   }
 
   async getAllSkipConfigs(
-    userName: string
+    userName: string,
   ): Promise<{ [key: string]: SkipConfig }> {
     const all = await this.withRetry(() =>
-      this.client.hGetAll(this.skipHashKey(userName))
+      this.client.hGetAll(this.skipHashKey(userName)),
     );
     const configs: { [key: string]: SkipConfig } = {};
     for (const [field, raw] of Object.entries(all)) {
@@ -538,7 +542,7 @@ export abstract class BaseRedisStorage implements IStorage {
   async migrateData(): Promise<void> {
     // 检查是否已迁移
     const migrated = await this.withRetry(() =>
-      this.client.get(this.migrationKey())
+      this.client.get(this.migrationKey()),
     );
     if (migrated === 'done') return;
 
@@ -555,7 +559,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
         if (oldPrKeys.length > 0) {
           const values = await this.withRetry(() =>
-            this.client.mGet(oldPrKeys)
+            this.client.mGet(oldPrKeys),
           );
           for (let i = 0; i < oldPrKeys.length; i++) {
             const raw = values[i];
@@ -564,7 +568,7 @@ export abstract class BaseRedisStorage implements IStorage {
             if (!match) continue;
             const [, userName, field] = match;
             await this.withRetry(() =>
-              this.client.hSet(this.prHashKey(userName), field, raw)
+              this.client.hSet(this.prHashKey(userName), field, raw),
             );
           }
           await this.withRetry(() => this.client.del(oldPrKeys));
@@ -582,7 +586,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
         if (oldFavKeys.length > 0) {
           const values = await this.withRetry(() =>
-            this.client.mGet(oldFavKeys)
+            this.client.mGet(oldFavKeys),
           );
           for (let i = 0; i < oldFavKeys.length; i++) {
             const raw = values[i];
@@ -591,7 +595,7 @@ export abstract class BaseRedisStorage implements IStorage {
             if (!match) continue;
             const [, userName, field] = match;
             await this.withRetry(() =>
-              this.client.hSet(this.favHashKey(userName), field, raw)
+              this.client.hSet(this.favHashKey(userName), field, raw),
             );
           }
           await this.withRetry(() => this.client.del(oldFavKeys));
@@ -601,7 +605,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
       // 迁移 skipConfig：u:*:skip:* → u:username:skip (Hash)
       const skipKeys = await this.withRetry(() =>
-        this.client.keys('u:*:skip:*')
+        this.client.keys('u:*:skip:*'),
       );
       if (skipKeys.length > 0) {
         const oldSkipKeys = skipKeys.filter((k) => {
@@ -611,7 +615,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
         if (oldSkipKeys.length > 0) {
           const values = await this.withRetry(() =>
-            this.client.mGet(oldSkipKeys)
+            this.client.mGet(oldSkipKeys),
           );
           for (let i = 0; i < oldSkipKeys.length; i++) {
             const raw = values[i];
@@ -620,7 +624,7 @@ export abstract class BaseRedisStorage implements IStorage {
             if (!match) continue;
             const [, userName, field] = match;
             await this.withRetry(() =>
-              this.client.hSet(this.skipHashKey(userName), field, raw)
+              this.client.hSet(this.skipHashKey(userName), field, raw),
             );
           }
           await this.withRetry(() => this.client.del(oldSkipKeys));
@@ -630,7 +634,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
       // 迁移用户列表：从 KEYS u:*:pwd 构建 sys:users Set
       const userSetExists = await this.withRetry(() =>
-        this.client.exists(this.usersSetKey())
+        this.client.exists(this.usersSetKey()),
       );
       if (!userSetExists) {
         const pwdKeys = await this.withRetry(() => this.client.keys('u:*:pwd'));
@@ -642,7 +646,7 @@ export abstract class BaseRedisStorage implements IStorage {
           .filter((u): u is string => typeof u === 'string');
         if (userNames.length > 0) {
           await this.withRetry(() =>
-            this.client.sAdd(this.usersSetKey(), userNames)
+            this.client.sAdd(this.usersSetKey(), userNames),
           );
           console.log(`迁移了 ${userNames.length} 个用户到 Set`);
         }

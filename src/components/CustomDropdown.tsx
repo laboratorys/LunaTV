@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 

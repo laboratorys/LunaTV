@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console */
+/* eslint-disable react-hooks/exhaustive-deps, no-console */
 
 'use client';
 
@@ -41,7 +41,7 @@ import VideoCard from '@/components/VideoCard';
 function HomeClient() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'favorites' | 'history'>(
-    'home'
+    'home',
   );
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
@@ -185,7 +185,7 @@ function HomeClient() {
       'favoritesUpdated',
       (newFavorites: Record<string, any>) => {
         updateFavoriteItems(newFavorites);
-      }
+      },
     );
 
     return unsubscribe;
@@ -208,7 +208,7 @@ function HomeClient() {
       'playRecordsUpdated',
       (newRecords: Record<string, PlayRecord>) => {
         updatePlayRecords(newRecords);
-      }
+      },
     );
     return unsubscribe;
   }, [activeTab]);
@@ -221,7 +221,7 @@ function HomeClient() {
 
     // 按 save_time 降序排序（最新的在前面）
     const sortedRecords = recordsArray.sort(
-      (a, b) => b.save_time - a.save_time
+      (a, b) => b.save_time - a.save_time,
     );
 
     setPlayRecords(sortedRecords);
@@ -346,7 +346,7 @@ function HomeClient() {
                         from='playrecord'
                         onDelete={() =>
                           setPlayRecords((prev) =>
-                            prev.filter((r) => r.key !== record.key)
+                            prev.filter((r) => r.key !== record.key),
                           )
                         }
                         type={record.total_episodes > 1 ? 'tv' : ''}
@@ -517,7 +517,7 @@ function HomeClient() {
                           // 找到当前星期对应的番剧数据
                           const todayAnimes =
                             bangumiCalendarData.find(
-                              (item) => item.weekday.en === currentWeekday
+                              (item) => item.weekday.en === currentWeekday,
                             )?.items || [];
 
                           return todayAnimes.map((anime, index) => (
@@ -706,7 +706,7 @@ function HomeClient() {
             </div>
             <button
               onClick={() => handleCloseAnnouncement(announcement)}
-              className='w-full rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 transition-all duration-300 transform hover:-translate-y-0.5'
+              className='w-full rounded-lg bg-linear-to-r from-green-600 to-green-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 transition-all duration-300 transform hover:-translate-y-0.5'
             >
               我知道了
             </button>

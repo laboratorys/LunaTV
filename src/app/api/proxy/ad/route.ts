@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import { NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
         response.url,
         request,
         allowCORS,
-        config.AdRules || ''
+        config.AdRules || '',
       );
 
       return new Response(modifiedContent, {
@@ -96,7 +96,7 @@ async function processM3U8(
   fullUrl: string,
   req: Request,
   allowCORS: boolean,
-  adRules: string
+  adRules: string,
 ) {
   const host = req.headers.get('host');
   const protocol = req.headers.get('x-forwarded-proto') || 'http';
@@ -109,9 +109,9 @@ async function processM3U8(
     (match, p1) => {
       const absoluteKeyUrl = resolveUrl(baseUrl, p1);
       return `#EXT-X-KEY:METHOD=AES-128,URI="${proxyBase}?url=${encodeURIComponent(
-        absoluteKeyUrl
+        absoluteKeyUrl,
       )}&source=${source}"`;
-    }
+    },
   );
 
   if (modifiedContent.includes('#EXT-X-STREAM-INF')) {
@@ -121,7 +121,7 @@ async function processM3U8(
         const trimmed = line.trim();
         if (trimmed && !trimmed.startsWith('#')) {
           return `${proxyBase}?source=${source}&url=${encodeURIComponent(
-            resolveUrl(baseUrl, trimmed)
+            resolveUrl(baseUrl, trimmed),
           )}&allowCORS=${allowCORS}`;
         }
         return line;
@@ -135,7 +135,7 @@ async function processM3U8(
   const remoteFilterFn = ruleString
     ? (new Function('blocks', 'baseUrl', ruleString) as (
         blocks: string[][],
-        baseUrl: string
+        baseUrl: string,
       ) => any)
     : null;
 
@@ -143,10 +143,10 @@ async function processM3U8(
     modifiedContent,
     fullUrl,
     remoteFilterFn,
-    true
+    true,
   );
   console.log(
-    `✅ 广告过滤完成，源: ${source}, 广告数量: ${adCount}, 广告总时长: ${adDuration}秒`
+    `✅ 广告过滤完成，源: ${source}, 广告数量: ${adCount}, 广告总时长: ${adDuration}秒`,
   );
   return main;
 }

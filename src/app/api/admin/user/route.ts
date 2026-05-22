@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,no-console,@typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       {
         error: '不支持本地存储进行管理员配置',
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: '无法对自己进行此操作' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       operatorRole = 'owner';
     } else {
       const userEntry = adminConfig.UserConfig.Users.find(
-        (u) => u.username === username
+        (u) => u.username === username,
       );
       if (!userEntry || userEntry.role !== 'admin' || userEntry.banned) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
@@ -106,14 +106,14 @@ export async function POST(request: NextRequest) {
       targetUsername
     ) {
       targetEntry = adminConfig.UserConfig.Users.find(
-        (u) => u.username === targetUsername
+        (u) => u.username === targetUsername,
       );
 
       if (
         targetEntry &&
         targetEntry.role === 'owner' &&
         !['changePassword', 'updateUserApis', 'updateUserGroups'].includes(
-          action
+          action,
         )
       ) {
         return NextResponse.json({ error: '无法操作站长' }, { status: 400 });
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         if (!targetPassword) {
           return NextResponse.json(
             { error: '缺少目标用户密码' },
-            { status: 400 }
+            { status: 400 },
           );
         }
         const key = await db.registerUser(targetUsername!, targetPassword);
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
         if (isTargetAdmin) {
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
           if (operatorRole !== 'owner') {
             return NextResponse.json(
               { error: '仅站长可封禁管理员' },
-              { status: 401 }
+              { status: 401 },
             );
           }
         }
@@ -179,14 +179,14 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
         if (isTargetAdmin) {
           if (operatorRole !== 'owner') {
             return NextResponse.json(
               { error: '仅站长可操作管理员' },
-              { status: 401 }
+              { status: 401 },
             );
           }
         }
@@ -197,19 +197,19 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
         if (targetEntry.role === 'admin') {
           return NextResponse.json(
             { error: '该用户已是管理员' },
-            { status: 400 }
+            { status: 400 },
           );
         }
         if (operatorRole !== 'owner') {
           return NextResponse.json(
             { error: '仅站长可设置管理员' },
-            { status: 401 }
+            { status: 401 },
           );
         }
         targetEntry.role = 'admin';
@@ -219,19 +219,19 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
         if (targetEntry.role !== 'admin') {
           return NextResponse.json(
             { error: '目标用户不是管理员' },
-            { status: 400 }
+            { status: 400 },
           );
         }
         if (operatorRole !== 'owner') {
           return NextResponse.json(
             { error: '仅站长可取消管理员' },
-            { status: 401 }
+            { status: 401 },
           );
         }
         targetEntry.role = 'user';
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
         if (!targetPassword) {
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
         if (targetEntry.role === 'owner') {
           return NextResponse.json(
             { error: '无法修改站长密码' },
-            { status: 401 }
+            { status: 401 },
           );
         }
 
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
         ) {
           return NextResponse.json(
             { error: '仅站长可修改其他管理员密码' },
-            { status: 401 }
+            { status: 401 },
           );
         }
 
@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
 
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
         if (isTargetAdmin && operatorRole !== 'owner') {
           return NextResponse.json(
             { error: '仅站长可删除管理员' },
-            { status: 401 }
+            { status: 401 },
           );
         }
 
@@ -294,7 +294,7 @@ export async function POST(request: NextRequest) {
 
         // 从配置中移除用户
         const userIndex = adminConfig.UserConfig.Users.findIndex(
-          (u) => u.username === targetUsername
+          (u) => u.username === targetUsername,
         );
         if (userIndex > -1) {
           adminConfig.UserConfig.Users.splice(userIndex, 1);
@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
 
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
         ) {
           return NextResponse.json(
             { error: '仅站长可配置其他管理员的采集源' },
-            { status: 401 }
+            { status: 401 },
           );
         }
 
@@ -352,7 +352,7 @@ export async function POST(request: NextRequest) {
             if (adminConfig.UserConfig.Tags.find((t) => t.name === groupName)) {
               return NextResponse.json(
                 { error: '用户组已存在' },
-                { status: 400 }
+                { status: 400 },
               );
             }
             adminConfig.UserConfig.Tags.push({
@@ -363,12 +363,12 @@ export async function POST(request: NextRequest) {
           }
           case 'edit': {
             const groupIndex = adminConfig.UserConfig.Tags.findIndex(
-              (t) => t.name === groupName
+              (t) => t.name === groupName,
             );
             if (groupIndex === -1) {
               return NextResponse.json(
                 { error: '用户组不存在' },
-                { status: 404 }
+                { status: 404 },
               );
             }
             adminConfig.UserConfig.Tags[groupIndex].enabledApis =
@@ -377,12 +377,12 @@ export async function POST(request: NextRequest) {
           }
           case 'delete': {
             const groupIndex = adminConfig.UserConfig.Tags.findIndex(
-              (t) => t.name === groupName
+              (t) => t.name === groupName,
             );
             if (groupIndex === -1) {
               return NextResponse.json(
                 { error: '用户组不存在' },
-                { status: 404 }
+                { status: 404 },
               );
             }
 
@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
             console.log(
               `删除用户组 "${groupName}"，影响用户: ${
                 affectedUsers.length > 0 ? affectedUsers.join(', ') : '无'
-              }`
+              }`,
             );
 
             break;
@@ -415,7 +415,7 @@ export async function POST(request: NextRequest) {
           default:
             return NextResponse.json(
               { error: '未知的用户组操作' },
-              { status: 400 }
+              { status: 400 },
             );
         }
         break;
@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
         if (!targetEntry) {
           return NextResponse.json(
             { error: '目标用户不存在' },
-            { status: 404 }
+            { status: 404 },
           );
         }
 
@@ -438,7 +438,7 @@ export async function POST(request: NextRequest) {
         ) {
           return NextResponse.json(
             { error: '仅站长可配置其他管理员的用户组' },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -461,7 +461,7 @@ export async function POST(request: NextRequest) {
         if (!usernames || !Array.isArray(usernames) || usernames.length === 0) {
           return NextResponse.json(
             { error: '缺少用户名列表' },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -469,7 +469,7 @@ export async function POST(request: NextRequest) {
         if (operatorRole !== 'owner') {
           for (const targetUsername of usernames) {
             const targetUser = adminConfig.UserConfig.Users.find(
-              (u) => u.username === targetUsername
+              (u) => u.username === targetUsername,
             );
             if (
               targetUser &&
@@ -478,7 +478,7 @@ export async function POST(request: NextRequest) {
             ) {
               return NextResponse.json(
                 { error: `管理员无法操作其他管理员 ${targetUsername}` },
-                { status: 400 }
+                { status: 400 },
               );
             }
           }
@@ -487,7 +487,7 @@ export async function POST(request: NextRequest) {
         // 批量更新用户组
         for (const targetUsername of usernames) {
           const targetUser = adminConfig.UserConfig.Users.find(
-            (u) => u.username === targetUsername
+            (u) => u.username === targetUsername,
           );
           if (targetUser) {
             if (userGroups && userGroups.length > 0) {
@@ -514,7 +514,7 @@ export async function POST(request: NextRequest) {
         headers: {
           'Cache-Control': 'no-store', // 管理员配置不缓存
         },
-      }
+      },
     );
   } catch (error) {
     console.error('用户管理操作失败:', error);
@@ -523,7 +523,7 @@ export async function POST(request: NextRequest) {
         error: '用户管理操作失败',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

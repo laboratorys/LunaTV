@@ -1,4 +1,4 @@
-/* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
@@ -46,12 +46,12 @@ class DB {
         try {
           const tableCheck = DB.instance
             .prepare(
-              "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+              "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
             )
             .get(m.table);
           if (tableCheck) {
             const columns = DB.instance.pragma(
-              `table_info(${m.table})`
+              `table_info(${m.table})`,
             ) as any[];
             const columnExists = columns.some((col) => col.name === m.column);
 
@@ -136,10 +136,10 @@ export class SqliteStorage implements IStorage {
 
   async getPlayRecord(
     userName: string,
-    key: string
+    key: string,
   ): Promise<PlayRecord | null> {
     const stmt = this.db.prepare(
-      'SELECT record FROM play_records WHERE user_name = ? AND key = ?'
+      'SELECT record FROM play_records WHERE user_name = ? AND key = ?',
     );
     const row = stmt.get(userName, key) as { record: string } | undefined;
     return row ? (JSON.parse(row.record) as PlayRecord) : null;
@@ -148,7 +148,7 @@ export class SqliteStorage implements IStorage {
   async setPlayRecord(
     userName: string,
     key: string,
-    record: PlayRecord
+    record: PlayRecord,
   ): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO play_records (user_name, key, record)
@@ -158,10 +158,10 @@ export class SqliteStorage implements IStorage {
   }
 
   async getAllPlayRecords(
-    userName: string
+    userName: string,
   ): Promise<Record<string, PlayRecord>> {
     const stmt = this.db.prepare(
-      'SELECT key, record FROM play_records WHERE user_name = ?'
+      'SELECT key, record FROM play_records WHERE user_name = ?',
     );
     const rows = stmt.all(userName) as { key: string; record: string }[];
     const result: Record<string, PlayRecord> = {};
@@ -173,14 +173,14 @@ export class SqliteStorage implements IStorage {
 
   async deletePlayRecord(userName: string, key: string): Promise<void> {
     const stmt = this.db.prepare(
-      'DELETE FROM play_records WHERE user_name = ? AND key = ?'
+      'DELETE FROM play_records WHERE user_name = ? AND key = ?',
     );
     stmt.run(userName, key);
   }
 
   async deleteAllPlayRecords(userName: string): Promise<void> {
     const stmt = this.db.prepare(
-      'DELETE FROM play_records WHERE user_name = ?'
+      'DELETE FROM play_records WHERE user_name = ?',
     );
     stmt.run(userName);
   }
@@ -192,7 +192,7 @@ export class SqliteStorage implements IStorage {
 
   async getFavorite(userName: string, key: string): Promise<Favorite | null> {
     const stmt = this.db.prepare(
-      'SELECT favorite FROM favorites WHERE user_name = ? AND key = ?'
+      'SELECT favorite FROM favorites WHERE user_name = ? AND key = ?',
     );
     const row = stmt.get(userName, key) as { favorite: string } | undefined;
     return row ? (JSON.parse(row.favorite) as Favorite) : null;
@@ -201,7 +201,7 @@ export class SqliteStorage implements IStorage {
   async setFavorite(
     userName: string,
     key: string,
-    favorite: Favorite
+    favorite: Favorite,
   ): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO favorites (user_name, key, favorite)
@@ -212,7 +212,7 @@ export class SqliteStorage implements IStorage {
 
   async getAllFavorites(userName: string): Promise<Record<string, Favorite>> {
     const stmt = this.db.prepare(
-      'SELECT key, favorite FROM favorites WHERE user_name = ?'
+      'SELECT key, favorite FROM favorites WHERE user_name = ?',
     );
     const rows = stmt.all(userName) as { key: string; favorite: string }[];
     const result: Record<string, Favorite> = {};
@@ -224,7 +224,7 @@ export class SqliteStorage implements IStorage {
 
   async deleteFavorite(userName: string, key: string): Promise<void> {
     const stmt = this.db.prepare(
-      'DELETE FROM favorites WHERE user_name = ? AND key = ?'
+      'DELETE FROM favorites WHERE user_name = ? AND key = ?',
     );
     stmt.run(userName, key);
   }
@@ -241,7 +241,7 @@ export class SqliteStorage implements IStorage {
 
   async registerUser(userName: string, password: string): Promise<string> {
     const stmt = this.db.prepare(
-      'INSERT OR REPLACE INTO users (user_name, key, password) VALUES (?, ? ,?)'
+      'INSERT OR REPLACE INTO users (user_name, key, password) VALUES (?, ? ,?)',
     );
     const key = generateShortKey(userName);
     stmt.run(userName, key, password);
@@ -250,7 +250,7 @@ export class SqliteStorage implements IStorage {
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
     const stmt = this.db.prepare(
-      'SELECT password FROM users WHERE user_name = ?'
+      'SELECT password FROM users WHERE user_name = ?',
     );
     const row = stmt.get(userName) as { password: string } | undefined;
     return row
@@ -270,7 +270,7 @@ export class SqliteStorage implements IStorage {
     const key = generateShortKey(userName);
     console.log('Generated new key for', userName, ':', key);
     const stmt = this.db.prepare(
-      'UPDATE users SET key = ? WHERE user_name = ?'
+      'UPDATE users SET key = ? WHERE user_name = ?',
     );
     stmt.run(key, userName);
   }
@@ -283,7 +283,7 @@ export class SqliteStorage implements IStorage {
 
   async changePassword(userName: string, newPassword: string): Promise<void> {
     const stmt = this.db.prepare(
-      'UPDATE users SET password = ? WHERE user_name = ?'
+      'UPDATE users SET password = ? WHERE user_name = ?',
     );
     stmt.run(newPassword, userName);
   }
@@ -298,7 +298,7 @@ export class SqliteStorage implements IStorage {
     this.db.transaction(() => {
       for (const table of tables) {
         const stmt = this.db.prepare(
-          `DELETE FROM ${table} WHERE user_name = ?`
+          `DELETE FROM ${table} WHERE user_name = ?`,
         );
         stmt.run(userName);
       }
@@ -314,7 +314,7 @@ export class SqliteStorage implements IStorage {
 
   async getSearchHistory(userName: string): Promise<string[]> {
     const stmt = this.db.prepare(
-      'SELECT keyword FROM search_history WHERE user_name = ? ORDER BY created_at DESC'
+      'SELECT keyword FROM search_history WHERE user_name = ? ORDER BY created_at DESC',
     );
     const rows = stmt.all(userName) as { keyword: string }[];
     return ensureStringArray(rows.map((row) => row.keyword));
@@ -324,17 +324,17 @@ export class SqliteStorage implements IStorage {
     this.db.transaction(() => {
       // 删除重复的关键词
       const deleteStmt = this.db.prepare(
-        'DELETE FROM search_history WHERE user_name = ? AND keyword = ?'
+        'DELETE FROM search_history WHERE user_name = ? AND keyword = ?',
       );
       deleteStmt.run(userName, ensureString(keyword));
       // 插入新关键词
       const insertStmt = this.db.prepare(
-        'INSERT INTO search_history (user_name, keyword) VALUES (?, ?)'
+        'INSERT INTO search_history (user_name, keyword) VALUES (?, ?)',
       );
       insertStmt.run(userName, ensureString(keyword));
       // 限制最大长度
       const countStmt = this.db.prepare(
-        'SELECT COUNT(*) as count FROM search_history WHERE user_name = ?'
+        'SELECT COUNT(*) as count FROM search_history WHERE user_name = ?',
       );
       const { count } = countStmt.get(userName) as { count: number };
       if (count > SEARCH_HISTORY_LIMIT) {
@@ -355,12 +355,12 @@ export class SqliteStorage implements IStorage {
   async deleteSearchHistory(userName: string, keyword?: string): Promise<void> {
     if (keyword) {
       const stmt = this.db.prepare(
-        'DELETE FROM search_history WHERE user_name = ? AND keyword = ?'
+        'DELETE FROM search_history WHERE user_name = ? AND keyword = ?',
       );
       stmt.run(userName, ensureString(keyword));
     } else {
       const stmt = this.db.prepare(
-        'DELETE FROM search_history WHERE user_name = ?'
+        'DELETE FROM search_history WHERE user_name = ?',
       );
       stmt.run(userName);
     }
@@ -369,7 +369,7 @@ export class SqliteStorage implements IStorage {
   // ---------- 获取缓存 ----------
   async getCacheByKey(key: string): Promise<any> {
     const stmt = this.db.prepare(
-      'SELECT data FROM cache WHERE key = ? AND (expiry IS NULL OR expiry > ?)'
+      'SELECT data FROM cache WHERE key = ? AND (expiry IS NULL OR expiry > ?)',
     );
     const row = stmt.get(key, new Date().toISOString()) as
       | { data: string }
@@ -391,7 +391,7 @@ export class SqliteStorage implements IStorage {
   // ---------- 清理过期缓存 ----------
   async clearExpiredCache(): Promise<number> {
     const stmt = this.db.prepare(
-      'DELETE FROM cache WHERE expiry IS NOT NULL AND expiry <= ?'
+      'DELETE FROM cache WHERE expiry IS NOT NULL AND expiry <= ?',
     );
     const currentTime = new Date().toISOString();
     const result = stmt.run(currentTime);
@@ -424,7 +424,7 @@ export class SqliteStorage implements IStorage {
 
   async getAdminConfig(): Promise<AdminConfig | null> {
     const stmt = this.db.prepare(
-      'SELECT config FROM admin_config WHERE key = ?'
+      'SELECT config FROM admin_config WHERE key = ?',
     );
     const row = stmt.get(this.adminConfigKey()) as
       | { config: string }
@@ -448,10 +448,10 @@ export class SqliteStorage implements IStorage {
   async getSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<SkipConfig | null> {
     const stmt = this.db.prepare(
-      'SELECT config FROM skip_configs WHERE user_name = ? AND source = ? AND id = ?'
+      'SELECT config FROM skip_configs WHERE user_name = ? AND source = ? AND id = ?',
     );
     const row = stmt.get(userName, source, id) as
       | { config: string }
@@ -463,7 +463,7 @@ export class SqliteStorage implements IStorage {
     userName: string,
     source: string,
     id: string,
-    config: SkipConfig
+    config: SkipConfig,
   ): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO skip_configs (user_name, source, id, config)
@@ -475,19 +475,19 @@ export class SqliteStorage implements IStorage {
   async deleteSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<void> {
     const stmt = this.db.prepare(
-      'DELETE FROM skip_configs WHERE user_name = ? AND source = ? AND id = ?'
+      'DELETE FROM skip_configs WHERE user_name = ? AND source = ? AND id = ?',
     );
     stmt.run(userName, source, id);
   }
 
   async getAllSkipConfigs(
-    userName: string
+    userName: string,
   ): Promise<{ [key: string]: SkipConfig }> {
     const stmt = this.db.prepare(
-      'SELECT source, id, config FROM skip_configs WHERE user_name = ?'
+      'SELECT source, id, config FROM skip_configs WHERE user_name = ?',
     );
     const rows = stmt.all(userName) as {
       source: string;

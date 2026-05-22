@@ -1,16 +1,18 @@
-# LunaTV
+# LabTV
 
 <div align="center">
   <img src="public/logo.png" alt="LunaTV Logo" width="120">
 </div>
 
-> 🎬 **LunaTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、云端存储，让你可以随时随地畅享海量免费影视内容。
+> 🎬 **LabTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 16** + **Tailwind&nbsp;CSS 4.x** + **TypeScript 6.x** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、云端存储，让你可以随时随地畅享海量免费影视内容。
 
 <div align="center">
-
-![Next.js](https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178c6?logo=typescript)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.0-000?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19.2.6-61dafb?logo=react)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8?logo=tailwindcss)
+![ArtPlayer](https://img.shields.io/badge/ArtPlayer-5.4.0-ff6b6b)
+![HLS.js](https://img.shields.io/badge/HLS.js-1.6.16-ec407a)
+![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178c6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
 
@@ -22,7 +24,7 @@
 
 ### 📢 声明
 
-1. 本项目仅作简单维护，主要修复 BUG，对于新功能会特别慎重，唯一可以确定会增加的就是对 tvbox 的支持。
+1. 本项目仅作简单维护，主要修复 BUG，对于新功能会特别慎重，主要增加对 tvbox 的支持。
 2. 你可以[反馈](https://github.com/laboratorys/LunaTV/issues)，但是我不一定（能）解决，主打一个随性。
 3. 尽量保证原汁原味，感谢原作者的付出，站在巨人的肩膀上！
 
@@ -30,7 +32,7 @@
 
 - [x] 开放注册
 - [x] 无痕浏览
-- [x] tvbox 支持
+- [x] TVBOX 支持
 - [x] 支持 sqlite 存储
 - [x] 短剧分类
 - [x] 视频源浏览
@@ -38,7 +40,7 @@
 
 ### 🌿 版本分支
 
-- v100 分支：原项目 v100 版本的最终代码，不会再做任何修改
+- v100 分支：原项目 v100 版本的最终代码，不会再做任何修改，仅做同步
 - main 分支：稳定版
 - dev 分支：开发版
 - 魔改版的初始版本是:5.0.0
@@ -56,12 +58,12 @@
 - 🔍 **多源聚合搜索**：一次搜索立刻返回全源结果。
 - 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示。
 - ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer。
-- ❤️ **收藏 + 继续观看**：支持 Kvrocks/Redis/Upstash 存储，多端同步进度。
+- ❤️ **收藏 + 继续观看**：支持 Sqlite3/Kvrocks/Redis/Upstash 存储，多端同步进度。
 - 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
 - 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
 - 👿 **智能去广告**：自动跳过视频中的切片广告（实验性）。
 
-### 注意：部署后项目为空壳项目，无内置播放源和直播源，需要自行收集
+### 注意：部署后项目为空壳项目，无内置播放源，需要自行搜寻
 
 <details>
   <summary>点击查看项目截图</summary>
@@ -69,9 +71,6 @@
   <img src="public/screenshot2.png" alt="项目截图" style="max-width:600px">
   <img src="public/screenshot3.png" alt="项目截图" style="max-width:600px">
 </details>
-
-### 请不要在 B 站、小红书、微信公众号、抖音、今日头条或其他中国大陆社交平台发布视频或文章宣传本项目，不授权任何“科技周刊/月刊”类项目或站点收录本项目。
-
 ## 🗺 目录
 
 - [技术栈](#技术栈)
@@ -93,9 +92,9 @@
 
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
-| 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
-| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
-| 语言      | TypeScript 4                                                                                          |
+| 前端框架  | [Next.js 16](https://nextjs.org/) · App Router                                                        |
+| UI & 样式 | [Tailwind&nbsp;CSS 4](https://tailwindcss.com/)                                                       |
+| 语言      | TypeScript 6                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 代码质量  | ESLint · Prettier · Jest                                                                              |
 | 部署      | Docker                                                                                                |
@@ -243,119 +242,9 @@ services:
       - UPSTASH_TOKEN=上面的 TOKEN
 ```
 
-### zeabur 一键部署
-
-点击下方按钮即可一键部署，自动配置 LunaTV + Kvrocks 数据库：
-
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/8MPTQU/deploy)
-
-**优势**：
-
-- ✅ 无需配置，一键启动（自动部署完整环境）
-- ✅ 自动 HTTPS 和全球 CDN 加速
-- ✅ 持久化存储，数据永不丢失
-- ✅ 免费额度足够个人使用
-
-**⚠️ 重要提示**：部署完成后，需要在 Zeabur 中为 LunaTV 服务设置访问域名（Domain）才能在浏览器中访问。详见下方 [设置访问域名](#5-设置访问域名必须) 步骤。
-
-### ☁️ Zeabur 部署（推荐）
-
-Thanks to @SzeMeng76
-
-Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以快速部署，无需等待构建。
-
-**部署步骤：**
-
-1. **添加 KVRocks 服务**（先添加数据库）
-
-   - 点击 "Add Service" > "Docker Images"
-   - 输入镜像名称：`apache/kvrocks`
-   - 配置端口：`6666` (TCP)
-   - **记住服务名称**（通常是 `apachekvrocks`）
-   - **配置持久化卷（重要）**：
-     - 在服务设置中找到 "Volumes" 部分
-     - 点击 "Add Volume" 添加新卷
-     - Volume ID: `kvrocks-data`（可自定义，仅支持字母、数字、连字符）
-     - Path: `/var/lib/kvrocks/db`
-     - 保存配置
-
-   > 💡 **重要提示**：持久化卷路径必须设置为 `/var/lib/kvrocks/db`（KVRocks 数据目录），这样配置文件保留在容器内，数据库文件持久化，重启后数据不会丢失！
-
-2. **添加 LunaTV 服务**
-
-   - 点击 "Add Service" > "Docker Images"
-   - 输入镜像名称：`ghcr.io/moontechlab/lunatv:latest`
-   - 配置端口：`3000` (HTTP)
-
-3. **配置环境变量**
-
-   在 LunaTV 服务的环境变量中添加：
-
-   ```env
-   # 必填：管理员账号
-   USERNAME=admin
-   PASSWORD=your_secure_password
-
-   # 必填：存储配置
-   NEXT_PUBLIC_STORAGE_TYPE=kvrocks
-   KVROCKS_URL=redis://apachekvrocks:6666
-
-   # 可选：站点配置
-   SITE_BASE=https://your-domain.zeabur.app
-   NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
-   ANNOUNCEMENT=欢迎使用 LunaTV Enhanced Edition
-
-   # 可选：豆瓣代理配置（推荐）
-   NEXT_PUBLIC_DOUBAN_PROXY_TYPE=cmliussss-cdn-tencent
-   NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE=cmliussss-cdn-tencent
-   ```
-
-   **注意**：
-
-   - 使用服务名称作为主机名：`redis://apachekvrocks:6666`
-   - 如果服务名称不同，请替换为实际名称
-   - 两个服务必须在同一个 Project 中
-
-4. **部署完成**
-   - Zeabur 会自动拉取镜像并启动服务
-   - 等待服务就绪后，需要手动设置访问域名（见下一步）
-
-#### 5. 设置访问域名（必须）
-
-- 在 LunaTV 服务页面，点击 "Networking" 或 "网络" 标签
-- 点击 "Generate Domain" 生成 Zeabur 提供的免费域名（如 `xxx.zeabur.app`）
-- 或者绑定自定义域名：
-  - 点击 "Add Domain" 添加你的域名
-  - 按照提示配置 DNS CNAME 记录指向 Zeabur 提供的目标地址
-- 设置完域名后即可通过域名访问 LunaTV
-
-6. **绑定自定义域名（可选）**
-   - 在服务设置中点击 "Domains"
-   - 添加你的自定义域名
-   - 配置 DNS CNAME 记录指向 Zeabur 提供的域名
-
-#### 🔄 更新 Docker 镜像
-
-当 Docker 镜像有新版本发布时，Zeabur 不会自动更新。需要手动触发更新。
-
-**更新步骤：**
-
-1. **进入服务页面**
-
-   - 点击需要更新的服务（LunaTV 或 KVRocks）
-
-2. **重启服务**
-   - 点击 **"服务状态"** 页面，再点击 **"重启当前版本"** 按钮
-   - Zeabur 会自动拉取最新的 `latest` 镜像并重新部署
-
-> 💡 **提示**：
->
-> - 使用 `latest` 标签时，Restart 会自动拉取最新镜像
-> - 生产环境推荐使用固定版本标签（如 `v5.5.6`）避免意外更新
-
 ## 配置文件
 
-完成部署后为空壳应用，无播放源，需要站长在管理后台的配置文件设置中填写配置文件（后续会支持订阅）
+完成部署后为空壳应用，无播放源，需要站长在管理后台的配置文件设置订阅地址
 
 配置文件示例如下：
 
@@ -401,11 +290,11 @@ custom_category 支持的自定义分类已知如下：
 
 也可输入如 "哈利波特" 效果等同于豆瓣搜索
 
-LunaTV 支持标准的苹果 CMS V10 API 格式。
+LabTV 支持标准的苹果 CMS V10 API 格式。
 
 ## 订阅
 
-将完整的配置文件 base58 编码后提供 http 服务即为订阅链接，可在 MoonTV 后台/Helios 中使用。
+将完整的配置文件 base58 编码后提供 http 服务即为订阅链接，可在 LabV 后台/Helios 中使用。
 
 ## 自动更新
 
@@ -420,7 +309,7 @@ dockge/komodo 等 docker compose UI 也有自动更新功能
 | USERNAME                            | 站长账号                 | 任意字符串                     | 无默认，必填字段                                                                                                           |
 | PASSWORD                            | 站长密码                 | 任意字符串                     | 无默认，必填字段                                                                                                           |
 | SITE_BASE                           | 站点 url                 | 形如 https://example.com       | 空                                                                                                                         |
-| NEXT_PUBLIC_SITE_NAME               | 站点名称                 | 任意字符串                     | LunaTV                                                                                                                     |
+| NEXT_PUBLIC_SITE_NAME               | 站点名称                 | 任意字符串                     | LabTV                                                                                                                      |
 | ANNOUNCEMENT                        | 站点公告                 | 任意字符串                     | 本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。 |
 | NEXT_PUBLIC_STORAGE_TYPE            | 播放记录/收藏的存储方式  | sqlte、redis、kvrocks、upstash | 无默认，必填字段                                                                                                           |
 | KVROCKS_URL                         | kvrocks 连接 url         | 连接 url                       | 空                                                                                                                         |
@@ -445,22 +334,21 @@ NEXT_PUBLIC_DOUBAN_PROXY_TYPE 选项解释：
 
 NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE 选项解释：
 
-- direct：由浏览器直接请求豆瓣分配的默认图片域名
 - server：由服务器代理请求豆瓣分配的默认图片域名
-- img3：由浏览器请求豆瓣官方的精品 cdn（阿里云）
 - cmliussss-cdn-tencent：由浏览器请求豆瓣 CDN，该 CDN 由 [CMLiussss](https://github.com/cmliu) 搭建，并由腾讯云 cdn 提供加速
 - cmliussss-cdn-ali：由浏览器请求豆瓣 CDN，该 CDN 由 [CMLiussss](https://github.com/cmliu) 搭建，并由阿里云 cdn 提供加速
 - custom: 用户自定义 proxy，由 NEXT_PUBLIC_DOUBAN_IMAGE_PROXY 定义
 
 ## 客户端
 
-v100.0.0 以上版本可配合 [Selene](https://github.com/MoonTechLab/Selene) 使用，移动端体验更加友好，数据完全同步
+- [Selene](https://github.com/MoonTechLab/Selene)
+
+- [TVBOX ](https://github.com/laboratorys/TV-Release)
 
 ## AndroidTV 使用
 
-目前该项目可以配合 [OrionTV](https://github.com/zimplexing/OrionTV) 在 Android TV 上使用，可以直接作为 OrionTV 后端
-
-已实现播放记录和网页端同步
+- [TVBOX ](https://github.com/laboratorys/TV-Release)
+- [OrionTV](https://github.com/zimplexing/OrionTV)
 
 ## 安全与隐私提醒
 
@@ -484,7 +372,7 @@ v100.0.0 以上版本可配合 [Selene](https://github.com/MoonTechLab/Selene) �
 
 ## License
 
-[MIT](LICENSE) © 2025 LunaTV & Contributors
+[MIT](LICENSE) © 2026 LunaTV & Contributors
 
 ## 致谢
 

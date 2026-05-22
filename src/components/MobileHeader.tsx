@@ -21,7 +21,7 @@ const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
     : 'text-green-600';
 
   return (
-    <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-800/50 transition-colors duration-300'>
+    <header className='md:hidden fixed top-0 left-0 right-0 z-999 w-full bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-800/50 transition-colors duration-300'>
       <div className='h-14 flex items-center justify-between px-3'>
         {/* 左侧：返回按钮 或 站点标识 (导航区) */}
         <div className='flex items-center min-w-0'>

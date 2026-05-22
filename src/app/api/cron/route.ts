@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 
 import { NextResponse } from 'next/server';
 
@@ -31,7 +31,7 @@ export async function GET() {
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -56,7 +56,7 @@ async function refreshAllLiveChannels() {
       } catch (error) {
         console.error(
           `刷新直播源失败 [${liveInfo.name || liveInfo.key}]:`,
-          error
+          error,
         );
         liveInfo.channelNumber = 0;
       }
@@ -136,7 +136,7 @@ async function refreshRecordAndFavorites() {
     const getDetail = async (
       source: string,
       id: string,
-      fallbackTitle: string
+      fallbackTitle: string,
     ): Promise<SearchResult | null> => {
       const key = `${source}+${id}`;
       let promise = detailCache.get(key);
@@ -163,7 +163,7 @@ async function refreshRecordAndFavorites() {
     // 并发限制工具
     const runWithConcurrency = async <T>(
       tasks: (() => Promise<T>)[],
-      concurrency: number
+      concurrency: number,
     ): Promise<T[]> => {
       const results: T[] = [];
       let index = 0;
@@ -175,8 +175,8 @@ async function refreshRecordAndFavorites() {
       };
       await Promise.all(
         Array.from({ length: Math.min(concurrency, tasks.length) }, () =>
-          worker()
-        )
+          worker(),
+        ),
       );
       return results;
     };
@@ -224,7 +224,7 @@ async function refreshRecordAndFavorites() {
                 tvbox_record: record.tvbox_record,
               });
               console.log(
-                `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`
+                `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`,
               );
             }
 
@@ -244,7 +244,7 @@ async function refreshRecordAndFavorites() {
       try {
         let favorites = await db.getAllFavorites(user);
         favorites = Object.fromEntries(
-          Object.entries(favorites).filter(([_, fav]) => fav.origin !== 'live')
+          Object.entries(favorites).filter(([_, fav]) => fav.origin !== 'live'),
         );
         const favEntries = Object.entries(favorites);
         const totalFavorites = favEntries.length;
@@ -277,7 +277,7 @@ async function refreshRecordAndFavorites() {
                 tvbox_record: fav.tvbox_record,
               });
               console.log(
-                `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`
+                `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`,
               );
             }
 

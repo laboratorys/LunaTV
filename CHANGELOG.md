@@ -6,6 +6,8 @@
 
 ### Changed
 
+- 升级依赖nextjs 16、react 19 、tailwindcss 4.3、artplayer 5.4
+- 全站改名LabTV，主要用于和原版LunaTV进行区分
 - 【100.1.2】移除豆瓣图片代理中的「直连」和「豆瓣官方精品 CDN」选项，历史数据自动兼容为服务器代理
 
 
