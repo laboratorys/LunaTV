@@ -71,7 +71,7 @@ export function GlobalErrorIndicator() {
         </span>
         <button
           onClick={handleClose}
-          className='text-white hover:text-red-100 transition-colors flex-shrink-0'
+          className='text-white hover:text-red-100 transition-colors shrink-0'
           aria-label='关闭错误提示'
         >
           <svg

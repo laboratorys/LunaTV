@@ -228,7 +228,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     key={index}
                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                   >
-                    <span className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0'></span>
+                    <span className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 shrink-0'></span>
                     {item}
                   </li>
                 ))}
@@ -248,7 +248,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     key={index}
                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                   >
-                    <span className='w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0'></span>
+                    <span className='w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 shrink-0'></span>
                     {item}
                   </li>
                 ))}
@@ -268,7 +268,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                     key={index}
                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                   >
-                    <span className='w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0'></span>
+                    <span className='w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 shrink-0'></span>
                     {item}
                   </li>
                 ))}
@@ -351,7 +351,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
               <div className='bg-linear-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4'>
                 <div className='flex flex-col gap-3'>
                   <div className='flex items-center gap-2 sm:gap-3'>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dark:bg-yellow-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
+                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dark:bg-yellow-800/40 rounded-full flex items-center justify-center shrink-0'>
                       <Download className='w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-400' />
                     </div>
                     <div className='min-w-0 flex-1'>
@@ -381,7 +381,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
               <div className='bg-linear-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 sm:p-4'>
                 <div className='flex flex-col gap-3'>
                   <div className='flex items-center gap-2 sm:gap-3'>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
+                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-800/40 rounded-full flex items-center justify-center shrink-0'>
                       <CheckCircle className='w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400' />
                     </div>
                     <div className='min-w-0 flex-1'>
@@ -479,7 +479,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                                     key={itemIndex}
                                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                                   >
-                                    <span className='w-1.5 h-1.5 bg-green-400 rounded-full mt-2 flex-shrink-0'></span>
+                                    <span className='w-1.5 h-1.5 bg-green-400 rounded-full mt-2 shrink-0'></span>
                                     {item}
                                   </li>
                                 ))}
@@ -499,7 +499,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                                     key={itemIndex}
                                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                                   >
-                                    <span className='w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0'></span>
+                                    <span className='w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 shrink-0'></span>
                                     {item}
                                   </li>
                                 ))}
@@ -519,7 +519,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
                                     key={itemIndex}
                                     className='text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2'
                                   >
-                                    <span className='w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0'></span>
+                                    <span className='w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 shrink-0'></span>
                                     {item}
                                   </li>
                                 ))}

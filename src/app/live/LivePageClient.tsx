@@ -1361,11 +1361,11 @@ function LivePageClient() {
 
   return (
     <PageLayout activePath='/live' title={currentSource?.name || '直播'}>
-      <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
+      <div className='flex flex-col gap-3 py-4 px-5 lg:px-12 2xl:px-20'>
         {/* 第一行：页面标题 */}
         <div className='py-1 hidden md:block'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 max-w-[80%]'>
-            <Radio className='w-5 h-5 text-blue-500 flex-shrink-0' />
+            <Radio className='w-5 h-5 text-blue-500 shrink-0' />
             <div className='min-w-0 flex-1'>
               <div className='truncate'>
                 {currentSource?.name}
@@ -1424,7 +1424,7 @@ function LivePageClient() {
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
+            className={`grid gap-4 lg:h-125 xl:h-162.5 2xl:h-187.5 transition-all duration-300 ease-in-out ${
               isChannelListCollapsed
                 ? 'grid-cols-1'
                 : 'grid-cols-1 md:grid-cols-4'
@@ -1436,7 +1436,7 @@ function LivePageClient() {
                 isChannelListCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
-              <div className='relative w-full h-[300px] lg:h-full'>
+              <div className='relative w-full h-75 lg:h-full'>
                 <div
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30'
@@ -1534,7 +1534,7 @@ function LivePageClient() {
 
             {/* 频道列表 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`h-75 lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
                 isChannelListCollapsed
                   ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
@@ -1542,7 +1542,7 @@ function LivePageClient() {
             >
               <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
                 {/* 主要的 Tab 切换 */}
-                <div className='flex mb-1 -mx-6 flex-shrink-0'>
+                <div className='flex mb-1 -mx-6 shrink-0'>
                   <div
                     onClick={() => setActiveTab('channels')}
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
@@ -1573,7 +1573,7 @@ function LivePageClient() {
                 {activeTab === 'channels' && (
                   <>
                     {/* 分组标签 */}
-                    <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
+                    <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 shrink-0'>
                       {/* 切换状态提示 */}
                       {isSwitchingSource && (
                         <div className='flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400'>
@@ -1626,7 +1626,7 @@ function LivePageClient() {
                               }}
                               onClick={() => handleGroupChange(group)}
                               disabled={isSwitchingSource}
-                              className={`w-20 relative py-2 text-sm font-medium transition-colors flex-shrink-0 text-center overflow-hidden
+                              className={`w-20 relative py-2 text-sm font-medium transition-colors shrink-0 text-center overflow-hidden
                                  ${
                                    isSwitchingSource
                                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
@@ -1675,7 +1675,7 @@ function LivePageClient() {
                               }`}
                             >
                               <div className='flex items-center gap-3'>
-                                <div className='w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                                <div className='w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0 overflow-hidden'>
                                   {channel.logo ? (
                                     <img
                                       src={`/api/proxy/logo?url=${encodeURIComponent(
@@ -1746,7 +1746,7 @@ function LivePageClient() {
                                 }`.trim()}
                             >
                               {/* 图标 */}
-                              <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0'>
+                              <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center shrink-0'>
                                 <Radio className='w-6 h-6 text-gray-500' />
                               </div>
 
@@ -1796,9 +1796,9 @@ function LivePageClient() {
           <div className='pt-4'>
             <div className='flex flex-col lg:flex-row gap-4'>
               {/* 频道图标+名称 - 在小屏幕上占100%，大屏幕占20% */}
-              <div className='w-full flex-shrink-0'>
+              <div className='w-full shrink-0'>
                 <div className='flex items-center gap-4'>
-                  <div className='w-20 h-20 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                  <div className='w-20 h-20 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center shrink-0 overflow-hidden'>
                     {currentChannel.logo ? (
                       <img
                         src={`/api/proxy/logo?url=${encodeURIComponent(
@@ -1822,7 +1822,7 @@ function LivePageClient() {
                           e.stopPropagation();
                           handleToggleFavorite();
                         }}
-                        className='flex-shrink-0 hover:opacity-80 transition-opacity'
+                        className='shrink-0 hover:opacity-80 transition-opacity'
                         title={favorited ? '取消收藏' : '收藏'}
                       >
                         <FavoriteIcon filled={favorited} />
@@ -1870,7 +1870,7 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
     );
   }
   return (
-    <Heart className='h-6 w-6 stroke-[1] text-gray-600 dark:text-gray-300' />
+    <Heart className='h-6 w-6 stroke-1 text-gray-600 dark:text-gray-300' />
   );
 };
 

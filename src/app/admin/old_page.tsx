@@ -4428,7 +4428,7 @@ const SiteConfigComponent = ({
                   >
                     <span className='truncate'>{option.label}</span>
                     {siteSettings.DoubanProxyType === option.value && (
-                      <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                      <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                     )}
                   </button>
                 ))}
@@ -4546,7 +4546,7 @@ const SiteConfigComponent = ({
                   >
                     <span className='truncate'>{option.label}</span>
                     {siteSettings.DoubanImageProxyType === option.value && (
-                      <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                      <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                     )}
                   </button>
                 ))}

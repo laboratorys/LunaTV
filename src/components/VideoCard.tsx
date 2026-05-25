@@ -638,7 +638,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         >
           {/* 海报容器 */}
           <div
-            className={`relative aspect-[2/3] overflow-hidden rounded-lg ${
+            className={`relative aspect-2/3 overflow-hidden rounded-lg ${
               origin === 'live'
                 ? 'ring-1 ring-gray-300/80 dark:ring-gray-600/80'
                 : ''
@@ -759,7 +759,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                     py-1 
                     rounded-r-md 
                     shadow-sm
-                    max-w-[120px] sm:max-w-[200px]
+                    max-w-30 sm:max-w-50
                   '
                 >
                   <span
@@ -1039,7 +1039,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
                         return (
                           <div
-                            className='absolute bottom-full mb-2 opacity-0 invisible group-hover/sources:opacity-100 group-hover/sources:visible transition-all duration-200 ease-out delay-100 pointer-events-none z-50 right-0 sm:right-0 -translate-x-0 sm:translate-x-0'
+                            className='absolute bottom-full mb-2 opacity-0 invisible group-hover/sources:opacity-100 group-hover/sources:visible transition-all duration-200 ease-out delay-100 pointer-events-none z-50 right-0 sm:right-0 translate-x-0 sm:translate-x-0'
                             style={
                               {
                                 WebkitUserSelect: 'none',
@@ -1053,7 +1053,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                             }}
                           >
                             <div
-                              className='bg-gray-800/90 backdrop-blur-sm text-white text-xs sm:text-xs rounded-lg shadow-xl border border-white/10 p-1.5 sm:p-2 min-w-[100px] sm:min-w-[120px] max-w-[140px] sm:max-w-[200px] overflow-hidden'
+                              className='bg-gray-800/90 backdrop-blur-sm text-white text-xs sm:text-xs rounded-lg shadow-xl border border-white/10 p-1.5 sm:p-2 min-w-25 sm:min-w-30 max-w-35 sm:max-w-50 overflow-hidden'
                               style={
                                 {
                                   WebkitUserSelect: 'none',
@@ -1073,7 +1073,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                                     key={index}
                                     className='flex items-center gap-1 sm:gap-1.5'
                                   >
-                                    <div className='w-0.5 h-0.5 sm:w-1 sm:h-1 bg-blue-400 rounded-full flex-shrink-0'></div>
+                                    <div className='w-0.5 h-0.5 sm:w-1 sm:h-1 bg-blue-400 rounded-full shrink-0'></div>
                                     <span
                                       className='truncate text-[10px] sm:text-xs leading-tight'
                                       title={sourceName}
@@ -1096,7 +1096,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                               )}
 
                               {/* 小箭头 */}
-                              <div className='absolute top-full right-2 sm:right-3 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] sm:border-l-[6px] sm:border-r-[6px] sm:border-t-[6px] border-transparent border-t-gray-800/90'></div>
+                              <div className='absolute top-full right-2 sm:right-3 w-0 h-0 border-l-4 border-r-4 border-t-4 sm:border-l-[6px] sm:border-r-[6px] sm:border-t-[6px] border-transparent border-t-gray-800/90'></div>
                             </div>
                           </div>
                         );
@@ -1108,7 +1108,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 进度条 */}
             {config.showProgress && progress !== undefined && (
               <div
-                className='absolute bottom-0 left-0 right-0 h-[3px] w-full bg-black/40 backdrop-blur-sm z-30'
+                className='absolute bottom-0 left-0 right-0 h-0.75 w-full bg-black/40 backdrop-blur-sm z-30'
                 style={
                   {
                     // 关键：确保进度条本身也继承底部的圆角，或者依靠父级的 overflow-hidden

@@ -2029,7 +2029,7 @@ export default function PlayPageClient() {
 
   return (
     <PageLayout activePath='/play' title={videoTitle || '播放影片'}>
-      <div className='flex flex-col gap-3 py-4 px-5 lg:px-[3rem] 2xl:px-20'>
+      <div className='flex flex-col gap-3 py-4 px-5 lg:px-12 2xl:px-20'>
         {/* 第一行：影片标题 */}
         <div className='py-1 hidden md:block'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
@@ -2088,7 +2088,7 @@ export default function PlayPageClient() {
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
+            className={`grid gap-4 lg:h-125 xl:h-162.5 2xl:h-187.5 transition-all duration-300 ease-in-out ${
               isEpisodeSelectorCollapsed
                 ? 'grid-cols-1'
                 : 'grid-cols-1 md:grid-cols-4'
@@ -2100,7 +2100,7 @@ export default function PlayPageClient() {
                 isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
-              <div className='relative w-full h-[300px] lg:h-full'>
+              <div className='relative w-full h-75 lg:h-full'>
                 <div
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
@@ -2186,7 +2186,7 @@ export default function PlayPageClient() {
 
             {/* 选集和换源 - 在移动端始终显示，在 lg 及以上可折叠 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`h-75 lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
                 isEpisodeSelectorCollapsed
                   ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
@@ -2222,7 +2222,7 @@ export default function PlayPageClient() {
                     e.stopPropagation();
                     handleToggleFavorite();
                   }}
-                  className='ml-3 flex-shrink-0 hover:opacity-80 transition-opacity'
+                  className='ml-3 shrink-0 hover:opacity-80 transition-opacity'
                 >
                   <FavoriteIcon filled={favorited} />
                 </button>
@@ -2239,7 +2239,7 @@ export default function PlayPageClient() {
                   <span>{detail?.year || videoYear}</span>
                 )}
                 {detail?.source_name && (
-                  <span className='border border-gray-500/60 px-2 py-[1px] rounded'>
+                  <span className='border border-gray-500/60 px-2 py-px rounded'>
                     {detail.source_name}
                   </span>
                 )}
@@ -2260,7 +2260,7 @@ export default function PlayPageClient() {
           {/* 封面展示 */}
           <div className='hidden md:block md:col-span-1 md:order-first'>
             <div className='pl-0 py-4 pr-6'>
-              <div className='relative bg-gray-300 dark:bg-gray-700 aspect-[2/3] flex items-center justify-center rounded-xl overflow-hidden'>
+              <div className='relative bg-gray-300 dark:bg-gray-700 aspect-2/3 flex items-center justify-center rounded-xl overflow-hidden'>
                 {videoCover ? (
                   <>
                     <img
@@ -2306,7 +2306,7 @@ export default function PlayPageClient() {
         </div>
       </div>
       {showAdNotice && (
-        <div className='fixed top-20 left-1/2 -translate-x-1/2 z-9999 bg-black/90 text-white px-4 py-3 rounded-full shadow-2xl border border-yellow-500/30 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 backdrop-blur-md whitespace-nowrap min-w-[300px] justify-between'>
+        <div className='fixed top-20 left-1/2 -translate-x-1/2 z-9999 bg-black/90 text-white px-4 py-3 rounded-full shadow-2xl border border-yellow-500/30 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 backdrop-blur-md whitespace-nowrap min-w-75 justify-between'>
           <div className='flex items-center gap-2'>
             <span className='relative flex h-2 w-2'>
               <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75'></span>
@@ -2373,6 +2373,6 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
     );
   }
   return (
-    <Heart className='h-7 w-7 stroke-[1] text-gray-600 dark:text-gray-300' />
+    <Heart className='h-7 w-7 stroke-1 text-gray-600 dark:text-gray-300' />
   );
 };

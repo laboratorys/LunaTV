@@ -29,7 +29,7 @@ const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
             <div className='flex items-center gap-1'>
               <BackButton />
               <span
-                className={`text-lg font-bold truncate max-w-[180px] ${titleColorClass}`}
+                className={`text-lg font-bold truncate max-w-45 ${titleColorClass}`}
               >
                 {displayTitle}
               </span>
@@ -39,7 +39,7 @@ const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
               href='/'
               className='flex items-center ml-1 transition-all duration-200 active:opacity-70'
             >
-              <div className='relative w-7 h-7 flex-shrink-0'>
+              <div className='relative w-7 h-7 shrink-0'>
                 <Image
                   src='/logo.png'
                   alt='Logo'

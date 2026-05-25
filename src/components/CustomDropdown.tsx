@@ -115,7 +115,7 @@ const CustomDropdown = ({
             >
               <span className='truncate'>{option.label}</span>
               {value === option.value && (
-                <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
               )}
             </button>
           ))}

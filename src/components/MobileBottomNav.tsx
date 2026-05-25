@@ -148,7 +148,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
           return (
             <li
               key={item.href}
-              className='flex-shrink-0'
+              className='shrink-0'
               style={{ width: '22vw', minWidth: '80px' }}
               data-active={active}
             >

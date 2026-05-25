@@ -357,7 +357,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   return (
     <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
       {/* 主要的 Tab 切换 - 无缝融入设计 */}
-      <div className='flex mb-1 -mx-6 flex-shrink-0'>
+      <div className='flex mb-1 -mx-6 shrink-0'>
         {totalEpisodes > 1 && (
           <div
             onClick={() => setActiveTab('episodes')}
@@ -390,7 +390,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {activeTab === 'episodes' && (
         <>
           {/* 分类标签 */}
-          <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
+          <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 shrink-0'>
             <div
               className='flex-1 overflow-x-auto'
               ref={categoryContainerRef}
@@ -407,7 +407,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         buttonRefs.current[idx] = el;
                       }}
                       onClick={() => handleCategoryClick(idx)}
-                      className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-center 
+                      className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 text-center 
                         ${
                           isActive
                             ? 'text-green-500 dark:text-green-400'
@@ -426,7 +426,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </div>
             {/* 向上/向下按钮 */}
             <button
-              className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]'
+              className='shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform -translate-y-1'
               onClick={() => {
                 // 切换集数排序（正序/倒序）
                 setDescending((prev) => !prev);
@@ -558,7 +558,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       }`.trim()}
                       >
                         {/* 封面 */}
-                        <div className='flex-shrink-0 w-12 h-20 bg-gray-300 dark:bg-gray-600 rounded overflow-hidden'>
+                        <div className='shrink-0 w-12 h-20 bg-gray-300 dark:bg-gray-600 rounded overflow-hidden'>
                           {source.episodes && source.episodes.length > 0 && (
                             <img
                               src={processImageUrl(source.poster)}
@@ -595,7 +595,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                               if (videoInfo && videoInfo.quality !== '未知') {
                                 if (videoInfo.hasError) {
                                   return (
-                                    <div className='bg-gray-500/10 dark:bg-gray-400/20 text-red-600 dark:text-red-400 px-1.5 py-0 rounded text-xs flex-shrink-0 min-w-[50px] text-center'>
+                                    <div className='bg-gray-500/10 dark:bg-gray-400/20 text-red-600 dark:text-red-400 px-1.5 py-0 rounded text-xs shrink-0 min-w-12.5 text-center'>
                                       检测失败
                                     </div>
                                   );
@@ -615,7 +615,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
                                   return (
                                     <div
-                                      className={`bg-gray-500/10 dark:bg-gray-400/20 ${textColorClasses} px-1.5 py-0 rounded text-xs flex-shrink-0 min-w-[50px] text-center`}
+                                      className={`bg-gray-500/10 dark:bg-gray-400/20 ${textColorClasses} px-1.5 py-0 rounded text-xs shrink-0 min-w-12.5 text-center`}
                                     >
                                       {videoInfo.quality}
                                     </div>
@@ -670,7 +670,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       </div>
                     );
                   })}
-                <div className='flex-shrink-0 mt-auto pt-2 border-t border-gray-400 dark:border-gray-700'>
+                <div className='shrink-0 mt-auto pt-2 border-t border-gray-400 dark:border-gray-700'>
                   <button
                     onClick={() => {
                       if (videoTitle) {

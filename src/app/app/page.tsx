@@ -83,8 +83,8 @@ export default function DownloadPage() {
       <div className='px-4 sm:px-10 py-8 min-h-screen relative max-w-7xl mx-auto'>
         {/* 背景光晕 */}
         <div className='fixed inset-0 -z-10 overflow-hidden pointer-events-none'>
-          <div className='absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-green-200/20 dark:bg-green-600/10 rounded-full blur-[120px]' />
-          <div className='absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] bg-emerald-200/20 dark:bg-emerald-600/10 rounded-full blur-[100px]' />
+          <div className='absolute top-[-10%] right-[-10%] w-125 h-125 bg-green-200/20 dark:bg-green-600/10 rounded-full blur-[120px]' />
+          <div className='absolute bottom-[10%] left-[-10%] w-125 h-125 bg-emerald-200/20 dark:bg-emerald-600/10 rounded-full blur-[100px]' />
         </div>
 
         {/* 1. 头部标题 */}
@@ -118,7 +118,7 @@ export default function DownloadPage() {
           {packageList.map((pkg, idx) => (
             <div
               key={idx}
-              className='relative group bg-white/80 dark:bg-gray-800/50 rounded-[2rem] p-6 border border-gray-200 dark:border-gray-700/50 backdrop-blur-md hover:border-green-500/50 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.15)]'
+              className='relative group bg-white/80 dark:bg-gray-800/50 rounded-4xl p-6 border border-gray-200 dark:border-gray-700/50 backdrop-blur-md hover:border-green-500/50 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.15)]'
             >
               <div className='flex justify-between items-start mb-6'>
                 <div className='p-3 bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/10 rounded-2xl text-green-600 dark:text-green-400 shadow-sm group-hover:scale-110 transition-transform duration-300'>

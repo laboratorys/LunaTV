@@ -605,7 +605,7 @@ export const UserMenu: React.FC = () => {
         {/* 菜单项 */}
         <div className='py-1'>
           {/* 主题按钮 */}
-          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'>
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5'>
             <div className='flex items-center gap-2.5'>
               <SunMoon className='w-4 h-4 text-gray-500 dark:text-gray-400' />
               <span className='font-medium'>主题</span>
@@ -615,7 +615,7 @@ export const UserMenu: React.FC = () => {
           {/* 无痕式浏览 */}
           <div
             onClick={() => toggleIncognito()}
-            className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'
+            className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5'
           >
             <div className='flex items-center gap-2.5'>
               <Glasses className='w-4 h-4 text-gray-500 dark:text-gray-400' />
@@ -627,7 +627,7 @@ export const UserMenu: React.FC = () => {
             />
           </div>
           {/* TVBOX 功能项 */}
-          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px] group'>
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5 group'>
             {/* 左侧：点击跳转 */}
             <button
               onClick={() => {
@@ -653,7 +653,7 @@ export const UserMenu: React.FC = () => {
               >
                 <Download className='w-3.5 h-3.5' />
               </button>
-              <div className='w-[1px] h-3 bg-gray-300 dark:bg-gray-600 mx-0.5' />
+              <div className='w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5' />
               <button
                 onClick={handleCopyTVBoxUrl}
                 className='p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors'
@@ -847,7 +847,7 @@ export const UserMenu: React.FC = () => {
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanDataSource === option.value && (
-                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                         )}
                       </button>
                     ))}
@@ -961,7 +961,7 @@ export const UserMenu: React.FC = () => {
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanImageProxyType === option.value && (
-                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                         )}
                       </button>
                     ))}
@@ -1259,7 +1259,7 @@ export const UserMenu: React.FC = () => {
           )}
         </button>
         {updateStatus === UpdateStatus.HAS_UPDATE && (
-          <div className='absolute top-[2px] right-[2px] w-2 h-2 bg-yellow-500 rounded-full'></div>
+          <div className='absolute top-0.5 right-0.5 w-2 h-2 bg-yellow-500 rounded-full'></div>
         )}
       </div>
 

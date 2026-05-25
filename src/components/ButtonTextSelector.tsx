@@ -231,7 +231,7 @@ const ButtonTextSelector = <T extends string | number>({
 
       <div className='relative'>
         {showSub && activeParent?.children?.length && (
-          <div className='absolute top-1 left-0 w-full sm:w-auto min-w-[200px] animate-in fade-in slide-in-from-top-1 z-100'>
+          <div className='absolute top-1 left-0 w-full sm:w-auto min-w-50 animate-in fade-in slide-in-from-top-1 z-100'>
             <div
               className='absolute -top-1 h-2 w-2 rotate-45 border-l border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 hidden sm:block'
               style={{

@@ -20,7 +20,7 @@ export function IncognitoToggle({ active, onToggle }: Props) {
     <div
       onClick={(e) => onToggle(e)} // 处理点击并透传事件对象 e 以便阻止冒泡
       className={`
-        relative inline-flex h-[18px] w-8 flex-shrink-0 cursor-pointer items-center rounded-full 
+        relative inline-flex h-[18px] w-8 shrink-0 cursor-pointer items-center rounded-full 
         transition-colors duration-200 ease-in-out
         ${active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}
       `}
