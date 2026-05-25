@@ -1,10 +1,11 @@
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Option {
   value: string;
   label: string;
-  disabled?: boolean; // 新增：支持禁用属性
+  disabled?: boolean;
 }
 
 interface CustomDropdownProps {
@@ -27,9 +28,37 @@ const CustomDropdown = ({
   onOpenChange,
 }: CustomDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  // 新增：用于存储菜单的位置坐标
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   const selectedLabel =
     options.find((option) => option.value === value)?.label || '请选择';
+
+  // 计算坐标逻辑
+  const updatePosition = () => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY + 4, // 按钮下方 4px
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  };
+
+  // 监听打开状态并计算位置
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -41,28 +70,12 @@ const CustomDropdown = ({
         onOpenChange?.(false);
       }
     };
-
     document.addEventListener('click', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isOpen, onOpenChange]);
-
-  const calculatedHeight = options.length * 2.75;
-  const heightClass = maxHeight
-    ? `max-h-${maxHeight}`
-    : `h-[${calculatedHeight}rem]`;
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [onOpenChange]);
 
   return (
-    // 注意：将 ref 移到最外层 div 以确保 handleClickOutside 逻辑准确
-    <div
-      className={`relative ${isOpen ? 'z-50' : 'z-40'} ${className}`}
-      data-dropdown
-      ref={dropdownRef}
-    >
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type='button'
         onClick={() => {
@@ -73,54 +86,55 @@ const CustomDropdown = ({
           }
         }}
         disabled={disabled}
-        className={`w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left ${
+        className={`w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-left transition-all text-gray-900 dark:text-gray-100 ${
           disabled ? 'cursor-not-allowed opacity-50' : ''
         }`}
       >
         {selectedLabel}
       </button>
+
       <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
         <ChevronDown
-          className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </div>
-      {isOpen && (
-        <div
-          className={`absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-auto ${
-            maxHeight ? heightClass : 'h-auto'
-          } transition-all duration-200`}
-        >
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type='button'
-              // 修改：如果选项禁用，则不触发点击
-              onClick={() => {
-                if (option.disabled) return;
-                onChange(option.value);
-                setIsOpen(false);
-                onOpenChange?.(false);
-              }}
-              className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between ${
-                option.disabled
-                  ? 'cursor-not-allowed opacity-40 grayscale pointer-events-none bg-gray-50 dark:bg-gray-900/40' // 禁用状态样式
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              } ${
-                value === option.value
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                  : 'text-gray-900 dark:text-gray-100'
-              }`}
-            >
-              <span className='truncate'>{option.label}</span>
-              {value === option.value && (
-                <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+
+      {isOpen &&
+        createPortal(
+          <div
+            className='fixed z-9999 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl overflow-auto '
+            style={{
+              top: `${coords.top}px`,
+              left: `${coords.left}px`,
+              width: `${coords.width}px`,
+              maxHeight: maxHeight ? maxHeight : '300px',
+            }}
+          >
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type='button'
+                onClick={() => {
+                  if (option.disabled) return;
+                  onChange(option.value);
+                  setIsOpen(false);
+                  onOpenChange?.(false);
+                }}
+                className={`w-full px-3 py-2.5 text-left text-sm flex items-center justify-between text-gray-900 dark:text-gray-100 ${
+                  option.disabled
+                    ? 'opacity-40 cursor-not-allowed'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                } ${value === option.value ? 'bg-green-50 dark:bg-green-900/20 text-green-600' : ''}`}
+              >
+                <span>{option.label}</span>
+                {value === option.value && (
+                  <Check className='w-4 h-4 text-green-600' />
+                )}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

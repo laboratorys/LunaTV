@@ -162,7 +162,7 @@ export default function EpgScrollableRow({
           </h4>
           <div className='w-16 sm:w-20'></div>
         </div>
-        <div className='min-h-[100px] sm:min-h-[120px] flex items-center justify-center'>
+        <div className='min-h-25 sm:min-h-30 flex items-center justify-center'>
           <div className='flex items-center gap-3 sm:gap-4 text-gray-500 dark:text-gray-400'>
             <div className='w-5 h-5 sm:w-6 sm:h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin'></div>
             <span className='text-sm sm:text-base'>加载节目单...</span>
@@ -183,7 +183,7 @@ export default function EpgScrollableRow({
           </h4>
           <div className='w-16 sm:w-20'></div>
         </div>
-        <div className='min-h-[100px] sm:min-h-[120px] flex items-center justify-center'>
+        <div className='min-h-25 sm:min-h-30 flex items-center justify-center'>
           <div className='flex items-center gap-2 sm:gap-3 text-gray-400 dark:text-gray-500'>
             <Tv className='w-4 h-4 sm:w-5 sm:h-5' />
             <span className='text-sm sm:text-base'>暂无节目单数据</span>
@@ -220,7 +220,7 @@ export default function EpgScrollableRow({
       >
         <div
           ref={containerRef}
-          className='flex overflow-x-auto scrollbar-hide py-2 pb-4 px-2 sm:px-4 min-h-[100px] sm:min-h-[120px]'
+          className='flex overflow-x-auto scrollbar-hide py-2 pb-4 px-2 sm:px-4 min-h-25 sm:min-h-30'
         >
           {programs.map((program, index) => {
             // 使用 currentPlayingIndex 来判断播放状态，确保样式能正确更新
@@ -231,7 +231,7 @@ export default function EpgScrollableRow({
             return (
               <div
                 key={index}
-                className={`shrink-0 w-36 sm:w-48 p-2 sm:p-3 rounded-lg border transition-all duration-200 flex flex-col min-h-[100px] sm:min-h-[120px] ${
+                className={`shrink-0 w-36 sm:w-48 p-2 sm:p-3 rounded-lg border transition-all duration-200 flex flex-col min-h-25 sm:min-h-30 ${
                   isPlaying
                     ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30'
                     : isFinishedProgram

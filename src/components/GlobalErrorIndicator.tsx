@@ -62,7 +62,7 @@ export function GlobalErrorIndicator() {
     <div className='fixed top-4 right-4 z-2000'>
       {/* 错误卡片 */}
       <div
-        className={`bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between min-w-[300px] max-w-[400px] transition-all duration-300 ${
+        className={`bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between min-w-75 max-w-100 transition-all duration-300 ${
           isReplacing ? 'scale-105 bg-red-400' : 'scale-100 bg-red-500'
         } animate-fade-in`}
       >
