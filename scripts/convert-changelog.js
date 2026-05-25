@@ -9,11 +9,11 @@ const CHANGELOG_PATH = path.join(process.cwd(), 'CHANGELOG.md');
 const OUTPUT_PATH = path.join(process.cwd(), 'src/lib/changelog.ts');
 const VERSION_TXT_PATH = path.join(
   process.cwd(),
-  `VERSION_${process.env.GITHUB_BRANCH?.toUpperCase()}.txt`
+  `VERSION_${process.env.GITHUB_BRANCH?.toUpperCase()}.txt`,
 );
 const VERSION_TS_PATH = path.join(
   process.cwd(),
-  `src/lib/version-${process.env.GITHUB_BRANCH}.ts`
+  `src/lib/version-${process.env.GITHUB_BRANCH}.ts`,
 );
 function parseChangelog(content) {
   const lines = content.split('\n');
@@ -27,7 +27,7 @@ function parseChangelog(content) {
 
     // 匹配版本行: ## [X.Y.Z] - YYYY-MM-DD
     const versionMatch = trimmedLine.match(
-      /^## \[([\d.]+)\] - (\d{4}-\d{2}-\d{2})$/
+      /^## \[([\d.]+)\] - (\d{4}-\d{2}-\d{2})$/,
     );
     if (versionMatch) {
       if (currentVersion) {
@@ -156,10 +156,8 @@ function updateVersionFile(version) {
 
 function updateVersionTs(version) {
   try {
-    const updatedContent = `/* eslint-disable no-console */
-const CURRENT_VERSION = '${version}';
-export { CURRENT_VERSION };
-`;
+    const updatedContent = `const CURRENT_VERSION = '${version}';
+                            export { CURRENT_VERSION };`;
     fs.writeFileSync(VERSION_TS_PATH, updatedContent, 'utf8');
     console.log(`✅ Updated version.ts: ${version}`);
   } catch (error) {
@@ -221,7 +219,7 @@ function main() {
     console.log(`📊 版本统计:`);
     changelogData.versions.forEach((version) => {
       console.log(
-        `   ${version.version} (${version.date}): +${version.added.length} ~${version.changed.length} !${version.fixed.length}`
+        `   ${version.version} (${version.date}): +${version.added.length} ~${version.changed.length} !${version.fixed.length}`,
       );
     });
 
