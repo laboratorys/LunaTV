@@ -174,7 +174,7 @@ export default function SiteSection({
               onChange={(e) => handleChange('ConfigFile', e.target.value)}
               rows={22}
               spellCheck={false}
-              className={`${styles.input} !rounded-2xl text-[13px] leading-relaxed resize-none h-[500px] transition-all border-blue-500/10 focus:border-blue-500/30 dark:bg-black/20`}
+              className={`${styles.input} rounded-2xl! text-[13px] leading-relaxed resize-none h-125 transition-all border-blue-500/10 focus:border-blue-500/30 dark:bg-black/20`}
               placeholder='请输入配置文件内容...'
             />
           </div>

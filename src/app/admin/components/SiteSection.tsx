@@ -84,7 +84,7 @@ export default function SiteSection({
                   站点公告
                 </label>
                 <textarea
-                  className={`${styles.input} !rounded-2xl h-32 resize-none transition-all`}
+                  className={`${styles.input} rounded-2xl! h-32 resize-none transition-all`}
                   value={siteConfig?.Announcement}
                   onChange={(e) => handleChange('Announcement', e.target.value)}
                 />
@@ -122,7 +122,7 @@ export default function SiteSection({
                 {siteConfig?.DoubanProxyType === 'custom' && (
                   <input
                     placeholder='请输入自定义数据代理地址'
-                    className={`${styles.input} !text-[11px] !py-1.5 animate-in fade-in zoom-in-95 duration-200`}
+                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
                     value={siteConfig.DoubanProxy || ''}
                     onChange={(e) =>
                       handleChange('CustomDoubanProxy', e.target.value)
@@ -151,7 +151,7 @@ export default function SiteSection({
                 {siteConfig?.DoubanImageProxyType === 'custom' && (
                   <input
                     placeholder='请输入自定义图片代理地址'
-                    className={`${styles.input} !text-[11px] !py-1.5 animate-in fade-in zoom-in-95 duration-200`}
+                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
                     value={siteConfig?.DoubanImageProxy || ''}
                     onChange={(e) =>
                       handleChange('CustomDoubanImageProxy', e.target.value)
