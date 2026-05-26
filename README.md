@@ -7,13 +7,11 @@
 > 🎬 **LabTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 16** + **Tailwind&nbsp;CSS 4.x** + **TypeScript 6.x** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、云端存储，让你可以随时随地畅享海量免费影视内容。
 
 <div align="center">
-  
+
+![GitHub Release](https://img.shields.io/github/v/release/laboratorys/LunaTV)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.0-000?logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-19.2.6-61dafb?logo=react)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-38bdf8?logo=tailwindcss)
-![ArtPlayer](https://img.shields.io/badge/ArtPlayer-5.4.0-ff6b6b)
-![HLS.js](https://img.shields.io/badge/HLS.js-1.6.16-ec407a)
-![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178c6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
 
