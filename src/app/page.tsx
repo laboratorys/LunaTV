@@ -93,17 +93,23 @@ function HomeClient() {
 
         // 并行获取热门电影、热门剧集和热门综艺
         // 使用 allSettled 避免单个请求失败导致全部数据为空
-        const [moviesRes, tvShowsRes, varietyShowsRes, bangumiRes] =
-          await Promise.allSettled([
-            getDoubanCategories({
-              kind: 'movie',
-              category: '热门',
-              type: '全部',
-            }),
-            getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
-            GetBangumiCalendarData(),
-          ]);
+        const [
+          moviesRes,
+          tvShowsRes,
+          varietyShowsRes,
+          bangumiRes,
+          shortDramaRes,
+        ] = await Promise.allSettled([
+          getDoubanCategories({
+            kind: 'movie',
+            category: '热门',
+            type: '全部',
+          }),
+          getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
+          getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
+          GetBangumiCalendarData(),
+          GetHotShortDramaData(),
+        ]);
 
         if (moviesRes.status === 'fulfilled' && moviesRes.value.code === 200) {
           setHotMovies(moviesRes.value.list);
@@ -133,6 +139,12 @@ function HomeClient() {
           setBangumiCalendarData(bangumiRes.value);
         } else {
           console.error('获取番剧日历失败:', bangumiRes.reason);
+        }
+        if (
+          shortDramaRes.status === 'fulfilled' &&
+          shortDramaRes.value.code === 200
+        ) {
+          setHotShortDrama(shortDramaRes.value.data.list);
         }
       } catch (error) {
         console.error('获取推荐数据失败:', error);
