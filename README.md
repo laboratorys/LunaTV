@@ -339,15 +339,15 @@ NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE 选项解释：
 - cmliussss-cdn-ali：由浏览器请求豆瓣 CDN，该 CDN 由 [CMLiussss](https://github.com/cmliu) 搭建，并由阿里云 cdn 提供加速
 - custom: 用户自定义 proxy，由 NEXT_PUBLIC_DOUBAN_IMAGE_PROXY 定义
 
-## 客户端
+## 移动端
 
-- [Selene](https://github.com/MoonTechLab/Selene)
+- [Selene](https://github.com/MoonTechLab/Selene) （含桌面端）
+- [TVBOX](https://github.com/laboratorys/TV-Release)
 
-- [TVBOX ](https://github.com/laboratorys/TV-Release)
+## AndroidTV
 
-## AndroidTV 使用
-
-- [TVBOX ](https://github.com/laboratorys/TV-Release)
+- [Selene](https://github.com/MoonTechLab/Selene-TV)
+- [TVBOX](https://github.com/laboratorys/TV-Release)
 - [OrionTV](https://github.com/zimplexing/OrionTV)
 
 ## 安全与隐私提醒
