@@ -12,7 +12,7 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     version: '5.1.1',
-    date: '2026-05-21',
+    date: '2026-05-28',
     added: [
       // 无新增内容
     ],
@@ -21,7 +21,11 @@ export const changelog: ChangelogEntry[] = [
       '全站改名LabTV，主要用于和原版LunaTV进行区分',
       '【100.1.2】移除豆瓣图片代理中的「直连」和「豆瓣官方精品 CDN」选项，历史数据自动兼容为服务器代理',
     ],
-    fixed: ['【后台配置】移动端站点配置操作障碍'],
+    fixed: [
+      '【后台配置】移动端站点配置操作障碍',
+      '【100.1.3】修复首页热门电影、热门剧集、热门综艺在番剧接口失败时一并空白的问题',
+      '【100.1.3】番剧日历改为通过服务端代理请求，规避 bgm.tv 的 访问限制',
+    ],
   },
   {
     version: '5.1.0',
