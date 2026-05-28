@@ -42,7 +42,10 @@ export function processImageUrl(originalUrl: string): string {
   if (!originalUrl || originalUrl.trim() === '') {
     return TRANSPARENT_PIXEL;
   }
-
+  //bgm.tv的图片走代理
+  if (originalUrl.includes('bgm.tv')) {
+    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+  }
   // 仅处理豆瓣图片代理
   if (!originalUrl.includes('doubanio.com')) {
     return originalUrl;

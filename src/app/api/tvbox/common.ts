@@ -10,7 +10,7 @@ import { TvboxContentItem } from '@/lib/types';
 
 export async function commonReturn(
   items: TvboxContentItem[],
-  pageSize: number
+  pageSize: number,
 ) {
   return NextResponse.json({
     list: items || [],
@@ -23,7 +23,7 @@ export async function fetchDoubanCategoryList(
   category = '热门',
   type = '全部',
   pageStart = 1,
-  pageLimit = 25
+  pageLimit = 25,
 ): Promise<TvboxContentItem[]> {
   if (pageLimit < 1 || pageLimit > 100) {
     throw new Error('pageLimit 必须在 1-100 之间');
@@ -37,12 +37,12 @@ export async function fetchDoubanCategoryList(
   const target = useTencentCDN
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
     : useAliCDN
-    ? `https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
-    : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`;
+      ? `https://m.douban.cmliussss.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`
+      : `https://m.douban.com/rexxar/api/v2/subject/recent_hot/${kind}?start=${pageStart}&limit=${pageLimit}&category=${category}&type=${type}`;
   try {
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN ? '' : proxyUrl,
     );
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -58,13 +58,13 @@ export async function fetchDoubanCategoryList(
           item.pic?.normal,
           imageProxyType,
           imageProxyUrl,
-          urlPrefix
+          urlPrefix,
         ) ||
         processImageUrl(
           item.pic?.large,
           imageProxyType,
           imageProxyUrl,
-          urlPrefix
+          urlPrefix,
         ) ||
         '',
       vod_remarks: item.episodes_info,
@@ -79,7 +79,7 @@ export function parseId(item: any): string {
   const title = item.title || '';
   const doubanId = item.id || '';
   return `${encodeURIComponent(
-    title
+    title,
   )}&year=${year}&douban_id=${doubanId}&short_drama=0`;
 }
 export function parseYearFromSubtitle(subtitle: string): string {
@@ -99,7 +99,7 @@ export async function fetchDoubanRecommendList(
   tags = [] as Array<string>,
   sort: string,
   pageStart = 1,
-  pageLimit = 25
+  pageLimit = 25,
 ): Promise<TvboxContentItem[]> {
   if (pageLimit < 1 || pageLimit > 100) {
     throw new Error('pageLimit 必须在 1-100 之间');
@@ -113,8 +113,8 @@ export async function fetchDoubanRecommendList(
   const baseUrl = useTencentCDN
     ? `https://m.douban.cmliussss.net/rexxar/api/v2/${kind}/recommend`
     : useAliCDN
-    ? `https://m.douban.cmliussss.com/rexxar/api/v2/${kind}/recommend`
-    : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
+      ? `https://m.douban.cmliussss.com/rexxar/api/v2/${kind}/recommend`
+      : `https://m.douban.com/rexxar/api/v2/${kind}/recommend`;
   const params = new URLSearchParams();
   params.append('refresh', '0');
   params.append('start', pageStart.toString());
@@ -131,7 +131,7 @@ export async function fetchDoubanRecommendList(
     // 调用豆瓣 API
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN ? '' : proxyUrl,
     );
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -149,13 +149,13 @@ export async function fetchDoubanRecommendList(
             item.pic?.normal,
             imageProxyType,
             imageProxyUrl,
-            urlPrefix
+            urlPrefix,
           ) ||
           processImageUrl(
             item.pic?.large,
             imageProxyType,
             imageProxyUrl,
-            urlPrefix
+            urlPrefix,
           ) ||
           '',
         vod_remarks: '',
@@ -170,7 +170,7 @@ export async function fetchDoubanHotList(
   urlPrefix: string,
   type = 'tv',
   pageStart = 0,
-  pageLimit = 50
+  pageLimit = 50,
 ): Promise<TvboxContentItem[]> {
   const tag = '热门';
   if (pageLimit < 1 || pageLimit > 100) {
@@ -191,7 +191,7 @@ export async function fetchDoubanHotList(
   try {
     const response = await fetchWithTimeout(
       target,
-      useTencentCDN || useAliCDN ? '' : proxyUrl
+      useTencentCDN || useAliCDN ? '' : proxyUrl,
     );
 
     if (!response.ok) {
@@ -208,7 +208,7 @@ export async function fetchDoubanHotList(
         item.cover,
         imageProxyType,
         imageProxyUrl,
-        urlPrefix
+        urlPrefix,
       ),
       vod_remarks: item.episodes_info,
     }));
@@ -220,7 +220,7 @@ export async function fetchDoubanHotList(
       window.dispatchEvent(
         new CustomEvent('globalError', {
           detail: { message: '获取豆瓣热门数据失败' },
-        })
+        }),
       );
     }
     throw new Error(`获取豆瓣热门数据失败: ${(error as Error).message}`);
@@ -291,10 +291,13 @@ export function processImageUrl(
   originalUrl: string,
   proxyType: string,
   proxyUrl: string,
-  urlPrefix: string
+  urlPrefix: string,
 ): string {
   if (!originalUrl) return originalUrl;
-
+  //bgm.tv的图片走代理
+  if (originalUrl.includes('bgm.tv')) {
+    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+  }
   // 仅处理豆瓣图片代理
   if (!originalUrl.includes('doubanio.com')) {
     return originalUrl;
@@ -302,19 +305,19 @@ export function processImageUrl(
   switch (proxyType) {
     case 'server':
       return `${urlPrefix}/api/image-proxy?url=${encodeURIComponent(
-        originalUrl
+        originalUrl,
       )}`;
     case 'img3':
       return originalUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
     case 'cmliussss-cdn-tencent':
       return originalUrl.replace(
         /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.net'
+        'img.doubanio.cmliussss.net',
       );
     case 'cmliussss-cdn-ali':
       return originalUrl.replace(
         /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.com'
+        'img.doubanio.cmliussss.com',
       );
     case 'custom':
       return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
@@ -338,7 +341,7 @@ export const getUrlPrefix = (request: NextRequest) => {
     const forwardedProto = request.headers.get('x-forwarded-proto');
     const protocol = (forwardedProto || request.nextUrl.protocol).replace(
       ':',
-      ''
+      '',
     );
     const host = request.headers.get('host') || request.nextUrl.host;
     const cleanProtocol = protocol.split(':')[0];
@@ -368,7 +371,7 @@ export const getMatchedVodInfo = async (
   id: string,
   apiSites: any[],
   config: any,
-  yellowWords: string[] = []
+  yellowWords: string[] = [],
 ) => {
   // 1. 解析原始 ID 信息
   const params = new URLSearchParams(`name=${decodeURIComponent(id)}`);
@@ -386,12 +389,12 @@ export const getMatchedVodInfo = async (
     Promise.race([
       searchFromApi(site, searchCriteria.name),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
+        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000),
       ),
     ]).catch((err) => {
       console.warn(`查询失败 ${site.name}:`, err.message);
       return [];
-    })
+    }),
   );
 
   try {
@@ -443,7 +446,7 @@ export const getMatchedVodInfo = async (
           }
           return map;
         }, new Map())
-        .values()
+        .values(),
     ) as any[];
 
     if (uniqueResults.length === 0) return null;
