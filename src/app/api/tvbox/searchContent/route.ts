@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const cacheData = await db.getCacheByKey(`${TVBOX_SEARCH_KEY}${query}`);
     if (cacheData) {
       console.log(
-        `【tvbox】searchContent return from cache:${TVBOX_SEARCH_KEY}${query}`
+        `【tvbox】searchContent return from cache:${TVBOX_SEARCH_KEY}${query}`,
       );
       return NextResponse.json(cacheData);
     }
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
     Promise.race([
       searchFromApi(site, query),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
+        setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000),
       ),
     ]).catch((err) => {
       console.warn(`搜索失败 ${site.name}:`, err.message);
       return []; // 返回空数组而不是抛出错误
-    })
+    }),
   );
 
   try {
@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
             vod_pic: item.poster || '',
             vod_remarks: item.remarks,
           },
-        ])
-      ).values()
+        ]),
+      ).values(),
     );
     if (isCached) {
       db.setCacheByKey(
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         {
           list: uniqueResults,
         },
-        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2,
       );
     }
     return NextResponse.json({

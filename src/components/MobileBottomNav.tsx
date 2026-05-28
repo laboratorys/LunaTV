@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion } from 'framer-motion';
@@ -38,7 +37,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       const container = scrollContainerRef.current;
       if (!container) return;
       const activeElement = container.querySelector(
-        '[data-active="true"]'
+        '[data-active="true"]',
       ) as HTMLElement;
 
       if (activeElement) {
@@ -133,7 +132,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   return (
     <nav
-      className='md:hidden fixed left-0 right-0 z-[600] bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800'
+      className='md:hidden fixed left-0 right-0 z-600 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800'
       style={{
         bottom: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
@@ -149,7 +148,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
           return (
             <li
               key={item.href}
-              className='flex-shrink-0'
+              className='shrink-0'
               style={{ width: '22vw', minWidth: '80px' }}
               data-active={active}
             >

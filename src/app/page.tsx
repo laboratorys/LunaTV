@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console */
+/* eslint-disable react-hooks/exhaustive-deps, no-console */
 
 'use client';
 
@@ -41,7 +41,7 @@ import VideoCard from '@/components/VideoCard';
 function HomeClient() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'favorites' | 'history'>(
-    'home'
+    'home',
   );
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
@@ -92,13 +92,14 @@ function HomeClient() {
         setLoading(true);
 
         // 并行获取热门电影、热门剧集和热门综艺
+        // 使用 allSettled 避免单个请求失败导致全部数据为空
         const [
-          moviesData,
-          tvShowsData,
-          varietyShowsData,
-          bangumiCalendarData,
-          shortDramaData,
-        ] = await Promise.all([
+          moviesRes,
+          tvShowsRes,
+          varietyShowsRes,
+          bangumiRes,
+          shortDramaRes,
+        ] = await Promise.allSettled([
           getDoubanCategories({
             kind: 'movie',
             category: '热门',
@@ -110,22 +111,40 @@ function HomeClient() {
           GetHotShortDramaData(),
         ]);
 
-        if (moviesData.code === 200) {
-          setHotMovies(moviesData.list);
+        if (moviesRes.status === 'fulfilled' && moviesRes.value.code === 200) {
+          setHotMovies(moviesRes.value.list);
+        } else if (moviesRes.status === 'rejected') {
+          console.error('获取热门电影失败:', moviesRes.reason);
         }
 
-        if (tvShowsData.code === 200) {
-          setHotTvShows(tvShowsData.list);
+        if (
+          tvShowsRes.status === 'fulfilled' &&
+          tvShowsRes.value.code === 200
+        ) {
+          setHotTvShows(tvShowsRes.value.list);
+        } else if (tvShowsRes.status === 'rejected') {
+          console.error('获取热门剧集失败:', tvShowsRes.reason);
         }
 
-        if (varietyShowsData.code === 200) {
-          setHotVarietyShows(varietyShowsData.list);
+        if (
+          varietyShowsRes.status === 'fulfilled' &&
+          varietyShowsRes.value.code === 200
+        ) {
+          setHotVarietyShows(varietyShowsRes.value.list);
+        } else if (varietyShowsRes.status === 'rejected') {
+          console.error('获取热门综艺失败:', varietyShowsRes.reason);
         }
 
-        setBangumiCalendarData(bangumiCalendarData);
-
-        if (shortDramaData.code === 200) {
-          setHotShortDrama(shortDramaData.data.list);
+        if (bangumiRes.status === 'fulfilled') {
+          setBangumiCalendarData(bangumiRes.value);
+        } else {
+          console.error('获取番剧日历失败:', bangumiRes.reason);
+        }
+        if (
+          shortDramaRes.status === 'fulfilled' &&
+          shortDramaRes.value.code === 200
+        ) {
+          setHotShortDrama(shortDramaRes.value.data.list);
         }
       } catch (error) {
         console.error('获取推荐数据失败:', error);
@@ -185,7 +204,7 @@ function HomeClient() {
       'favoritesUpdated',
       (newFavorites: Record<string, any>) => {
         updateFavoriteItems(newFavorites);
-      }
+      },
     );
 
     return unsubscribe;
@@ -208,7 +227,7 @@ function HomeClient() {
       'playRecordsUpdated',
       (newRecords: Record<string, PlayRecord>) => {
         updatePlayRecords(newRecords);
-      }
+      },
     );
     return unsubscribe;
   }, [activeTab]);
@@ -221,7 +240,7 @@ function HomeClient() {
 
     // 按 save_time 降序排序（最新的在前面）
     const sortedRecords = recordsArray.sort(
-      (a, b) => b.save_time - a.save_time
+      (a, b) => b.save_time - a.save_time,
     );
 
     setPlayRecords(sortedRecords);
@@ -288,7 +307,7 @@ function HomeClient() {
                   </button>
                 )}
               </div>
-              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
+              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
                 {favoriteItems.map((item) => (
                   <div key={item.id + item.source} className='w-full'>
                     <VideoCard
@@ -327,7 +346,7 @@ function HomeClient() {
                   </button>
                 )}
               </div>
-              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
+              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
                 {playRecords.map((record) => {
                   const { source, id } = parseKey(record.key);
                   return (
@@ -346,7 +365,7 @@ function HomeClient() {
                         from='playrecord'
                         onDelete={() =>
                           setPlayRecords((prev) =>
-                            prev.filter((r) => r.key !== record.key)
+                            prev.filter((r) => r.key !== record.key),
                           )
                         }
                         type={record.total_episodes > 1 ? 'tv' : ''}
@@ -390,9 +409,9 @@ function HomeClient() {
                         Array.from({ length: 8 }).map((_, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
-                            <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                            <div className='relative aspect-2/3 w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
                               <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
                             </div>
                             <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
@@ -402,7 +421,7 @@ function HomeClient() {
                         hotMovies.map((movie, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
                             <VideoCard
                               from='douban'
@@ -441,9 +460,9 @@ function HomeClient() {
                         Array.from({ length: 8 }).map((_, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
-                            <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                            <div className='relative aspect-2/3 w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
                               <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
                             </div>
                             <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
@@ -453,7 +472,7 @@ function HomeClient() {
                         hotTvShows.map((show, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
                             <VideoCard
                               from='douban'
@@ -491,9 +510,9 @@ function HomeClient() {
                         Array.from({ length: 8 }).map((_, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
-                            <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                            <div className='relative aspect-2/3 w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
                               <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
                             </div>
                             <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
@@ -517,13 +536,13 @@ function HomeClient() {
                           // 找到当前星期对应的番剧数据
                           const todayAnimes =
                             bangumiCalendarData.find(
-                              (item) => item.weekday.en === currentWeekday
+                              (item) => item.weekday.en === currentWeekday,
                             )?.items || [];
 
                           return todayAnimes.map((anime, index) => (
                             <div
                               key={`${anime.id}-${index}`}
-                              className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                              className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                             >
                               <VideoCard
                                 from='douban'
@@ -569,9 +588,9 @@ function HomeClient() {
                         Array.from({ length: 8 }).map((_, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
-                            <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                            <div className='relative aspect-2/3 w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
                               <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
                             </div>
                             <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
@@ -581,7 +600,7 @@ function HomeClient() {
                         hotVarietyShows.map((show, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
                             <VideoCard
                               from='douban'
@@ -619,9 +638,9 @@ function HomeClient() {
                         Array.from({ length: 8 }).map((_, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
-                            <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                            <div className='relative aspect-2/3 w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
                               <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
                             </div>
                             <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
@@ -631,7 +650,7 @@ function HomeClient() {
                         hotShortDrama.map((item, index) => (
                           <div
                             key={index}
-                            className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                            className='min-w-24 w-24 sm:min-w-45 sm:w-44'
                           >
                             <VideoCard
                               from='douban'
@@ -706,7 +725,7 @@ function HomeClient() {
             </div>
             <button
               onClick={() => handleCloseAnnouncement(announcement)}
-              className='w-full rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 transition-all duration-300 transform hover:-translate-y-0.5'
+              className='w-full rounded-lg bg-linear-to-r from-green-600 to-green-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 transition-all duration-300 transform hover:-translate-y-0.5'
             >
               我知道了
             </button>

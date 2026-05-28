@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 'use client';
 
@@ -82,10 +82,10 @@ export const UserMenu: React.FC = () => {
   const [fluidSearch, setFluidSearch] = useState(true);
   const [liveDirectConnect, setLiveDirectConnect] = useState(false);
   const [doubanDataSource, setDoubanDataSource] = useState(
-    'cmliussss-cdn-tencent'
+    'cmliussss-cdn-tencent',
   );
   const [doubanImageProxyType, setDoubanImageProxyType] = useState(
-    'cmliussss-cdn-tencent'
+    'cmliussss-cdn-tencent',
   );
   const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
@@ -117,9 +117,7 @@ export const UserMenu: React.FC = () => {
 
   // 豆瓣图片代理选项
   const doubanImageProxyTypeOptions = [
-    { value: 'direct', label: '直连（浏览器直接请求豆瓣）' },
     { value: 'server', label: '服务器代理（由服务器代理请求豆瓣）' },
-    { value: 'img3', label: '豆瓣官方精品 CDN（阿里云）' },
     {
       value: 'cmliussss-cdn-tencent',
       label: '豆瓣 CDN By CMLiussss（腾讯云）',
@@ -159,7 +157,7 @@ export const UserMenu: React.FC = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedAggregateSearch = localStorage.getItem(
-        'defaultAggregateSearch'
+        'defaultAggregateSearch',
       );
       if (savedAggregateSearch !== null) {
         setDefaultAggregateSearch(JSON.parse(savedAggregateSearch));
@@ -185,19 +183,26 @@ export const UserMenu: React.FC = () => {
       }
 
       const savedDoubanImageProxyType = localStorage.getItem(
-        'doubanImageProxyType'
+        'doubanImageProxyType',
       );
       const defaultDoubanImageProxyType =
         (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
         'cmliussss-cdn-tencent';
+      // 兼容历史数据：直连和豆瓣官方精品 CDN 统一使用服务器代理
+      const normalizeImageProxyType = (type: string) =>
+        type === 'direct' || type === 'img3' ? 'server' : type;
       if (savedDoubanImageProxyType !== null) {
-        setDoubanImageProxyType(savedDoubanImageProxyType);
+        setDoubanImageProxyType(
+          normalizeImageProxyType(savedDoubanImageProxyType),
+        );
       } else if (defaultDoubanImageProxyType) {
-        setDoubanImageProxyType(defaultDoubanImageProxyType);
+        setDoubanImageProxyType(
+          normalizeImageProxyType(defaultDoubanImageProxyType),
+        );
       }
 
       const savedDoubanImageProxyUrl = localStorage.getItem(
-        'doubanImageProxyUrl'
+        'doubanImageProxyUrl',
       );
       const defaultDoubanImageProxyUrl =
         (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
@@ -454,9 +459,15 @@ export const UserMenu: React.FC = () => {
       'cmliussss-cdn-tencent';
     const defaultDoubanProxy =
       (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
-    const defaultDoubanImageProxyType =
+    let defaultDoubanImageProxyType =
       (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
       'cmliussss-cdn-tencent';
+    if (
+      defaultDoubanImageProxyType === 'direct' ||
+      defaultDoubanImageProxyType === 'img3'
+    ) {
+      defaultDoubanImageProxyType = 'server';
+    }
     const defaultDoubanImageProxyUrl =
       (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
     const defaultFluidSearch =
@@ -554,14 +565,14 @@ export const UserMenu: React.FC = () => {
     <>
       {/* 背景遮罩 - 普通菜单无需模糊 */}
       <div
-        className='fixed inset-0 bg-transparent z-[1000]'
+        className='fixed inset-0 bg-transparent z-1000'
         onClick={handleCloseMenu}
       />
 
       {/* 菜单面板 */}
-      <div className='fixed top-14 right-4 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1001] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
+      <div className='fixed top-14 right-4 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-1001 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
         {/* 用户信息区域 */}
-        <div className='px-3 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50'>
+        <div className='px-3 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-linear-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50'>
           <div className='space-y-1'>
             <div className='flex items-center justify-between'>
               <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
@@ -572,8 +583,8 @@ export const UserMenu: React.FC = () => {
                   (authInfo?.role || 'user') === 'owner'
                     ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                     : (authInfo?.role || 'user') === 'admin'
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                 }`}
               >
                 {getRoleText(authInfo?.role || 'user')}
@@ -594,7 +605,7 @@ export const UserMenu: React.FC = () => {
         {/* 菜单项 */}
         <div className='py-1'>
           {/* 主题按钮 */}
-          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'>
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5'>
             <div className='flex items-center gap-2.5'>
               <SunMoon className='w-4 h-4 text-gray-500 dark:text-gray-400' />
               <span className='font-medium'>主题</span>
@@ -604,7 +615,7 @@ export const UserMenu: React.FC = () => {
           {/* 无痕式浏览 */}
           <div
             onClick={() => toggleIncognito()}
-            className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px]'
+            className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5'
           >
             <div className='flex items-center gap-2.5'>
               <Glasses className='w-4 h-4 text-gray-500 dark:text-gray-400' />
@@ -616,7 +627,7 @@ export const UserMenu: React.FC = () => {
             />
           </div>
           {/* TVBOX 功能项 */}
-          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-[38px] group'>
+          <div className='w-full px-3 flex items-center justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm h-9.5 group'>
             {/* 左侧：点击跳转 */}
             <button
               onClick={() => {
@@ -642,7 +653,7 @@ export const UserMenu: React.FC = () => {
               >
                 <Download className='w-3.5 h-3.5' />
               </button>
-              <div className='w-[1px] h-3 bg-gray-300 dark:bg-gray-600 mx-0.5' />
+              <div className='w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5' />
               <button
                 onClick={handleCopyTVBoxUrl}
                 className='p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors'
@@ -716,8 +727,8 @@ export const UserMenu: React.FC = () => {
                       updateStatus === UpdateStatus.HAS_UPDATE
                         ? 'bg-yellow-500'
                         : updateStatus === UpdateStatus.NO_UPDATE
-                        ? 'bg-green-400'
-                        : ''
+                          ? 'bg-green-400'
+                          : ''
                     }`}
                   ></div>
                 )}
@@ -733,7 +744,7 @@ export const UserMenu: React.FC = () => {
     <>
       {/* 背景遮罩 */}
       <div
-        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000]'
+        className='fixed inset-0 bg-black/50 backdrop-blur-[4.5px] z-1000'
         onClick={handleCloseSettings}
         onTouchMove={(e) => {
           // 只阻止滚动，允许其他触摸事件
@@ -749,7 +760,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 设置面板 */}
-      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-1001 flex flex-col'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
           className='flex-1 p-6 overflow-y-auto'
@@ -803,7 +814,7 @@ export const UserMenu: React.FC = () => {
                 >
                   {
                     doubanDataSourceOptions.find(
-                      (option) => option.value === doubanDataSource
+                      (option) => option.value === doubanDataSource,
                     )?.label
                   }
                 </button>
@@ -836,7 +847,7 @@ export const UserMenu: React.FC = () => {
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanDataSource === option.value && (
-                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                         )}
                       </button>
                     ))}
@@ -852,7 +863,7 @@ export const UserMenu: React.FC = () => {
                     onClick={() =>
                       window.open(
                         getThanksInfo(doubanDataSource)!.url,
-                        '_blank'
+                        '_blank',
                       )
                     }
                     className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
@@ -906,14 +917,14 @@ export const UserMenu: React.FC = () => {
                   type='button'
                   onClick={() =>
                     setIsDoubanImageProxyDropdownOpen(
-                      !isDoubanImageProxyDropdownOpen
+                      !isDoubanImageProxyDropdownOpen,
                     )
                   }
                   className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
                 >
                   {
                     doubanImageProxyTypeOptions.find(
-                      (option) => option.value === doubanImageProxyType
+                      (option) => option.value === doubanImageProxyType,
                     )?.label
                   }
                 </button>
@@ -950,7 +961,7 @@ export const UserMenu: React.FC = () => {
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanImageProxyType === option.value && (
-                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 ml-2' />
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
                         )}
                       </button>
                     ))}
@@ -966,7 +977,7 @@ export const UserMenu: React.FC = () => {
                     onClick={() =>
                       window.open(
                         getThanksInfo(doubanImageProxyType)!.url,
-                        '_blank'
+                        '_blank',
                       )
                     }
                     className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
@@ -1121,7 +1132,7 @@ export const UserMenu: React.FC = () => {
     <>
       {/* 背景遮罩 */}
       <div
-        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000]'
+        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-1000'
         onClick={handleCloseChangePassword}
         onTouchMove={(e) => {
           // 只阻止滚动，允许其他触摸事件
@@ -1137,7 +1148,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 修改密码面板 */}
-      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'>
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-1001 overflow-hidden'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
           className='h-full p-6'
@@ -1248,7 +1259,7 @@ export const UserMenu: React.FC = () => {
           )}
         </button>
         {updateStatus === UpdateStatus.HAS_UPDATE && (
-          <div className='absolute top-[2px] right-[2px] w-2 h-2 bg-yellow-500 rounded-full'></div>
+          <div className='absolute top-0.5 right-0.5 w-2 h-2 bg-yellow-500 rounded-full'></div>
         )}
       </div>
 

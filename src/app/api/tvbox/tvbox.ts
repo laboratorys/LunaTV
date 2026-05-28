@@ -1,9 +1,9 @@
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LabTV';
 export const tvboxConfig = {
   spider: '/api/tvbox/jar',
   wallpaper: '/api/tvbox/wallpapers',
-  logo: 'https://raw.githubusercontent.com/laboratorys/LunaTV/refs/heads/dev/public/favicon.ico',
-  notice: '请勿相信视频中的任何广告',
+  logo: 'https://cdn.jsdmirror.cn/gh/laboratorys/LunaTV@dev/public/favicon.ico',
+  notice: '🛑 请勿相信视频中的任何广告',
   warningText: '',
   sites: [
     {

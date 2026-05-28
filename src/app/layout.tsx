@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
@@ -18,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
   const config = await getConfig();
-  let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
+  let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LabTV';
   if (storageType !== 'localstorage') {
     siteName = config.SiteConfig.SiteName;
   }
@@ -41,7 +39,7 @@ export default async function RootLayout({
 }) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
-  let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV';
+  let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'LabTV';
   let announcement =
     process.env.ANNOUNCEMENT ||
     '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
@@ -77,7 +75,7 @@ export default async function RootLayout({
     doubanImageProxy = config.SiteConfig.DoubanImageProxy;
     disableYellowFilter = config.SiteConfig.DisableYellowFilter;
     customCategories = config.CustomCategories.filter(
-      (category) => !category.disabled
+      (category) => !category.disabled,
     ).map((category) => ({
       name: category.name || '',
       type: category.type,
@@ -119,7 +117,7 @@ export default async function RootLayout({
         />
         <link rel='apple-touch-icon' href='/icons/icon-192x192.png' />
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        {}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.RUNTIME_CONFIG = ${JSON.stringify(runtimeConfig)};`,

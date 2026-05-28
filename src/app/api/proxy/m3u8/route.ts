@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 
 import { NextResponse } from 'next/server';
 
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     if (!response.ok) {
       return NextResponse.json(
         { error: 'Failed to fetch m3u8' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
         m3u8Content,
         baseUrl,
         request,
-        allowCORS
+        allowCORS,
       );
 
       const headers = new Headers();
@@ -73,12 +73,12 @@ export async function GET(request: Request) {
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       headers.set(
         'Access-Control-Allow-Headers',
-        'Content-Type, Range, Origin, Accept'
+        'Content-Type, Range, Origin, Accept',
       );
       headers.set('Cache-Control', 'no-cache');
       headers.set(
         'Access-Control-Expose-Headers',
-        'Content-Length, Content-Range'
+        'Content-Length, Content-Range',
       );
       return new Response(modifiedContent, { headers });
     }
@@ -86,18 +86,18 @@ export async function GET(request: Request) {
     const headers = new Headers();
     headers.set(
       'Content-Type',
-      response.headers.get('Content-Type') || 'application/vnd.apple.mpegurl'
+      response.headers.get('Content-Type') || 'application/vnd.apple.mpegurl',
     );
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     headers.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Range, Origin, Accept'
+      'Content-Type, Range, Origin, Accept',
     );
     headers.set('Cache-Control', 'no-cache');
     headers.set(
       'Access-Control-Expose-Headers',
-      'Content-Length, Content-Range'
+      'Content-Length, Content-Range',
     );
 
     // 直接返回视频流
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch m3u8' },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     // 确保 response 被正确关闭以释放资源
@@ -127,7 +127,7 @@ function rewriteM3U8Content(
   content: string,
   baseUrl: string,
   req: Request,
-  allowCORS: boolean
+  allowCORS: boolean,
 ) {
   // 从 referer 头提取协议信息
   const referer = req.headers.get('referer');
@@ -180,7 +180,7 @@ function rewriteM3U8Content(
         if (nextLine && !nextLine.startsWith('#')) {
           const resolvedUrl = resolveUrl(baseUrl, nextLine);
           const proxyUrl = `${proxyBase}/m3u8?url=${encodeURIComponent(
-            resolvedUrl
+            resolvedUrl,
           )}`;
           rewrittenLines.push(proxyUrl);
         } else {
@@ -202,7 +202,7 @@ function rewriteMapUri(line: string, baseUrl: string, proxyBase: string) {
     const originalUri = uriMatch[1];
     const resolvedUrl = resolveUrl(baseUrl, originalUri);
     const proxyUrl = `${proxyBase}/segment?url=${encodeURIComponent(
-      resolvedUrl
+      resolvedUrl,
     )}`;
     return line.replace(uriMatch[0], `URI="${proxyUrl}"`);
   }

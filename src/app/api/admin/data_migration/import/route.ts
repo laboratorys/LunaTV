@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,no-console */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { promisify } from 'util';
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (storageType === 'localstorage') {
       return NextResponse.json(
         { error: '不支持本地存储进行数据迁移' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (authInfo.username !== process.env.USERNAME) {
       return NextResponse.json(
         { error: '权限不足，只有站长可以导入数据' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
       return NextResponse.json(
         { error: '解密失败，请检查密码是否正确' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
     console.error('数据导入失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '导入失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

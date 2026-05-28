@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -21,7 +21,7 @@ export const GET = async (request: NextRequest) => {
     console.error('GET Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -37,7 +37,7 @@ export const POST = async (request: NextRequest) => {
     if (!keyword)
       return NextResponse.json(
         { error: 'Missing record key' },
-        { status: 400 }
+        { status: 400 },
       );
     await db.addSearchHistory(auth.user.username, keyword);
     return NextResponse.json({ ok: true });
@@ -45,7 +45,7 @@ export const POST = async (request: NextRequest) => {
     console.error('POST Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -64,7 +64,7 @@ export const DELETE = async (request: NextRequest) => {
     console.error('DELETE Error:', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

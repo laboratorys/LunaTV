@@ -1,4 +1,4 @@
-/* eslint-disable no-console,@typescript-eslint/no-explicit-any,@typescript-eslint/no-non-null-assertion*/
+/* eslint-disable no-console*/
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig, setCachedConfig } from '@/lib/config';
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         console.error('获取用户列表失败:', e);
       }
       const oldUsersMap = new Map(
-        (adminConfig.UserConfig?.Users || []).map((u: any) => [u.username, u])
+        (adminConfig.UserConfig?.Users || []).map((u: any) => [u.username, u]),
       );
       const allUsers = users.map((u) => {
         const oldData = oldUsersMap.get(u.user_name);
@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
           role: oldData
             ? oldData.role
             : u.user_name !== process.env.USERNAME
-            ? 'user'
-            : 'owner',
+              ? 'user'
+              : 'owner',
           banned: oldData ? oldData.banned : false,
         };
       });

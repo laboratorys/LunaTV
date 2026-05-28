@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 
 import {
@@ -142,7 +141,7 @@ function AdminPageClient() {
     return (
       <PageLayout activePath='/admin'>
         {/* 调整容器宽度为 max-w-7xl (1280px) 或自定义宽度 */}
-        <div className='mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-[1440px]'>
+        <div className='mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-360'>
           {/* 标题区 */}
           <div className='pt-8 pb-4 flex items-center gap-3'>
             <div className='flex items-center gap-3'>
@@ -172,7 +171,7 @@ function AdminPageClient() {
   return (
     <PageLayout activePath='/admin'>
       {/* 调整容器宽度为 max-w-7xl (1280px) 或自定义宽度 */}
-      <div className='mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-[1440px]'>
+      <div className='mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-360'>
         {/* 标题区 */}
         <div className='pt-8 pb-4 flex items-center gap-3'>
           <div className='flex items-center gap-3'>
@@ -223,7 +222,7 @@ function AdminPageClient() {
                     <span className='relative z-10'>{tab.label}</span>
 
                     {isActive && (
-                      <span className='absolute inset-0 rounded-xl bg-emerald-500/[0.02] dark:bg-emerald-400/[0.02] pointer-events-none' />
+                      <span className='absolute inset-0 rounded-xl bg-emerald-500/2 dark:bg-emerald-400/2 pointer-events-none' />
                     )}
                   </button>
                 );
@@ -233,7 +232,7 @@ function AdminPageClient() {
         </div>
 
         {/* 主内容区 */}
-        <div className='min-h-[400px]'>
+        <div className='min-h-100'>
           {!config ? (
             <SectionSkeleton /> // 数据未加载时显示骨架
           ) : (
@@ -330,7 +329,7 @@ function AdminPageClient() {
       {showResetConfigModal &&
         createPortal(
           <div
-            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
             onClick={() => setShowResetConfigModal(false)}
           >
             <div
@@ -409,7 +408,7 @@ function AdminPageClient() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </PageLayout>
   );

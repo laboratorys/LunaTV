@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 
 import { FileJson, RefreshCw, Save } from 'lucide-react';
@@ -20,10 +19,10 @@ export default function SiteSection({
 }: SectionConfigProps) {
   const [configFile, setConfigFile] = useState(config?.ConfigFile || '');
   const [configSubscribtion, setConfigSubscribtion] = useState(
-    config?.ConfigSubscribtion
+    config?.ConfigSubscribtion,
   );
   const [lastCheckTime, setLastCheckTime] = useState<string>(
-    config?.ConfigSubscribtion.LastCheck || ''
+    config?.ConfigSubscribtion.LastCheck || '',
   );
   const { isLoading, withLoading } = useLoadingState();
   const [fetching, setFetching] = useState(false);
@@ -100,7 +99,9 @@ export default function SiteSection({
             <div className='flex flex-col sm:flex-row sm:items-center gap-2 mb-2'>
               <div className='flex items-center gap-2'>
                 <RefreshCw className='text-emerald-500 w-5 h-5' />
-                <h3 className='font-bold dark:text-white text-lg'>配置订阅</h3>
+                <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
+                  配置订阅
+                </h3>
               </div>
 
               <div className='text-xs sm:text-sm text-gray-500 dark:text-gray-400 sm:px-3 py-1.5 rounded-full bg-gray-100/50 dark:bg-white/5 sm:bg-transparent w-fit'>
@@ -158,7 +159,7 @@ export default function SiteSection({
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               <FileJson className='text-blue-500 w-5 h-5' />
-              <h3 className='font-bold dark:text-white text-lg'>
+              <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                 配置文件内容
               </h3>
             </div>
@@ -173,7 +174,7 @@ export default function SiteSection({
               onChange={(e) => handleChange('ConfigFile', e.target.value)}
               rows={22}
               spellCheck={false}
-              className={`${styles.input} !rounded-2xl text-[13px] leading-relaxed resize-none h-[500px] transition-all border-blue-500/10 focus:border-blue-500/30 dark:bg-black/20`}
+              className={`${styles.input} rounded-2xl! text-[13px] leading-relaxed resize-none h-125 transition-all border-blue-500/10 focus:border-blue-500/30 dark:bg-black/20`}
               placeholder='请输入配置文件内容...'
             />
           </div>

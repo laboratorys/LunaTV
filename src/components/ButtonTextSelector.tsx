@@ -45,12 +45,12 @@ const ButtonTextSelector = <T extends string | number>({
 
   const activeParent = useMemo(
     () => options.find((opt) => opt.value === selectedValue),
-    [options, selectedValue]
+    [options, selectedValue],
   );
 
   const centerActiveItem = useCallback(() => {
     const activeBtn = scrollRef.current?.querySelector(
-      `[data-active="true"]`
+      `[data-active="true"]`,
     ) as HTMLElement;
     if (activeBtn && scrollRef.current) {
       const container = scrollRef.current;
@@ -74,7 +74,7 @@ const ButtonTextSelector = <T extends string | number>({
     checkScroll();
     if (containerRef.current && selectedValue !== undefined) {
       const activeBtn = containerRef.current.querySelector(
-        `[data-active="true"]`
+        `[data-active="true"]`,
       ) as HTMLElement;
       if (activeBtn) {
         const parentRect = containerRef.current.getBoundingClientRect();
@@ -110,7 +110,7 @@ const ButtonTextSelector = <T extends string | number>({
     if (!showAllOptions || !mounted) return null;
 
     return createPortal(
-      <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4'>
+      <div className='fixed inset-0 z-9999 flex items-end sm:items-center justify-center p-0 sm:p-4'>
         <div
           className='absolute inset-0 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-200'
           onClick={() => setShowAllOptions(false)}
@@ -155,13 +155,13 @@ const ButtonTextSelector = <T extends string | number>({
           </div>
         </div>
       </div>,
-      document.body
+      document.body,
     );
   };
 
   return (
     <div className={`flex flex-col ${className} relative`} ref={containerRef}>
-      <div className='flex items-center gap-1.5 sm:gap-2 relative z-[60]'>
+      <div className='flex items-center gap-1.5 sm:gap-2 relative z-60'>
         {label && (
           <button
             onClick={() => setShowAllOptions(true)}
@@ -175,7 +175,7 @@ const ButtonTextSelector = <T extends string | number>({
         <div className='relative flex-1 group overflow-hidden h-9 sm:h-10 flex items-center'>
           {showLeftArrow && (
             <div className='absolute left-0 z-20 hidden sm:flex items-center h-full pointer-events-none'>
-              <div className='w-10 h-full bg-gradient-to-r from-white dark:from-gray-900 to-transparent' />
+              <div className='w-10 h-full bg-linear-to-r from-white dark:from-gray-900 to-transparent' />
               <button
                 onClick={() =>
                   scrollRef.current?.scrollBy({
@@ -215,7 +215,7 @@ const ButtonTextSelector = <T extends string | number>({
 
           {showRightArrow && (
             <div className='absolute right-0 z-20 hidden sm:flex items-center h-full pointer-events-none'>
-              <div className='w-10 h-full bg-gradient-to-l from-white dark:from-gray-900 to-transparent' />
+              <div className='w-10 h-full bg-linear-to-l from-white dark:from-gray-900 to-transparent' />
               <button
                 onClick={() =>
                   scrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })
@@ -231,7 +231,7 @@ const ButtonTextSelector = <T extends string | number>({
 
       <div className='relative'>
         {showSub && activeParent?.children?.length && (
-          <div className='absolute top-1 left-0 w-full sm:w-auto min-w-[200px] animate-in fade-in slide-in-from-top-1 z-[100]'>
+          <div className='absolute top-1 left-0 w-full sm:w-auto min-w-50 animate-in fade-in slide-in-from-top-1 z-100'>
             <div
               className='absolute -top-1 h-2 w-2 rotate-45 border-l border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 hidden sm:block'
               style={{

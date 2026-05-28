@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-console */
 
 import { db } from '@/lib/db';
 import { DbUser } from '@/lib/types';
@@ -71,7 +71,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   // 合并文件中的源信息
   const apiSitesFromFile = Object.entries(fileConfig.api_site || []);
   const currentApiSites = new Map(
-    (adminConfig.SourceConfig || []).map((s) => [s.key, s])
+    (adminConfig.SourceConfig || []).map((s) => [s.key, s]),
   );
 
   apiSitesFromFile.forEach(([key, site]) => {
@@ -109,7 +109,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   // 覆盖 CustomCategories
   const customCategoriesFromFile = fileConfig.custom_category || [];
   const currentCustomCategories = new Map(
-    (adminConfig.CustomCategories || []).map((c) => [c.query + c.type, c])
+    (adminConfig.CustomCategories || []).map((c) => [c.query + c.type, c]),
   );
 
   customCategoriesFromFile.forEach((category) => {
@@ -133,7 +133,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   // 检查现有 CustomCategories 是否在 fileConfig.custom_category 中，如果不在则标记为 custom
   const customCategoriesFromFileKeys = new Set(
-    customCategoriesFromFile.map((c) => c.query + c.type)
+    customCategoriesFromFile.map((c) => c.query + c.type),
   );
   currentCustomCategories.forEach((category) => {
     if (!customCategoriesFromFileKeys.has(category.query + category.type)) {
@@ -146,7 +146,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   const livesFromFile = Object.entries(fileConfig.lives || []);
   const currentLives = new Map(
-    (adminConfig.LiveConfig || []).map((l) => [l.key, l])
+    (adminConfig.LiveConfig || []).map((l) => [l.key, l]),
   );
   livesFromFile.forEach(([key, site]) => {
     const existingLive = currentLives.get(key);
@@ -194,7 +194,7 @@ async function getInitConfig(
     URL: '',
     AutoUpdate: false,
     LastCheck: '',
-  }
+  },
 ): Promise<AdminConfig> {
   let cfgFile: ConfigFileStruct;
   try {
@@ -206,7 +206,7 @@ async function getInitConfig(
     ConfigFile: configFile,
     ConfigSubscribtion: subConfig,
     SiteConfig: {
-      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'LunaTV',
+      SiteName: process.env.NEXT_PUBLIC_SITE_NAME || 'LabTV',
       Announcement:
         process.env.ANNOUNCEMENT ||
         '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。',
@@ -324,7 +324,7 @@ export async function getConfig(): Promise<AdminConfig> {
     //初始化owner
     const key = await db.registerUser(
       process.env.USERNAME!,
-      process.env.PASSWORD! || '123456'
+      process.env.PASSWORD! || '123456',
     );
     adminConfig.UserConfig.Users.unshift({
       username: process.env.USERNAME!,
@@ -416,7 +416,7 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
       }
       seenCustomCategoryKeys.add(category.query + category.type);
       return true;
-    }
+    },
   );
 
   // 直播源去重
@@ -444,7 +444,7 @@ export async function resetConfig() {
   }
   const adminConfig = await getInitConfig(
     originConfig.ConfigFile,
-    originConfig.ConfigSubscribtion
+    originConfig.ConfigSubscribtion,
   );
   cachedConfig = adminConfig;
   await db.saveAdminConfig(adminConfig);
@@ -491,7 +491,7 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
       const tagConfig = config.UserConfig.Tags?.find((t) => t.name === tagName);
       if (tagConfig && tagConfig.enabledApis) {
         tagConfig.enabledApis.forEach((apiKey) =>
-          enabledApisFromTags.add(apiKey)
+          enabledApisFromTags.add(apiKey),
         );
       }
     });

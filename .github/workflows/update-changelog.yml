@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
@@ -31,9 +31,9 @@ jobs:
       # 后续步骤仅当should_execute为true时运行
       - name: Set up Node.js
         if: steps.branch_check.outputs.should_execute == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install pnpm
         run: corepack enable && corepack prepare pnpm@latest --activate

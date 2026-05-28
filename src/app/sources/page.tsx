@@ -1,4 +1,4 @@
-/* eslint-disable no-console,react-hooks/exhaustive-deps,@typescript-eslint/no-explicit-any */
+/* eslint-disable no-console,react-hooks/exhaustive-deps */
 'use client';
 
 import { RotateCcw, Search, X } from 'lucide-react';
@@ -182,7 +182,7 @@ function SourcesPageClient() {
       page: number,
       typeId: string | number,
       append: boolean,
-      wd: string
+      wd: string,
     ) => {
       if (!sourceCode) return;
       try {
@@ -191,8 +191,8 @@ function SourcesPageClient() {
 
         const res = await fetch(
           `/api/sources/detail?source=${sourceCode}&wd=${encodeURIComponent(
-            wd
-          )}&h=${hour}&t=${typeId}&pg=${page}`
+            wd,
+          )}&h=${hour}&t=${typeId}&pg=${page}`,
         );
         const data: SourceDetailItem[] = await res.json();
 
@@ -210,7 +210,7 @@ function SourcesPageClient() {
         setIsLoadingMore(false);
       }
     },
-    []
+    [],
   );
 
   // 5. 统一的网络请求监听器（只监听 trigger）
@@ -223,7 +223,7 @@ function SourcesPageClient() {
       currentPage,
       targetType,
       isAppendMode.current,
-      keyword
+      keyword,
     );
   }, [trigger, fetchDetails]);
 
@@ -279,7 +279,7 @@ function SourcesPageClient() {
           });
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     if (loadingRef.current) observer.observe(loadingRef.current);
     return () => observer.disconnect();

@@ -1,4 +1,4 @@
-/* eslint-disable no-console, @typescript-eslint/no-empty-function */
+/* eslint-disable no-console */
 'use client';
 import {
   closestCenter,
@@ -56,7 +56,7 @@ const SourceSection = ({
 
   // 批量操作相关状态
   const [selectedSources, setSelectedSources] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // 使用 useMemo 计算全选状态，避免每次渲染都重新计算
@@ -105,7 +105,7 @@ const SourceSection = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -146,7 +146,7 @@ const SourceSection = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleSource_${key}`, () =>
-      callSourceApi({ action, key })
+      callSourceApi({ action, key }),
     ).catch(() => {
       console.error('操作失败', action, key);
     });
@@ -154,7 +154,7 @@ const SourceSection = ({
 
   const handleDelete = (key: string) => {
     withLoading(`deleteSource_${key}`, () =>
-      callSourceApi({ action: 'delete', key })
+      callSourceApi({ action: 'delete', key }),
     ).catch(() => {
       console.error('操作失败', 'delete', key);
     });
@@ -196,7 +196,7 @@ const SourceSection = ({
   const handleSaveOrder = () => {
     const order = sources.map((s) => s.key);
     withLoading('saveSourceOrder', () =>
-      callSourceApi({ action: 'sort', order })
+      callSourceApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -236,8 +236,8 @@ const SourceSection = ({
         // 使用EventSource接收流式数据
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
-            searchKeyword.trim()
-          )}`
+            searchKeyword.trim(),
+          )}`,
         );
 
         eventSource.onmessage = (event) => {
@@ -267,11 +267,11 @@ const SourceSection = ({
                               data.status === 'valid'
                                 ? '搜索正常'
                                 : data.status === 'no_results'
-                                ? '无法搜索到结果'
-                                : '连接失败',
+                                  ? '无法搜索到结果'
+                                  : '连接失败',
                             resultCount: data.status === 'valid' ? 1 : 0,
                           }
-                        : r
+                        : r,
                     );
                   } else {
                     return [
@@ -286,8 +286,8 @@ const SourceSection = ({
                           data.status === 'valid'
                             ? '搜索正常'
                             : data.status === 'no_results'
-                            ? '无法搜索到结果'
-                            : '连接失败',
+                              ? '无法搜索到结果'
+                              : '连接失败',
                         resultCount: data.status === 'valid' ? 1 : 0,
                       },
                     ];
@@ -297,7 +297,7 @@ const SourceSection = ({
 
               case 'complete':
                 console.log(
-                  `检测完成，共检测 ${data.completedSources} 个视频源`
+                  `检测完成，共检测 ${data.completedSources} 个视频源`,
                 );
                 eventSource.close();
                 setIsValidating(false);
@@ -425,18 +425,18 @@ const SourceSection = ({
           {source.key}
         </td>
         <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[12rem] truncate'
+          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-48 truncate'
           title={source.api}
         >
           {source.api}
         </td>
         <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[8rem] truncate'
+          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-32 truncate'
           title={source.detail || '-'}
         >
           {source.detail || '-'}
         </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        <td className='px-6 py-4 whitespace-nowrap max-w-4'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !source.disabled
@@ -447,7 +447,7 @@ const SourceSection = ({
             {!source.disabled ? '启用中' : '已禁用'}
           </span>
         </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        <td className='px-6 py-4 whitespace-nowrap max-w-4'>
           {(() => {
             const status = getValidationStatus(source.key);
             if (!status) {
@@ -509,7 +509,7 @@ const SourceSection = ({
         setSelectedSources(new Set());
       }
     },
-    [sources]
+    [sources],
   );
 
   // 单个选择
@@ -527,7 +527,7 @@ const SourceSection = ({
 
   // 批量操作
   const handleBatchOperation = async (
-    action: 'batch_enable' | 'batch_disable' | 'batch_delete'
+    action: 'batch_enable' | 'batch_disable' | 'batch_delete',
   ) => {
     if (selectedSources.size === 0) {
       showAlert({
@@ -565,7 +565,7 @@ const SourceSection = ({
       onConfirm: async () => {
         try {
           await withLoading(`batchSource_${action}`, () =>
-            callSourceApi({ action, keys })
+            callSourceApi({ action, keys }),
           );
           showAlert({
             type: 'success',
@@ -772,7 +772,7 @@ const SourceSection = ({
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         >
           <div
-            className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
+            className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-112 overflow-y-auto overflow-x-auto relative'
             data-table='source-list'
           >
             <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
@@ -844,7 +844,7 @@ const SourceSection = ({
         {showValidationModal &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+              className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'
               onClick={() => setShowValidationModal(false)}
             >
               <div
@@ -888,14 +888,14 @@ const SourceSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* 批量操作确认弹窗 */}
         {confirmModal.isOpen &&
           createPortal(
             <div
-              className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
               onClick={confirmModal.onCancel}
             >
               <div
@@ -966,7 +966,7 @@ const SourceSection = ({
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
           )}
       </div>
     </div>

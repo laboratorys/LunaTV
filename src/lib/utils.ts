@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,no-console */
+/* eslint-disable no-console */
 import CryptoJS from 'crypto-js';
 import he from 'he';
 import Hls from 'hls.js';
@@ -9,18 +9,20 @@ import { CURRENT_VERSION as CURRENT_VERSION_MAIN } from '@/lib/version-main';
 
 function getDoubanImageProxyConfig(): {
   proxyType:
-    | 'direct'
     | 'server'
-    | 'img3'
     | 'cmliussss-cdn-tencent'
     | 'cmliussss-cdn-ali'
     | 'custom';
   proxyUrl: string;
 } {
-  const doubanImageProxyType =
+  let doubanImageProxyType =
     localStorage.getItem('doubanImageProxyType') ||
     (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
     'cmliussss-cdn-tencent';
+  // 兼容历史数据：直连和豆瓣官方精品 CDN 统一使用服务器代理
+  if (doubanImageProxyType === 'direct' || doubanImageProxyType === 'img3') {
+    doubanImageProxyType = 'server';
+  }
   const doubanImageProxy =
     localStorage.getItem('doubanImageProxyUrl') ||
     (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY ||
@@ -35,8 +37,15 @@ function getDoubanImageProxyConfig(): {
  * 处理图片 URL，如果设置了图片代理则使用代理
  */
 export function processImageUrl(originalUrl: string): string {
-  if (!originalUrl) return originalUrl;
-
+  const TRANSPARENT_PIXEL =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  if (!originalUrl || originalUrl.trim() === '') {
+    return TRANSPARENT_PIXEL;
+  }
+  //bgm.tv的图片走代理
+  if (originalUrl.includes('bgm.tv')) {
+    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+  }
   // 仅处理豆瓣图片代理
   if (!originalUrl.includes('doubanio.com')) {
     return originalUrl;
@@ -46,23 +55,20 @@ export function processImageUrl(originalUrl: string): string {
   switch (proxyType) {
     case 'server':
       return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
-    case 'img3':
-      return originalUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
     case 'cmliussss-cdn-tencent':
       return originalUrl.replace(
         /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.net'
+        'img.doubanio.cmliussss.net',
       );
     case 'cmliussss-cdn-ali':
       return originalUrl.replace(
         /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.com'
+        'img.doubanio.cmliussss.com',
       );
     case 'custom':
       return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
-    case 'direct':
     default:
-      return originalUrl;
+      return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
   }
 }
 
@@ -136,14 +142,14 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
               width >= 3840
                 ? '4K' // 4K: 3840x2160
                 : width >= 2560
-                ? '2K' // 2K: 2560x1440
-                : width >= 1920
-                ? '1080p' // 1080p: 1920x1080
-                : width >= 1280
-                ? '720p' // 720p: 1280x720
-                : width >= 854
-                ? '480p'
-                : 'SD'; // 480p: 854x480
+                  ? '2K' // 2K: 2560x1440
+                  : width >= 1920
+                    ? '1080p' // 1080p: 1920x1080
+                    : width >= 1280
+                      ? '720p' // 720p: 1280x720
+                      : width >= 854
+                        ? '480p'
+                        : 'SD'; // 480p: 854x480
 
             resolve({
               quality,
@@ -199,12 +205,33 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
 
       // 监听hls.js错误
       hls.on(Hls.Events.ERROR, (event: any, data: any) => {
+        if (data.details === 'manifestLoadError') {
+          if (data.response && data.response.code === 0) {
+            return;
+          }
+        }
         console.error('HLS错误:', data);
+
         if (data.fatal) {
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad();
+            return;
+          }
+          if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError();
+            return;
+          }
           clearTimeout(timeout);
-          hls.destroy();
-          video.remove();
-          reject(new Error(`HLS播放失败: ${data.type}`));
+          setTimeout(() => {
+            try {
+              if (hls) {
+                hls.detachMedia();
+                hls.destroy();
+              }
+            } catch (e) {
+              console.error('异步销毁 hls 实例时发生异常:', e);
+            }
+          }, 0);
         }
       });
 
@@ -218,7 +245,7 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
     throw new Error(
       `Error getting video resolution: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
@@ -423,7 +450,7 @@ export function createFavRecordFromTVBox(tvbox: KeepItem): Favorite {
 }
 export function handleTVBoxFromFavRecord(
   record: Favorite,
-  siteName: string
+  siteName: string,
 ): Favorite {
   return {
     ...record,
@@ -446,7 +473,7 @@ export function filterAdsFromM3U8Common(
   m3u8Content: string,
   m3u8Url: string,
   filterFn: ((...args: any[]) => any) | null,
-  proxyTs = false
+  proxyTs = false,
 ) {
   if (!m3u8Content) return { main: '', ads: '' };
   const baseUrl = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);

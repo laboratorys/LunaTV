@@ -1,22 +1,18 @@
 /** @type {import('next').NextConfig} */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const git = require('git-rev-sync');
 const remoteUrl = git.remoteUrl();
 const { user, repo } = parseRepoInfo(remoteUrl);
+
 const nextConfig = {
   output: 'standalone',
-  eslint: {
-    dirs: ['src'],
-  },
-
   reactStrictMode: false,
-  swcMinify: false,
-
-  experimental: {
-    instrumentationHook: process.env.NODE_ENV === 'production',
+  allowedDevOrigins: ['192.168.30.113'],
+  // 1. Next.js 16 正确的 Turbopack 配置位置（移到顶层）
+  turbopack: {
+    // 留空即可，Next.js 16 默认会自动完美处理开发环境下的打包冲突
   },
 
-  // Uncoment to add domain whitelist
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -31,33 +27,31 @@ const nextConfig = {
     ],
   },
 
+  // 2. 彻底移除无效的 experimental 块
+
   webpack(config) {
-    // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
-      rule.test?.test?.('.svg')
+      rule.test?.test?.('.svg'),
     );
 
     config.module.rules.push(
-      // Reapply the existing rule, but only for svg imports ending in ?url
       {
         ...fileLoaderRule,
         test: /\.svg$/i,
-        resourceQuery: /url/, // *.svg?url
+        resourceQuery: /url/,
       },
-      // Convert all other *.svg imports to React components
       {
         test: /\.svg$/i,
         issuer: { not: /\.(css|scss|sass)$/ },
-        resourceQuery: { not: /url/ }, // exclude if *.svg?url
+        resourceQuery: { not: /url/ },
         loader: '@svgr/webpack',
         options: {
           dimensions: false,
           titleProp: true,
         },
-      }
+      },
     );
 
-    // Modify the file loader rule to ignore *.svg, since we have it handled now.
     fileLoaderRule.exclude = /\.svg$/i;
 
     config.resolve.fallback = {
@@ -69,6 +63,7 @@ const nextConfig = {
 
     return config;
   },
+
   env: {
     GIT_COMMIT_HASH: git.short(),
     GIT_BRANCH: git.branch(),
@@ -87,7 +82,7 @@ const withPWA = require('next-pwa')({
 
 function parseRepoInfo(url) {
   const matches = url.match(
-    /(?:https?:\/\/[^/]+\/|git@[^:]+:)([^/]+)\/([^/]+?)(?:\.git)?$/i
+    /(?:https?:\/\/[^/]+\/|git@[^:]+:)([^/]+)\/([^/]+?)(?:\.git)?$/i,
   );
 
   if (!matches || matches.length < 3) {
@@ -99,4 +94,5 @@ function parseRepoInfo(url) {
     repo: matches[2].replace(/\.git$/, ''),
   };
 }
+
 module.exports = withPWA(nextConfig);

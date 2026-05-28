@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import {
@@ -88,7 +87,7 @@ const AlertModal = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
+      className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={onClose}
@@ -148,7 +147,7 @@ const AlertModal = ({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
@@ -215,7 +214,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
       // 获取文件名
       const contentDisposition = response.headers.get('content-disposition');
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch?.[1] || 'lunatv-backup.dat';
+      const filename = filenameMatch?.[1] || 'labtv-backup.dat';
 
       // 下载文件
       const blob = await response.blob();
@@ -305,7 +304,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
             <p><strong>导入完成！</strong></p>
             <p class="mt-2">导入的用户数量: ${result.importedUsers}</p>
             <p>备份时间: ${new Date(result.timestamp).toLocaleString(
-              'zh-CN'
+              'zh-CN',
             )}</p>
             <p>服务器版本: ${result.serverVersion || '未知版本'}</p>
             <p class="mt-3 text-orange-600">请刷新页面以查看最新数据。</p>
@@ -346,7 +345,7 @@ const DataMigration = ({ onRefreshConfig }: DataMigrationProps) => {
       <div className='max-w-6xl mx-auto space-y-6'>
         {/* 简洁警告提示 */}
         <div className='flex items-center gap-3 p-4 border border-amber-200 dark:border-amber-700 rounded-lg bg-amber-50/30 dark:bg-amber-900/5'>
-          <AlertTriangle className='w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0' />
+          <AlertTriangle className='w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0' />
           <p className='text-sm text-amber-800 dark:text-amber-200'>
             数据迁移操作请谨慎，确保已备份重要数据
           </p>
