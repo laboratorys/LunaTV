@@ -78,18 +78,27 @@ export const UserMenu: React.FC = () => {
   // 设置相关状态
   const [defaultAggregateSearch, setDefaultAggregateSearch] = useState(true);
   const [doubanProxyUrl, setDoubanProxyUrl] = useState('');
+  const [bgmProxyUrl, setBgmProxyUrl] = useState('');
   const [enableOptimization, setEnableOptimization] = useState(true);
   const [fluidSearch, setFluidSearch] = useState(true);
   const [liveDirectConnect, setLiveDirectConnect] = useState(false);
   const [doubanDataSource, setDoubanDataSource] = useState(
     'cmliussss-cdn-tencent',
   );
+  const [bgmDataSource, setBgmDataSource] = useState('cmliussss-cdn-tencent');
   const [doubanImageProxyType, setDoubanImageProxyType] = useState(
     'cmliussss-cdn-tencent',
   );
+  const [bgmImageProxyType, setBgmImageProxyType] = useState(
+    'cmliussss-cdn-tencent',
+  );
   const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
+  const [bgmImageProxyUrl, setBgmImageProxyUrl] = useState('');
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
+  const [isBgmDropdownOpen, setIsBgmDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
+    useState(false);
+  const [isBgmImageProxyDropdownOpen, setIsBgmImageProxyDropdownOpen] =
     useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
   useEffect(() => {
@@ -123,6 +132,34 @@ export const UserMenu: React.FC = () => {
       label: '豆瓣 CDN By CMLiussss（腾讯云）',
     },
     { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
+    { value: 'custom', label: '自定义代理' },
+  ];
+
+  // BGM 数据源选项
+  const bgmDataSourceOptions = [
+    { value: 'direct', label: '直连（服务器直接请求番组计划）' },
+    {
+      value: 'cmliussss-cdn-tencent',
+      label: '番组计划 CDN By CMLiussss（腾讯云）',
+    },
+    {
+      value: 'cmliussss-cdn-ali',
+      label: '番组计划 CDN By CMLiussss（阿里云）',
+    },
+    { value: 'custom', label: '自定义代理' },
+  ];
+
+  // BGM 图片代理选项
+  const bgmImageProxyTypeOptions = [
+    { value: 'server', label: '服务器代理（由服务器代理请求番组计划）' },
+    {
+      value: 'cmliussss-cdn-tencent',
+      label: '番组计划 CDN By CMLiussss（腾讯云）',
+    },
+    {
+      value: 'cmliussss-cdn-ali',
+      label: '番组计划 CDN By CMLiussss（阿里云）',
+    },
     { value: 'custom', label: '自定义代理' },
   ];
 
@@ -173,6 +210,16 @@ export const UserMenu: React.FC = () => {
         setDoubanDataSource(defaultDoubanProxyType);
       }
 
+      const savedBgmDataSource = localStorage.getItem('bgmDataSource');
+      const defaultBgmProxyType =
+        (window as any).RUNTIME_CONFIG?.BGM_PROXY_TYPE ||
+        'cmliussss-cdn-tencent';
+      if (savedBgmDataSource !== null) {
+        setBgmDataSource(savedBgmDataSource);
+      } else if (defaultBgmProxyType) {
+        setBgmDataSource(defaultBgmProxyType);
+      }
+
       const savedDoubanProxyUrl = localStorage.getItem('doubanProxyUrl');
       const defaultDoubanProxy =
         (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
@@ -180,6 +227,14 @@ export const UserMenu: React.FC = () => {
         setDoubanProxyUrl(savedDoubanProxyUrl);
       } else if (defaultDoubanProxy) {
         setDoubanProxyUrl(defaultDoubanProxy);
+      }
+
+      const savedBgmProxyUrl = localStorage.getItem('bgmProxyUrl');
+      const defaultBgmProxy = (window as any).RUNTIME_CONFIG?.BGM_PROXY || '';
+      if (savedBgmProxyUrl !== null) {
+        setBgmProxyUrl(savedBgmProxyUrl);
+      } else if (defaultBgmProxy) {
+        setBgmProxyUrl(defaultBgmProxy);
       }
 
       const savedDoubanImageProxyType = localStorage.getItem(
@@ -201,6 +256,16 @@ export const UserMenu: React.FC = () => {
         );
       }
 
+      const savedBgmImageProxyType = localStorage.getItem('bgmImageProxyType');
+      const defaultBgmImageProxyType =
+        (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY_TYPE ||
+        'cmliussss-cdn-tencent';
+      if (savedBgmImageProxyType !== null) {
+        setBgmImageProxyType(normalizeImageProxyType(savedBgmImageProxyType));
+      } else if (defaultBgmImageProxyType) {
+        setBgmImageProxyType(normalizeImageProxyType(defaultBgmImageProxyType));
+      }
+
       const savedDoubanImageProxyUrl = localStorage.getItem(
         'doubanImageProxyUrl',
       );
@@ -210,6 +275,15 @@ export const UserMenu: React.FC = () => {
         setDoubanImageProxyUrl(savedDoubanImageProxyUrl);
       } else if (defaultDoubanImageProxyUrl) {
         setDoubanImageProxyUrl(defaultDoubanImageProxyUrl);
+      }
+
+      const savedBgmImageProxyUrl = localStorage.getItem('bgmImageProxyUrl');
+      const defaultBgmImageProxyUrl =
+        (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY || '';
+      if (savedBgmImageProxyUrl !== null) {
+        setBgmImageProxyUrl(savedBgmImageProxyUrl);
+      } else if (defaultBgmImageProxyUrl) {
+        setBgmImageProxyUrl(defaultBgmImageProxyUrl);
       }
 
       const savedEnableOptimization =
@@ -270,6 +344,23 @@ export const UserMenu: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      if (isBgmDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('[data-dropdown="bgm-datasource"]')) {
+          setIsBgmDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isBgmDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isBgmDropdownOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (isDoubanImageProxyDropdownOpen) {
         const target = event.target as Element;
         if (!target.closest('[data-dropdown="douban-image-proxy"]')) {
@@ -284,6 +375,23 @@ export const UserMenu: React.FC = () => {
         document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isDoubanImageProxyDropdownOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isBgmImageProxyDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('[data-dropdown="bgm-image-proxy"]')) {
+          setIsBgmImageProxyDropdownOpen(false);
+        }
+      }
+    };
+
+    if (isBgmImageProxyDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isBgmImageProxyDropdownOpen]);
 
   const handleMenuClick = () => {
     setIsOpen(!isOpen);
@@ -392,6 +500,13 @@ export const UserMenu: React.FC = () => {
     }
   };
 
+  const handleBgmProxyUrlChange = (value: string) => {
+    setBgmProxyUrl(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bgmProxyUrl', value);
+    }
+  };
+
   const handleOptimizationToggle = (value: boolean) => {
     setEnableOptimization(value);
     if (typeof window !== 'undefined') {
@@ -420,10 +535,24 @@ export const UserMenu: React.FC = () => {
     }
   };
 
+  const handleBgmDataSourceChange = (value: string) => {
+    setBgmDataSource(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bgmDataSource', value);
+    }
+  };
+
   const handleDoubanImageProxyTypeChange = (value: string) => {
     setDoubanImageProxyType(value);
     if (typeof window !== 'undefined') {
       localStorage.setItem('doubanImageProxyType', value);
+    }
+  };
+
+  const handleBgmImageProxyTypeChange = (value: string) => {
+    setBgmImageProxyType(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bgmImageProxyType', value);
     }
   };
 
@@ -433,6 +562,18 @@ export const UserMenu: React.FC = () => {
       localStorage.setItem('doubanImageProxyUrl', value);
     }
   };
+
+  const handleBgmImageProxyUrlChange = (value: string) => {
+    setBgmImageProxyUrl(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bgmImageProxyUrl', value);
+    }
+  };
+
+  const contributors = [
+    { name: '@Zwei', url: 'https://github.com/bestzwei' },
+    { name: '@CMLiussss', url: 'https://github.com/cmliu' },
+  ];
 
   // 获取感谢信息
   const getThanksInfo = (dataSource: string) => {
@@ -457,8 +598,11 @@ export const UserMenu: React.FC = () => {
     const defaultDoubanProxyType =
       (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
       'cmliussss-cdn-tencent';
+    const defaultBgmProxyType =
+      (window as any).RUNTIME_CONFIG?.BGM_PROXY_TYPE || 'cmliussss-cdn-tencent';
     const defaultDoubanProxy =
       (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
+    const defaultBgmProxy = (window as any).RUNTIME_CONFIG?.BGM_PROXY || '';
     let defaultDoubanImageProxyType =
       (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
       'cmliussss-cdn-tencent';
@@ -468,8 +612,19 @@ export const UserMenu: React.FC = () => {
     ) {
       defaultDoubanImageProxyType = 'server';
     }
+    let defaultBgmImageProxyType =
+      (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY_TYPE ||
+      'cmliussss-cdn-tencent';
+    if (
+      defaultBgmImageProxyType === 'direct' ||
+      defaultBgmImageProxyType === 'img3'
+    ) {
+      defaultBgmImageProxyType = 'server';
+    }
     const defaultDoubanImageProxyUrl =
       (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
+    const defaultBgmImageProxyUrl =
+      (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY || '';
     const defaultFluidSearch =
       (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
 
@@ -478,9 +633,13 @@ export const UserMenu: React.FC = () => {
     setFluidSearch(defaultFluidSearch);
     setLiveDirectConnect(false);
     setDoubanProxyUrl(defaultDoubanProxy);
+    setBgmProxyUrl(defaultBgmProxy);
     setDoubanDataSource(defaultDoubanProxyType);
+    setBgmDataSource(defaultBgmProxyType);
     setDoubanImageProxyType(defaultDoubanImageProxyType);
+    setBgmImageProxyType(defaultBgmImageProxyType);
     setDoubanImageProxyUrl(defaultDoubanImageProxyUrl);
+    setBgmImageProxyUrl(defaultBgmImageProxyUrl);
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('defaultAggregateSearch', JSON.stringify(true));
@@ -488,9 +647,13 @@ export const UserMenu: React.FC = () => {
       localStorage.setItem('fluidSearch', JSON.stringify(defaultFluidSearch));
       localStorage.setItem('liveDirectConnect', JSON.stringify(false));
       localStorage.setItem('doubanProxyUrl', defaultDoubanProxy);
+      localStorage.setItem('bgmProxyUrl', defaultBgmProxy);
       localStorage.setItem('doubanDataSource', defaultDoubanProxyType);
+      localStorage.setItem('bgmDataSource', defaultBgmProxyType);
       localStorage.setItem('doubanImageProxyType', defaultDoubanImageProxyType);
+      localStorage.setItem('bgmImageProxyType', defaultBgmImageProxyType);
       localStorage.setItem('doubanImageProxyUrl', defaultDoubanImageProxyUrl);
+      localStorage.setItem('bgmImageProxyUrl', defaultBgmImageProxyUrl);
     }
   };
 
@@ -854,27 +1017,6 @@ export const UserMenu: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              {/* 感谢信息 */}
-              {getThanksInfo(doubanDataSource) && (
-                <div className='mt-3'>
-                  <button
-                    type='button'
-                    onClick={() =>
-                      window.open(
-                        getThanksInfo(doubanDataSource)!.url,
-                        '_blank',
-                      )
-                    }
-                    className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
-                  >
-                    <span className='font-medium'>
-                      {getThanksInfo(doubanDataSource)!.text}
-                    </span>
-                    <ExternalLink className='w-3.5 opacity-70' />
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* 豆瓣代理地址设置 - 仅在选择自定义代理时显示 */}
@@ -897,9 +1039,6 @@ export const UserMenu: React.FC = () => {
                 />
               </div>
             )}
-
-            {/* 分割线 */}
-            <div className='border-t border-gray-200 dark:border-gray-700'></div>
 
             {/* 豆瓣图片代理设置 */}
             <div className='space-y-3'>
@@ -933,7 +1072,7 @@ export const UserMenu: React.FC = () => {
                 <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                   <ChevronDown
                     className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
-                      isDoubanDropdownOpen ? 'rotate-180' : ''
+                      isDoubanImageProxyDropdownOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </div>
@@ -968,27 +1107,6 @@ export const UserMenu: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              {/* 感谢信息 */}
-              {getThanksInfo(doubanImageProxyType) && (
-                <div className='mt-3'>
-                  <button
-                    type='button'
-                    onClick={() =>
-                      window.open(
-                        getThanksInfo(doubanImageProxyType)!.url,
-                        '_blank',
-                      )
-                    }
-                    className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
-                  >
-                    <span className='font-medium'>
-                      {getThanksInfo(doubanImageProxyType)!.text}
-                    </span>
-                    <ExternalLink className='w-3.5 opacity-70' />
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* 豆瓣图片代理地址设置 - 仅在选择自定义代理时显示 */}
@@ -1014,6 +1132,198 @@ export const UserMenu: React.FC = () => {
               </div>
             )}
 
+            {/* BGM数据源选择 */}
+            <div className='space-y-3'>
+              <div>
+                <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  BGM（番组计划）数据代理
+                </h4>
+                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                  选择获取番组计划数据的方式
+                </p>
+              </div>
+              <div className='relative' data-dropdown='bgm-datasource'>
+                {/* 自定义下拉选择框 */}
+                <button
+                  type='button'
+                  onClick={() => setIsBgmDropdownOpen(!isBgmDropdownOpen)}
+                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
+                >
+                  {
+                    bgmDataSourceOptions.find(
+                      (option) => option.value === bgmDataSource,
+                    )?.label
+                  }
+                </button>
+
+                {/* 下拉箭头 */}
+                <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                      isBgmDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+
+                {/* 下拉选项列表 */}
+                {isBgmDropdownOpen && (
+                  <div className='absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto'>
+                    {bgmDataSourceOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        onClick={() => {
+                          handleBgmDataSourceChange(option.value);
+                          setIsBgmDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          bgmDataSource === option.value
+                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                            : 'text-gray-900 dark:text-gray-100'
+                        }`}
+                      >
+                        <span className='truncate'>{option.label}</span>
+                        {bgmDataSource === option.value && (
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* BGM代理地址设置 - 仅在选择自定义代理时显示 */}
+            {bgmDataSource === 'custom' && (
+              <div className='space-y-3'>
+                <div>
+                  <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                    BGM 代理地址
+                  </h4>
+                  <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                    自定义代理服务器地址
+                  </p>
+                </div>
+                <input
+                  type='text'
+                  className='w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
+                  placeholder='例如: https://proxy.example.com/fetch?url='
+                  value={bgmProxyUrl}
+                  onChange={(e) => handleBgmProxyUrlChange(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* BGM图片代理设置 */}
+            <div className='space-y-3'>
+              <div>
+                <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  BGM（番组计划）图片代理
+                </h4>
+                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                  选择获取番组计划图片的方式
+                </p>
+              </div>
+              <div className='relative' data-dropdown='bgm-image-proxy'>
+                {/* 自定义下拉选择框 */}
+                <button
+                  type='button'
+                  onClick={() =>
+                    setIsBgmImageProxyDropdownOpen(!isBgmImageProxyDropdownOpen)
+                  }
+                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
+                >
+                  {
+                    bgmImageProxyTypeOptions.find(
+                      (option) => option.value === bgmImageProxyType,
+                    )?.label
+                  }
+                </button>
+
+                {/* 下拉箭头 */}
+                <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                      isBgmImageProxyDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+
+                {/* 下拉选项列表 */}
+                {isBgmImageProxyDropdownOpen && (
+                  <div className='absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto'>
+                    {bgmImageProxyTypeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        onClick={() => {
+                          handleBgmImageProxyTypeChange(option.value);
+                          setIsBgmImageProxyDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          bgmImageProxyType === option.value
+                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                            : 'text-gray-900 dark:text-gray-100'
+                        }${
+                          option.value === 'direct'
+                            ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                            : ''
+                        }`}
+                      >
+                        <span className='truncate'>{option.label}</span>
+                        {bgmImageProxyType === option.value && (
+                          <Check className='w-4 h-4 text-green-600 dark:text-green-400 shrink-0 ml-2' />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* BGM图片代理地址设置 - 仅在选择自定义代理时显示 */}
+            {bgmImageProxyType === 'custom' && (
+              <div className='space-y-3'>
+                <div>
+                  <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                    BGM 图片代理地址
+                  </h4>
+                  <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                    自定义图片代理服务器地址
+                  </p>
+                </div>
+                <input
+                  type='text'
+                  className='w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
+                  placeholder='例如: https://proxy.example.com/fetch?url='
+                  value={bgmImageProxyUrl}
+                  onChange={(e) => handleBgmImageProxyUrlChange(e.target.value)}
+                />
+              </div>
+            )}
+            {/* 感谢信息 */}
+            <div className='mt-3 flex items-center justify-center flex-wrap gap-x-1 gap-y-0.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400'>
+              <span className='font-medium'>Thanks to </span>
+
+              {contributors.map((contributor, index) => (
+                <span key={contributor.url} className='flex items-center'>
+                  <a
+                    href={contributor.url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='font-medium hover:text-green-500 dark:hover:text-green-400 cursor-pointer transition-colors'
+                  >
+                    {contributor.name}
+                  </a>
+                  {/* 如果不是最后一个人，后面加一个逗号和空格隔开 */}
+                  {index < contributors.length - 1 && (
+                    <span className='mr-1'>,</span>
+                  )}
+                </span>
+              ))}
+
+              <ExternalLink className='w-3.5 opacity-70 ml-0.5' />
+            </div>
             {/* 分割线 */}
             <div className='border-t border-gray-200 dark:border-gray-700'></div>
 

@@ -220,6 +220,12 @@ async function getInitConfig(
         process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE ||
         'cmliussss-cdn-tencent',
       DoubanImageProxy: process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY || '',
+      BgmProxyType:
+        process.env.NEXT_PUBLIC_BGM_PROXY_TYPE || 'cmliussss-cdn-tencent',
+      BgmProxy: process.env.NEXT_PUBLIC_BGM_PROXY || '',
+      BgmImageProxyType:
+        process.env.NEXT_PUBLIC_BGM_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent',
+      BgmImageProxy: process.env.NEXT_PUBLIC_BGM_IMAGE_PROXY || '',
       DisableYellowFilter:
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
       FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',

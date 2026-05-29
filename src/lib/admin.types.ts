@@ -14,6 +14,10 @@ export interface AdminConfig {
     DoubanProxy: string;
     DoubanImageProxyType: string;
     DoubanImageProxy: string;
+    BgmProxyType: string;
+    BgmProxy: string;
+    BgmImageProxyType: string;
+    BgmImageProxy: string;
     DisableYellowFilter: boolean;
     FluidSearch: boolean;
     OpenRegister: boolean;

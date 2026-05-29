@@ -25,6 +25,27 @@ const DOUBAN_IMAGE_PROXIES = [
   { value: 'custom', label: '自定义代理' },
 ];
 
+// 番组计划（BGM）代理预设选项
+const BGM_PROXIES = [
+  { value: 'direct', label: '直连（服务器直接请求BGM）' },
+  {
+    value: 'cmliussss-cdn-tencent',
+    label: '番组计划 CDN By CMLiussss（腾讯云）',
+  },
+  { value: 'cmliussss-cdn-ali', label: '番组计划 CDN By CMLiussss（阿里云）' },
+  { value: 'custom', label: '自定义代理' },
+];
+
+const BGM_IMAGE_PROXIES = [
+  { value: 'server', label: '服务器代理（由服务器代理请求BGM）' },
+  {
+    value: 'cmliussss-cdn-tencent',
+    label: '番组计划 CDN By CMLiussss（腾讯云）',
+  },
+  { value: 'cmliussss-cdn-ali', label: '番组计划 CDN By CMLiussss（阿里云）' },
+  { value: 'custom', label: '自定义代理' },
+];
+
 export default function SiteSection({
   config,
   refresh,
@@ -34,7 +55,7 @@ export default function SiteSection({
 }: SectionConfigProps) {
   const [siteConfig, setSiteConfig] = useState(config?.SiteConfig);
   const { isLoading, withLoading } = useLoadingState();
-  const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const handleUpdateConfig = async () => {
     return withLoading(`SiteConfig`, async () => {
       try {
@@ -92,23 +113,23 @@ export default function SiteSection({
             </div>
           </div>
 
-          {/* 豆瓣设置 */}
+          {/* 数据设置 */}
           <div
             className={`${styles.roundedCard} relative ${
-              isDoubanDropdownOpen ? 'z-30' : 'z-10'
+              isDropdownOpen ? 'z-30' : 'z-10'
             }`}
           >
             <div className='flex items-center gap-2  mb-5'>
               <Link2 className='text-green-500 w-5 h-5' />
               <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
-                豆瓣数据代理
+                数据代理
               </h3>
             </div>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               {/* 数据接口代理 */}
               <div className='space-y-2'>
                 <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
-                  数据接口代理
+                  豆瓣API代理
                 </label>
                 <CustomDropdown
                   options={DOUBAN_PROXIES}
@@ -116,7 +137,7 @@ export default function SiteSection({
                   onChange={(val: string) =>
                     handleChange('DoubanProxyType', val)
                   }
-                  onOpenChange={(isOpen) => setIsDoubanDropdownOpen(isOpen)}
+                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
                   className='w-full'
                 />
                 {siteConfig?.DoubanProxyType === 'custom' && (
@@ -145,7 +166,7 @@ export default function SiteSection({
                   onChange={(val: string) =>
                     handleChange('DoubanImageProxyType', val)
                   }
-                  onOpenChange={(isOpen) => setIsDoubanDropdownOpen(isOpen)}
+                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
                   className='w-full'
                 />
                 {siteConfig?.DoubanImageProxyType === 'custom' && (
@@ -162,7 +183,62 @@ export default function SiteSection({
                   选择获取豆瓣图片的方式
                 </p>
               </div>
+              {/* 番组计划（BGM）代理 */}
+              <div className='space-y-2'>
+                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                  BGM API代理
+                </label>
+                <CustomDropdown
+                  options={BGM_PROXIES}
+                  value={siteConfig?.BgmProxyType || ''}
+                  onChange={(val: string) => handleChange('BgmProxyType', val)}
+                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                  className='w-full'
+                />
+                {siteConfig?.BgmProxyType === 'custom' && (
+                  <input
+                    placeholder='请输入自定义数据代理地址'
+                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                    value={siteConfig.BgmProxy || ''}
+                    onChange={(e) =>
+                      handleChange('CustomBgmProxy', e.target.value)
+                    }
+                  />
+                )}
+                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                  选择获取BGM数据的方式
+                </p>
+              </div>
+              {/* 番组计划（BGM）图片代理 */}
+              <div className='space-y-2'>
+                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                  BGM 图片代理
+                </label>
+                <CustomDropdown
+                  options={BGM_IMAGE_PROXIES}
+                  value={siteConfig?.BgmImageProxyType || ''}
+                  onChange={(val: string) =>
+                    handleChange('BgmImageProxyType', val)
+                  }
+                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                  className='w-full'
+                />
+                {siteConfig?.BgmImageProxyType === 'custom' && (
+                  <input
+                    placeholder='请输入自定义 BGM 图片代理地址'
+                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                    value={siteConfig?.BgmImageProxy || ''}
+                    onChange={(e) =>
+                      handleChange('CustomBgmImageProxy', e.target.value)
+                    }
+                  />
+                )}
+                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                  选择获取BGM图片的方式
+                </p>
+              </div>
             </div>
+
             <div className='pt-0 mt-1 space-y-2'>
               <div className='px-1 flex items-center gap-2'>
                 <span className='text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500'>
@@ -185,6 +261,14 @@ export default function SiteSection({
                   >
                     豆瓣电影 <ExternalLink size={10} />
                   </a>
+                  <a
+                    href='https://bgm.tv'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-[11px] text-green-600/80 hover:text-green-500 dark:text-green-400/80 transition-colors flex items-center gap-1'
+                  >
+                    Bangumi <ExternalLink size={10} />
+                  </a>
                 </div>
               </div>
             </div>
@@ -193,7 +277,7 @@ export default function SiteSection({
 
         {/* 系统策略 */}
         <div
-          className={`${styles.roundedCard} relative ${isDoubanDropdownOpen ? '' : 'z-0'}`}
+          className={`${styles.roundedCard} relative ${isDropdownOpen ? '' : 'z-0'}`}
         >
           <div className='flex items-center gap-2 mb-5'>
             <ShieldCheck className='text-green-500 w-5 h-5' />

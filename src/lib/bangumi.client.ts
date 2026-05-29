@@ -23,11 +23,53 @@ export interface BangumiCalendarData {
   }[];
 }
 
+function getBgmProxyConfig(): {
+  proxyType:
+    | 'direct'
+    | 'cmliussss-cdn-tencent'
+    | 'cmliussss-cdn-ali'
+    | 'custom';
+  proxyUrl: string;
+} {
+  const bgmProxyType =
+    localStorage.getItem('bgmDataSource') ||
+    (window as any).RUNTIME_CONFIG?.BGM_PROXY_TYPE ||
+    'cmliussss-cdn-tencent';
+  const bgmProxy =
+    localStorage.getItem('bgmProxyUrl') ||
+    (window as any).RUNTIME_CONFIG?.BGM_PROXY ||
+    '';
+  return {
+    proxyType: bgmProxyType,
+    proxyUrl: bgmProxy,
+  };
+}
+
+function getCalendarUrl(): string {
+  const config = getBgmProxyConfig();
+
+  switch (config.proxyType) {
+    case 'direct':
+      return '/api/bangumi/calendar';
+    case 'cmliussss-cdn-tencent':
+      return 'https://img.doubanio.cmliussss.net/calendar';
+    case 'cmliussss-cdn-ali':
+      return 'https://img.doubanio.cmliussss.com/calendar';
+    case 'custom':
+      return `${config.proxyUrl}https://api.bgm.tv/calendar`;
+    default:
+      return '/api/bangumi/calendar';
+  }
+}
+
 export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {
-  const response = await fetch('/api/bangumi/calendar');
+  const url = getCalendarUrl();
+  const response = await fetch(url);
+
   if (!response.ok) {
     throw new Error(`获取番剧日历失败: HTTP ${response.status}`);
   }
+
   const data = await response.json();
   const filteredData = data.map((item: BangumiCalendarData) => ({
     ...item,
