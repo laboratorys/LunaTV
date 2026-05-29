@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.2',
+    date: '2026-05-29',
+    added: [
+      // 无新增内容
+    ],
+    changed: ['增加bgm.tv（番组计划）的代理配置'],
+    fixed: [
+      // 无修复内容
+    ],
+  },
+  {
     version: '5.1.1',
     date: '2026-05-28',
     added: [
