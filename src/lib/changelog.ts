@@ -12,13 +12,14 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     version: '5.1.2',
-    date: '2026-05-29',
+    date: '2026-06-01',
     added: [
       // 无新增内容
     ],
-    changed: ['增加bgm.tv（番组计划）的代理配置'],
+    changed: ['Vercel部署支持', '增加bgm.tv（番组计划）的代理配置'],
     fixed: [
-      // 无修复内容
+      '【后台配置】缓存导致的配置修改无法立即生效',
+      '修复Upstash存储模式报错',
     ],
   },
   {
