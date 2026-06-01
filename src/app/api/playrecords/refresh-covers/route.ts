@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
                 const newPic = data.list[0].vod_pic;
                 if (newPic !== record.cover) {
                   record.cover = newPic;
-                  record.save_time = Date.now();
                   // 异步单条写入数据库
                   if (typeof db.savePlayRecord === 'function') {
                     await db.savePlayRecord(

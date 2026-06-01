@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
 
               if (data?.list?.[0]?.vod_pic) {
                 const newPic = data.list[0].vod_pic;
-                console.log(newPic);
                 if (newPic !== favItem.cover) {
                   favItem.cover = newPic;
                   // 异步写回数据库单个收藏记录
