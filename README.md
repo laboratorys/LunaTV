@@ -104,7 +104,7 @@
 
 ### ⚡ Vercel 一键部署 (推荐)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flaboratorys%2FLunaTV&env=USERNAME%2CPASSWORD%2CNEXT_PUBLIC_STORAGE_TYPE%2CUPSTASH_URL%2CUPSTASH_TOKEN&build-command=pnpm%20--filter%3Dlabtv%20build)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/import?repository-url=https%3A%2F%2Fgithub.com%2Flaboratorys%2FLunaTV&env=USERNAME%2CPASSWORD%2CNEXT_PUBLIC_STORAGE_TYPE%2CUPSTASH_URL%2CUPSTASH_TOKEN&build-command=pnpm%20--filter%3Dlabtv%20build)
 
 ### 🐳 Docker 容器部署
 
