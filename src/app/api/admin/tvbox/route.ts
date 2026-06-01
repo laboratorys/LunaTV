@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
       expireSeconds,
     };
 
-    // 写入数据库
-    await db.saveAdminConfig(adminConfig);
+    // 写入数据库、缓存
+    setCachedConfig(adminConfig);
     await db.clearAllCache('api:cache:tvbox:');
     return NextResponse.json(
       { ok: true },

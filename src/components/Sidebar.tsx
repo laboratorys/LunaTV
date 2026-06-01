@@ -6,8 +6,9 @@ import {
   Clover,
   Film,
   Home,
-  Menu,
   MonitorPlay,
+  PanelLeftClose,
+  PanelLeftOpen,
   Radio,
   Search,
   Star,
@@ -237,7 +238,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
                 }`}
               >
-                <Menu className='h-4 w-4' />
+                {isCollapsed ? (
+                  <PanelLeftOpen className='h-4 w-4' />
+                ) : (
+                  <PanelLeftClose className='h-4 w-4' />
+                )}
               </button>
             </div>
 

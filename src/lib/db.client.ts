@@ -1200,15 +1200,63 @@ export async function clearAllPlayRecords(): Promise<void> {
     }
     return;
   }
-
-  // localStorage 模式
+}
+export async function refreshAllPlayRecords(): Promise<void> {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(PLAY_RECORDS_KEY);
-  window.dispatchEvent(
-    new CustomEvent('playRecordsUpdated', {
-      detail: {},
-    }),
-  );
+
+  try {
+    await fetchWithAuth('/api/playrecords/refresh-covers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const freshData =
+      await fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`);
+
+    if (STORAGE_TYPE !== 'localstorage') {
+      cacheManager.cachePlayRecords(freshData);
+    } else {
+      localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(freshData));
+    }
+
+    window.dispatchEvent(
+      new CustomEvent('playRecordsUpdated', {
+        detail: freshData,
+      }),
+    );
+  } catch (err) {
+    console.error('刷新失效海报失败:', err);
+    triggerGlobalError('刷新失效海报失败');
+    throw err;
+  }
+}
+
+export async function refreshAllFavorites(): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  try {
+    await fetchWithAuth('/api/favorites/refresh-covers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const freshData = await fetchFromApi<Record<string, any>>(`/api/favorites`);
+
+    if (STORAGE_TYPE !== 'localstorage') {
+      cacheManager.cacheFavorites?.(freshData);
+    } else {
+      localStorage.setItem('lunatv_favorites', JSON.stringify(freshData));
+    }
+    window.dispatchEvent(
+      new CustomEvent('favoritesUpdated', {
+        detail: freshData,
+      }),
+    );
+  } catch (err) {
+    console.error('刷新失效收藏海报失败:', err);
+    triggerGlobalError('刷新失效收藏海报失败');
+    throw err;
+  }
 }
 
 /**

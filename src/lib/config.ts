@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 
+import { revalidateTag, unstable_cache } from 'next/cache';
+
 import { db } from '@/lib/db';
 import { DbUser } from '@/lib/types';
 
@@ -55,9 +57,8 @@ export const API_CONFIG = {
     },
   },
 };
-db;
-// 在模块加载时根据环境决定配置来源
-let cachedConfig: AdminConfig;
+
+const CACHE_TAG = 'admin-config';
 
 // 从配置文件补充管理员配置
 export function refineConfig(adminConfig: AdminConfig): AdminConfig {
@@ -310,39 +311,41 @@ async function getInitConfig(
   return adminConfig;
 }
 
+const getCachedConfig = unstable_cache(
+  async () => {
+    let config: AdminConfig | null = null;
+    try {
+      config = await db.getAdminConfig();
+    } catch (e) {
+      console.error('获取管理员配置失败:', e);
+    }
+
+    if (!config) {
+      config = await getInitConfig('');
+      const key = await db.registerUser(
+        process.env.USERNAME!,
+        process.env.PASSWORD! || '123456',
+      );
+      config.UserConfig.Users.unshift({
+        username: process.env.USERNAME!,
+        key: key as string,
+        role: 'owner',
+        banned: false,
+      });
+      await db.saveAdminConfig(config);
+    }
+
+    return configSelfCheck(config);
+  },
+  [CACHE_TAG],
+  {
+    revalidate: false,
+    tags: [CACHE_TAG],
+  },
+);
+
 export async function getConfig(): Promise<AdminConfig> {
-  // 直接使用内存缓存
-  if (cachedConfig) {
-    return cachedConfig;
-  }
-
-  // 读 db
-  let adminConfig: AdminConfig | null = null;
-  try {
-    adminConfig = await db.getAdminConfig();
-  } catch (e) {
-    console.error('获取管理员配置失败:', e);
-  }
-
-  // db 中无配置，执行一次初始化
-  if (!adminConfig) {
-    adminConfig = await getInitConfig('');
-    //初始化owner
-    const key = await db.registerUser(
-      process.env.USERNAME!,
-      process.env.PASSWORD! || '123456',
-    );
-    adminConfig.UserConfig.Users.unshift({
-      username: process.env.USERNAME!,
-      key: key as string,
-      role: 'owner',
-      banned: false,
-    });
-  }
-  adminConfig = configSelfCheck(adminConfig);
-  cachedConfig = adminConfig;
-  db.saveAdminConfig(cachedConfig);
-  return cachedConfig;
+  return getCachedConfig();
 }
 
 export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
@@ -463,8 +466,7 @@ export async function resetConfig() {
     originConfig.ConfigFile,
     originConfig.ConfigSubscribtion,
   );
-  cachedConfig = adminConfig;
-  await db.saveAdminConfig(adminConfig);
+  setCachedConfig(adminConfig);
 
   return;
 }
@@ -530,5 +532,6 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
 }
 
 export async function setCachedConfig(config: AdminConfig) {
-  cachedConfig = config;
+  await db.saveAdminConfig(config);
+  revalidateTag(CACHE_TAG, { expire: 0 });
 }

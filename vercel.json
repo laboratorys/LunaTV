@@ -1,5 +1,6 @@
 {
   "buildCommand": "pnpm --filter=labtv build",
+  "ignoreCommand": "if git log -1 --pretty=%B | grep -q '\\[skip ci\\]'; then exit 1; else exit 1; fi",
   "headers": [
     {
       "source": "/fonts/inter-var-latin.woff2",

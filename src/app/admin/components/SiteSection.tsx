@@ -30,9 +30,9 @@ const BGM_PROXIES = [
   { value: 'direct', label: '直连（服务器直接请求BGM）' },
   {
     value: 'cmliussss-cdn-tencent',
-    label: '番组计划 CDN By CMLiussss（腾讯云）',
+    label: 'BGM CDN By CMLiussss（腾讯云）',
   },
-  { value: 'cmliussss-cdn-ali', label: '番组计划 CDN By CMLiussss（阿里云）' },
+  { value: 'cmliussss-cdn-ali', label: 'BGM CDN By CMLiussss（阿里云）' },
   { value: 'custom', label: '自定义代理' },
 ];
 
@@ -40,9 +40,9 @@ const BGM_IMAGE_PROXIES = [
   { value: 'server', label: '服务器代理（由服务器代理请求BGM）' },
   {
     value: 'cmliussss-cdn-tencent',
-    label: '番组计划 CDN By CMLiussss（腾讯云）',
+    label: 'BGM CDN By CMLiussss（腾讯云）',
   },
-  { value: 'cmliussss-cdn-ali', label: '番组计划 CDN By CMLiussss（阿里云）' },
+  { value: 'cmliussss-cdn-ali', label: 'BGM CDN By CMLiussss（阿里云）' },
   { value: 'custom', label: '自定义代理' },
 ];
 

@@ -571,28 +571,11 @@ export const UserMenu: React.FC = () => {
   };
 
   const contributors = [
-    { name: '@Zwei', url: 'https://github.com/bestzwei' },
+    { name: 'Banggumi', url: 'https://bgm.tv' },
+    { name: 'Douban', url: 'https://www.douban.com' },
     { name: '@CMLiussss', url: 'https://github.com/cmliu' },
+    { name: '@Zwei', url: 'https://github.com/bestzwei' },
   ];
-
-  // 获取感谢信息
-  const getThanksInfo = (dataSource: string) => {
-    switch (dataSource) {
-      case 'cors-proxy-zwei':
-        return {
-          text: 'Thanks to @Zwei',
-          url: 'https://github.com/bestzwei',
-        };
-      case 'cmliussss-cdn-tencent':
-      case 'cmliussss-cdn-ali':
-        return {
-          text: 'Thanks to @CMLiussss',
-          url: 'https://github.com/cmliu',
-        };
-      default:
-        return null;
-    }
-  };
 
   const handleResetSettings = () => {
     const defaultDoubanProxyType =

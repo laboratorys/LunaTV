@@ -12,6 +12,7 @@ import {
   History,
   Tv,
 } from 'lucide-react';
+import { RotateCw, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -26,6 +27,8 @@ import {
   clearAllPlayRecords,
   getAllFavorites,
   getAllPlayRecords,
+  refreshAllFavorites,
+  refreshAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { getDoubanCategories } from '@/lib/douban.client';
@@ -54,6 +57,8 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshingFavorites, setIsRefreshingFavorites] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -296,15 +301,43 @@ function HomeClient() {
                   我的收藏
                 </h2>
                 {favoriteItems.length > 0 && (
-                  <button
-                    className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    onClick={async () => {
-                      await clearAllFavorites();
-                      setFavoriteItems([]);
-                    }}
-                  >
-                    清空
-                  </button>
+                  <div className='flex items-center gap-3'>
+                    {/* 刷新失效海报 按钮 */}
+                    <button
+                      className={`p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors ${
+                        isRefreshingFavorites
+                          ? 'animate-spin opacity-60 pointer-events-none'
+                          : ''
+                      }`}
+                      title='刷新失效海报'
+                      disabled={isRefreshingFavorites}
+                      onClick={async () => {
+                        try {
+                          setIsRefreshingFavorites(true);
+                          // 调用前端定义的刷新收藏海报方法，触发后全自动异步更新
+                          await refreshAllFavorites();
+                        } catch (err) {
+                          console.error('刷新收藏海报异常:', err);
+                        } finally {
+                          setIsRefreshingFavorites(false);
+                        }
+                      }}
+                    >
+                      <RotateCw className='w-4 h-4' />
+                    </button>
+
+                    {/* 清空 按钮 */}
+                    <button
+                      className='p-1 rounded text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-800 transition-colors'
+                      title='清空'
+                      onClick={async () => {
+                        await clearAllFavorites();
+                        setFavoriteItems([]);
+                      }}
+                    >
+                      <Trash2 className='w-4 h-4' />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
@@ -335,15 +368,42 @@ function HomeClient() {
                   播放记录
                 </h2>
                 {playRecords.length > 0 && (
-                  <button
-                    className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    onClick={async () => {
-                      await clearAllPlayRecords();
-                      setPlayRecords([]);
-                    }}
-                  >
-                    清空
-                  </button>
+                  <div className='flex items-center gap-3'>
+                    {/* 刷新失效海报 按钮 */}
+                    <button
+                      className={`p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors ${
+                        isRefreshing
+                          ? 'animate-spin opacity-60 pointer-events-none'
+                          : ''
+                      }`}
+                      title='刷新失效海报'
+                      disabled={isRefreshing}
+                      onClick={async () => {
+                        try {
+                          setIsRefreshing(true);
+                          await refreshAllPlayRecords();
+                        } catch (err) {
+                          console.error(err);
+                        } finally {
+                          setIsRefreshing(false);
+                        }
+                      }}
+                    >
+                      <RotateCw className='w-4 h-4' />
+                    </button>
+
+                    {/* 清空 按钮 */}
+                    <button
+                      className='p-1 rounded text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-800 transition-colors'
+                      title='清空'
+                      onClick={async () => {
+                        await clearAllPlayRecords();
+                        setPlayRecords([]);
+                      }}
+                    >
+                      <Trash2 className='w-4 h-4' />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
