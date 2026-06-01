@@ -190,7 +190,7 @@ export default function SiteSection({
                 </label>
                 <CustomDropdown
                   options={BGM_PROXIES}
-                  value={siteConfig?.BgmProxyType || ''}
+                  value={siteConfig?.BgmProxyType || 'cmliussss-cdn-tencent'}
                   onChange={(val: string) => handleChange('BgmProxyType', val)}
                   onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
                   className='w-full'
@@ -216,7 +216,9 @@ export default function SiteSection({
                 </label>
                 <CustomDropdown
                   options={BGM_IMAGE_PROXIES}
-                  value={siteConfig?.BgmImageProxyType || ''}
+                  value={
+                    siteConfig?.BgmImageProxyType || 'cmliussss-cdn-tencent'
+                  }
                   onChange={(val: string) =>
                     handleChange('BgmImageProxyType', val)
                   }

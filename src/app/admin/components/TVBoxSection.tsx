@@ -157,7 +157,7 @@ export default function TVBoxSection({
               <input
                 type='number'
                 min={0}
-                className={`!w-1/2 ${styles.input}`}
+                className={`w-1/2! ${styles.input}`}
                 value={cacheTimeValue}
                 onChange={(e) => {
                   const newVal = Number(e.target.value);

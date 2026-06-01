@@ -368,7 +368,18 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   if (!adminConfig.LiveConfig || !Array.isArray(adminConfig.LiveConfig)) {
     adminConfig.LiveConfig = [];
   }
-
+  if (!adminConfig.SiteConfig.BgmImageProxyType) {
+    adminConfig.SiteConfig.BgmImageProxyType = 'cmliussss-cdn-tencent';
+  }
+  if (!adminConfig.SiteConfig.BgmProxyType) {
+    adminConfig.SiteConfig.BgmProxyType = 'cmliussss-cdn-tencent';
+  }
+  if (!adminConfig.SiteConfig.BgmImageProxy) {
+    adminConfig.SiteConfig.BgmImageProxy = '';
+  }
+  if (!adminConfig.SiteConfig.BgmProxy) {
+    adminConfig.SiteConfig.BgmProxy = '';
+  }
   // 站长变更自检
   // const ownerUser = process.env.USERNAME;
 
