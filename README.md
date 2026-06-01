@@ -75,15 +75,14 @@
 
 - [技术栈](#技术栈)
 - [部署](#部署)
-  - [一键部署](#zeabur-一键部署)
-  - [Docker 部署](#Kvrocks-存储推荐)
+  - [⚡ Vercel 一键部署 (推荐)](#-vercel-一键部署-推荐)
+  - [🐳 Docker 容器部署](#-docker-容器部署)
 - [配置文件](#配置文件)
 - [订阅](#订阅)
 - [自动更新](#自动更新)
 - [环境变量](#环境变量)
-- [客户端](#客户端)
-- [AndroidTV 使用](#AndroidTV-使用)
-- [Roadmap](#roadmap)
+- [移动端](#移动端)
+- [AndroidTV](#androidtv)
 - [安全与隐私提醒](#安全与隐私提醒)
 - [License](#license)
 - [致谢](#致谢)
@@ -101,9 +100,15 @@
 
 ## 部署
 
-本项目**仅支持 Docker 或其他基于 Docker 的平台** 部署。
+本项目支持**Vercel 云端一键部署以及传统的 Docker 容器** 部署。
 
-### sqlite 存储（方式 1-手动创建目录）
+### ⚡ Vercel 一键部署 (推荐)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flaboratorys%2FLunaTV&env=USERNAME%2CPASSWORD%2CNEXT_PUBLIC_STORAGE_TYPE%2CUPSTASH_URL%2CUPSTASH_TOKEN&build-command=pnpm%20--filter%3Dlabtv%20build)
+
+### 🐳 Docker 容器部署
+
+#### sqlite 存储（方式 1-手动创建目录）
 
 **由于容器中以非 root 账户运行，需要在宿主机创建目录并设置权限**
 
@@ -148,7 +153,7 @@ volumes:
   lunatv-data:
 ```
 
-### Kvrocks 存储
+#### Kvrocks 存储
 
 ```yml
 services:
@@ -187,7 +192,7 @@ volumes:
       o: bind
 ```
 
-### Redis 存储（有一定的丢数据风险）
+#### Redis 存储（有一定的丢数据风险）
 
 ```yml
 services:
@@ -220,7 +225,7 @@ networks:
     driver: bridge
 ```
 
-### Upstash 存储
+#### Upstash 存储
 
 1. 在 [upstash](https://upstash.com/) 注册账号并新建一个 Redis 实例，名称任意。
 2. 复制新数据库的 **HTTPS ENDPOINT 和 TOKEN**
