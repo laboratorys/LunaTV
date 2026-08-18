@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
               const detailUrl = `${apiSite.api}${DETAIL_PATH}${id}`;
               const controller = new AbortController();
               const timeoutId = setTimeout(() => controller.abort(), 8000);
-
               const res = await fetch(detailUrl, {
                 headers: HEADERS,
                 signal: controller.signal,

@@ -286,7 +286,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
       label: '年代',
       options: [
         { label: '全部', value: 'all' },
-        { label: '2020年代', value: '2020s' },
+        { label: '2026', value: '2026' },
         { label: '2025', value: '2025' },
         { label: '2024', value: '2024' },
         { label: '2023', value: '2023' },
@@ -294,6 +294,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
         { label: '2021', value: '2021' },
         { label: '2020', value: '2020' },
         { label: '2019', value: '2019' },
+        { label: '2020年代', value: '2020s' },
         { label: '2010年代', value: '2010s' },
         { label: '2000年代', value: '2000s' },
         { label: '90年代', value: '1990s' },
