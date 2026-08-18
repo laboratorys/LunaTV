@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.3',
+    date: '2026-08-18',
+    added: [
+      // 无新增内容
+    ],
+    changed: ['年代筛选增加2026'],
+    fixed: ['修复短剧热门数据加载失败'],
+  },
+  {
     version: '5.1.2',
     date: '2026-06-01',
     added: [
