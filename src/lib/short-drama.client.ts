@@ -2,7 +2,6 @@
 
 import { ShortDramaItem } from '@/lib/types';
 
-// 原始 JSON 的接口定义
 interface RawBannerItem {
   series_id: string;
   series_name: string;
@@ -29,7 +28,7 @@ interface ShortDramaApiResponse {
  */
 export async function fetchHotShortDramaPaged(
   page = 1,
-  pageSize = 20,
+  pageSize = 24,
   snapshotId?: string,
 ): Promise<{
   list: ShortDramaItem[];
@@ -108,7 +107,8 @@ export async function fetchHotShortDramaPaged(
       rawList = rawList.slice(0, pageSize);
     } else {
       // 2. 后续页：使用传入的 snapshotId 调用 API 获取
-      const offset = (page - 2) * pageSize;
+      // 【修改点】：第二页开始，offset 应该是 (page - 1) * pageSize，从而正确跳过第一页
+      const offset = (page - 1) * pageSize;
       const url = `${API_BASE_URL}?snapshot_id=${currentSnapshotId}&offset=${offset}`;
 
       const response = await fetch(url, {
@@ -154,7 +154,7 @@ export async function fetchHotShortDramaPaged(
       total,
       page,
       totalPage,
-      snapshotId: currentSnapshotId, // 将更新后的 snapshotId 编码返回给前端
+      snapshotId: currentSnapshotId,
     };
   } catch (error) {
     console.error('Short Drama Scraper Error:', error);
