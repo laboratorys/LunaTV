@@ -34,7 +34,7 @@ const ConfigToggle: React.FC<ConfigToggleProps> = ({
 
       <button
         type='button'
-        className={`shrink-0 w-12 h-6 rounded-full transition-all duration-300 relative ${
+        className={`admin-toggle shrink-0 w-12 h-6 rounded-full transition-all duration-300 relative ${
           enabled
             ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
             : 'bg-gray-300 dark:bg-gray-700'

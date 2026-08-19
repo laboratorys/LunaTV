@@ -211,6 +211,66 @@ html:not(.dark) body {
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* 配置表格在移动端保留底部横向滚动条 */
+.admin-table-scroll {
+  scrollbar-width: auto;
+}
+
+.admin-table-scroll::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.admin-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.5);
+  border-radius: 4px;
+}
+
+/* 管理面板移动端操作区：按钮紧凑并允许自然换行 */
+@media (max-width: 767px) {
+  .admin-panel .admin-toggle {
+    width: 3rem;
+    height: 1.5rem;
+    min-height: 1.5rem;
+    padding: 0;
+  }
+
+  .admin-panel button:not(.admin-toggle) {
+    min-height: 2.25rem;
+  }
+
+  .admin-panel .flex.justify-end,
+  .admin-panel .flex.justify-center {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-panel .space-x-2 > :not([hidden]) ~ :not([hidden]),
+  .admin-panel .space-x-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0;
+  }
+
+  .admin-panel button[class*='px-6'] {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  .admin-panel button[class*='px-4'] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .admin-panel button[class*='py-3'] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .admin-panel button[class*='py-2.5'] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
 /* View Transitions API 动画 */
 @keyframes slide-from-top {
   from {

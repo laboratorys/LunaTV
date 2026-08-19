@@ -10,6 +10,11 @@ import CopyableInput from '@/app/admin/components/CopyableInput';
 
 import { styles, useLoadingState } from './UIComponents';
 
+interface CleanupSource {
+  key: string;
+  name: string;
+}
+
 export default function SiteSection({
   config,
   refresh,
@@ -26,6 +31,7 @@ export default function SiteSection({
   );
   const { isLoading, withLoading } = useLoadingState();
   const [fetching, setFetching] = useState(false);
+  const [cleanupSources, setCleanupSources] = useState<CleanupSource[]>([]);
 
   const handleChange = (key: string, value: any) => {
     if (key === 'ConfigFile') {
@@ -35,7 +41,25 @@ export default function SiteSection({
     }
   };
 
-  const handleUpdateConfig = async () => {
+  const getCleanupSources = (): CleanupSource[] => {
+    try {
+      const oldConfig = JSON.parse(config?.ConfigFile || '{}');
+      const newConfig = JSON.parse(configFile);
+      const oldApiSiteKeys = new Set(Object.keys(oldConfig.api_site || {}));
+      const newApiSiteKeys = new Set(Object.keys(newConfig.api_site || {}));
+
+      return (config?.SourceConfig || [])
+        .filter(
+          (source) =>
+            oldApiSiteKeys.has(source.key) && !newApiSiteKeys.has(source.key),
+        )
+        .map(({ key, name }) => ({ key, name }));
+    } catch {
+      return [];
+    }
+  };
+
+  const saveConfig = async (cleanupKeys: string[] = []) => {
     return withLoading(`ConfigFile`, async () => {
       try {
         const res = await fetch('/api/admin/config_file', {
@@ -46,17 +70,38 @@ export default function SiteSection({
             subscriptionUrl: configSubscribtion?.URL,
             autoUpdate: configSubscribtion?.AutoUpdate,
             lastCheckTime: lastCheckTime || new Date().toISOString(),
+            cleanupKeys,
           }),
         });
         if (res.ok) {
-          showSuccess('保存成功, 请刷新页面', showAlert);
-          refresh();
+          showSuccess(
+            cleanupKeys.length > 0
+              ? `保存成功，已清理 ${cleanupKeys.length} 个旧视频源`
+              : '保存成功, 请刷新页面',
+            showAlert,
+          );
+          await refresh();
         }
       } catch (err) {
         showError(err instanceof Error ? err.message : '操作失败', showAlert);
         throw err;
       }
     });
+  };
+
+  const handleUpdateConfig = async () => {
+    const sourcesToCleanup = getCleanupSources();
+    if (sourcesToCleanup.length > 0) {
+      setCleanupSources(sourcesToCleanup);
+      return;
+    }
+    await saveConfig();
+  };
+
+  const handleCleanupConfirm = async (cleanup: boolean) => {
+    const cleanupKeys = cleanup ? cleanupSources.map(({ key }) => key) : [];
+    setCleanupSources([]);
+    await saveConfig(cleanupKeys);
   };
 
   const handleFetchConfig = async () => {
@@ -201,6 +246,41 @@ export default function SiteSection({
           {isLoading('ConfigFile') ? '保存中...' : '保存'}
         </button>
       </div>
+
+      {cleanupSources.length > 0 && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+          <div className='w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800'>
+            <h3 className='mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+              清理旧的视频源数据？
+            </h3>
+            <p className='mb-4 text-gray-600 dark:text-gray-400'>
+              检测到 {cleanupSources.length}{' '}
+              个已从配置文件移除的视频源，是否清理？
+            </p>
+            <div className='max-h-32 overflow-y-auto rounded border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300'>
+              {cleanupSources.map((source) => (
+                <div key={source.key}>
+                  {source.name} ({source.key})
+                </div>
+              ))}
+            </div>
+            <div className='mt-6 flex justify-end gap-3'>
+              <button
+                onClick={() => handleCleanupConfirm(false)}
+                className={styles.secondary}
+              >
+                否
+              </button>
+              <button
+                onClick={() => handleCleanupConfirm(true)}
+                className={styles.danger}
+              >
+                确定清理
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -171,7 +171,7 @@ function AdminPageClient() {
   return (
     <PageLayout activePath='/admin'>
       {/* 调整容器宽度为 max-w-7xl (1280px) 或自定义宽度 */}
-      <div className='mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-360'>
+      <div className='admin-panel mx-auto pb-10 px-4 sm:px-8 lg:px-12 max-w-360'>
         {/* 标题区 */}
         <div className='pt-8 pb-4 flex items-center gap-3'>
           <div className='flex items-center gap-3'>
@@ -202,7 +202,7 @@ function AdminPageClient() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      relative flex items-center gap-2.5 px-5 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl whitespace-nowrap
+                      relative flex items-center gap-2.5 px-5 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl whitespace-nowrap max-md:gap-1.5 max-md:px-3 max-md:py-2 max-md:text-xs
                       ${
                         isActive
                           ? 'text-emerald-600 dark:text-emerald-400 bg-white dark:bg-gray-700 shadow-[0_4px_14px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] ring-1 ring-black/5 dark:ring-white/10'

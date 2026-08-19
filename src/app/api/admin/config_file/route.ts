@@ -39,7 +39,13 @@ export async function POST(request: NextRequest) {
 
     // 获取请求体
     const body = await request.json();
-    const { configFile, subscriptionUrl, autoUpdate, lastCheckTime } = body;
+    const {
+      configFile,
+      subscriptionUrl,
+      autoUpdate,
+      lastCheckTime,
+      cleanupKeys,
+    } = body;
 
     if (!configFile || typeof configFile !== 'string') {
       return NextResponse.json(
@@ -56,6 +62,51 @@ export async function POST(request: NextRequest) {
         { error: '配置文件格式错误，请检查 JSON 语法' },
         { status: 400 },
       );
+    }
+
+    let keysToCleanup: string[] = [];
+    if (Array.isArray(cleanupKeys) && cleanupKeys.length > 0) {
+      let previousConfig: { api_site?: Record<string, unknown> } = {};
+      try {
+        previousConfig = JSON.parse(adminConfig.ConfigFile || '{}');
+      } catch {
+        previousConfig = {};
+      }
+
+      let nextConfig: { api_site?: Record<string, unknown> } = {};
+      try {
+        nextConfig = JSON.parse(configFile);
+      } catch {
+        nextConfig = {};
+      }
+
+      const previousApiSiteKeys = new Set(
+        Object.keys(previousConfig.api_site || {}),
+      );
+      const nextApiSiteKeys = new Set(Object.keys(nextConfig.api_site || {}));
+      keysToCleanup = cleanupKeys.filter(
+        (key: unknown): key is string =>
+          typeof key === 'string' &&
+          previousApiSiteKeys.has(key) &&
+          !nextApiSiteKeys.has(key),
+      );
+
+      adminConfig.SourceConfig = adminConfig.SourceConfig.filter(
+        (source) => !keysToCleanup.includes(source.key),
+      );
+
+      if (keysToCleanup.length > 0) {
+        adminConfig.UserConfig.Tags?.forEach((tag) => {
+          tag.enabledApis = tag.enabledApis?.filter(
+            (key) => !keysToCleanup.includes(key),
+          );
+        });
+        adminConfig.UserConfig.Users.forEach((user) => {
+          user.enabledApis = user.enabledApis?.filter(
+            (key) => !keysToCleanup.includes(key),
+          );
+        });
+      }
     }
 
     adminConfig.ConfigFile = configFile;
@@ -82,6 +133,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: '配置文件更新成功',
+      cleanedCount: keysToCleanup.length,
     });
   } catch (error) {
     console.error('更新配置文件失败:', error);
