@@ -579,7 +579,7 @@ const LiveSourceSection = ({
             className='admin-table-scroll border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
             data-table='live-source-list'
           >
-            <table className='min-w-max divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
+            <table className='min-w-max md:min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
               <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
                 <tr>
                   <th className='w-8' />

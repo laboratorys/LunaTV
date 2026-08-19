@@ -786,7 +786,7 @@ const UserSection = ({
                   className='admin-table-scroll border border-gray-200 dark:border-gray-700 rounded-lg max-h-112 overflow-y-auto overflow-x-auto relative'
                   data-table='user-list'
                 >
-                  <table className='min-w-max divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
+                  <table className='min-w-max md:min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
                     <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10 whitespace-nowrap'>
                       <tr>
                         <th className='w-4' />
@@ -1174,7 +1174,7 @@ const UserSection = ({
 
                 {/* 用户组列表 */}
                 <div className='admin-table-scroll border border-gray-200 dark:border-gray-700 rounded-lg max-h-80 overflow-y-auto overflow-x-auto relative'>
-                  <table className='min-w-max divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
+                  <table className='min-w-max md:min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
                     <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
                       <tr>
                         <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
