@@ -328,7 +328,7 @@ function SourcesPageClient() {
             </span>
             <button
               onClick={handleResetAll}
-              className='flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-500 hover:text-emerald-500 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors group'
+              className='flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-500 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400 transition-colors group'
             >
               <RotateCcw
                 size={14}
@@ -346,13 +346,13 @@ function SourcesPageClient() {
     rounded-xl border border-transparent
     transition-all duration-300
     focus-within:bg-white dark:focus-within:bg-gray-900 
-    focus-within:border-emerald-500/50 focus-within:ring-4 focus-within:ring-emerald-500/10
+    focus-within:border-primary-500/50 focus-within:ring-4 focus-within:ring-primary-500/10
     focus-within:shadow-sm
   `}
             >
               <Search
                 size={18}
-                className='text-gray-400 group-focus-within:text-emerald-500 transition-colors shrink-0'
+                className='text-gray-400 group-focus-within:text-primary-500 transition-colors shrink-0'
               />
 
               <input
@@ -383,7 +383,7 @@ function SourcesPageClient() {
               {/* 搜索按钮：添加 shrink-0 和 whitespace-nowrap */}
               <button
                 onClick={handleSearch}
-                className='ml-2 px-4 py-1.5 shrink-0 whitespace-nowrap bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-medium rounded-lg transition-all active:scale-95 shadow-sm shadow-emerald-500/20'
+                className='ml-2 px-4 py-1.5 shrink-0 whitespace-nowrap bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-medium rounded-lg transition-all active:scale-95 shadow-sm shadow-primary-500/20'
               >
                 搜索
               </button>
@@ -477,7 +477,7 @@ function SourcesPageClient() {
                     setKeyword('');
                     handleFilterChange(true);
                   }}
-                  className='mt-6 px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 text-gray-600 dark:text-gray-400 rounded-xl transition-all text-sm font-medium'
+                  className='mt-6 px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 text-gray-600 dark:text-gray-400 rounded-xl transition-all text-sm font-medium'
                 >
                   重置搜索条件
                 </button>
@@ -489,7 +489,7 @@ function SourcesPageClient() {
           {videoData.length > 0 && (
             <div ref={loadingRef} className='flex justify-center mt-12 py-8'>
               {isLoadingMore && (
-                <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500' />
+                <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500' />
               )}
               {!hasMore && (
                 <div className='text-center text-gray-500 text-sm'>

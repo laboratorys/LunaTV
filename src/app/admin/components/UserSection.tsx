@@ -566,7 +566,7 @@ const UserSection = ({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`relative pb-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-primary-600 dark:text-primary-400'
                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
                 }`}
               >
@@ -576,7 +576,7 @@ const UserSection = ({
                   <span
                     className={`px-2 py-0.5 text-[10px] rounded-full border ${
                       activeTab === tab.id
-                        ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800'
+                        ? 'bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-900/30 dark:border-primary-800'
                         : 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700'
                     }`}
                   >
@@ -585,7 +585,7 @@ const UserSection = ({
                 </div>
                 {/* 激活状态的下划线动画 */}
                 {activeTab === tab.id && (
-                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-500 rounded-full' />
+                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-500 rounded-full' />
                 )}
               </button>
             ))}
@@ -655,7 +655,7 @@ const UserSection = ({
                               username: e.target.value,
                             }))
                           }
-                          className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+                          className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent'
                         />
                         <input
                           type='password'
@@ -667,7 +667,7 @@ const UserSection = ({
                               password: e.target.value,
                             }))
                           }
-                          className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+                          className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent'
                         />
                       </div>
                       <div>
@@ -682,7 +682,7 @@ const UserSection = ({
                               userGroup: e.target.value,
                             }))
                           }
-                          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+                          className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent'
                         >
                           <option value=''>无用户组（无限制）</option>
                           {userGroups.map((group) => (
@@ -721,8 +721,8 @@ const UserSection = ({
 
                 {/* 修改密码表单 */}
                 {showChangePasswordForm && (
-                  <div className='mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700'>
-                    <h5 className='text-sm font-medium text-blue-800 dark:text-blue-300 mb-3'>
+                  <div className='mb-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-700'>
+                    <h5 className='text-sm font-medium text-primary-800 dark:text-primary-300 mb-3'>
                       修改用户密码
                     </h5>
                     <div className='flex flex-col sm:flex-row gap-4 sm:gap-3'>
@@ -743,7 +743,7 @@ const UserSection = ({
                             password: e.target.value,
                           }))
                         }
-                        className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                        className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent'
                       />
                       <button
                         onClick={handleChangePassword}
@@ -809,7 +809,7 @@ const UserSection = ({
                                 onChange={(e) =>
                                   handleSelectAllUsers(e.target.checked)
                                 }
-                                className='appearance-auto accent-green-600 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                                className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
                               />
                             ) : (
                               <div className='w-4 h-4' />
@@ -929,7 +929,7 @@ const UserSection = ({
                                             e.target.checked,
                                           )
                                         }
-                                        className='appearance-auto accent-green-600 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                                        className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
                                       />
                                     ) : (
                                       <div className='w-4 h-4' />
@@ -962,7 +962,7 @@ const UserSection = ({
                                     <span
                                       className={`px-2 py-1 text-xs rounded-full ${
                                         !user.banned
-                                          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                                          ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                                           : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                                       }`}
                                     >
@@ -1297,10 +1297,10 @@ const UserSection = ({
                   </div>
 
                   <div className='mb-6'>
-                    <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+                    <div className='bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4'>
                       <div className='flex items-center space-x-2 mb-2'>
                         <svg
-                          className='w-5 h-5 text-blue-600 dark:text-blue-400'
+                          className='w-5 h-5 text-primary-600 dark:text-primary-400'
                           fill='none'
                           stroke='currentColor'
                           viewBox='0 0 24 24'
@@ -1312,11 +1312,11 @@ const UserSection = ({
                             d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                           />
                         </svg>
-                        <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
+                        <span className='text-sm font-medium text-primary-800 dark:text-primary-300'>
                           配置说明
                         </span>
                       </div>
-                      <p className='text-sm text-blue-700 dark:text-blue-400 mt-1'>
+                      <p className='text-sm text-primary-700 dark:text-primary-400 mt-1'>
                         提示：全不选为无限制，选中的采集源将限制用户只能访问这些源
                       </p>
                     </div>
@@ -1347,7 +1347,7 @@ const UserSection = ({
                                 );
                               }
                             }}
-                            className='appearance-auto accent-green-600 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700'
+                            className='appearance-auto accent-primary-600 w-4 h-4 rounded border-gray-300 text-primary-600 dark:border-gray-600 dark:bg-gray-700'
                           />
                           <div className='flex-1 min-w-0'>
                             <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
@@ -1388,7 +1388,7 @@ const UserSection = ({
                     </div>
                     <div className='text-sm text-gray-600 dark:text-gray-400'>
                       已选择：
-                      <span className='font-medium text-blue-600 dark:text-blue-400'>
+                      <span className='font-medium text-primary-600 dark:text-primary-400'>
                         {selectedApis.length > 0
                           ? `${selectedApis.length} 个源`
                           : '无限制'}
@@ -1488,7 +1488,7 @@ const UserSection = ({
                             name: e.target.value,
                           }))
                         }
-                        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent'
                       />
                     </div>
 
@@ -1526,7 +1526,7 @@ const UserSection = ({
                                   }));
                                 }
                               }}
-                              className='appearance-auto accent-green-600 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700'
+                              className='appearance-auto accent-primary-600 w-4 h-4 rounded border-gray-300 text-primary-600 dark:border-gray-600 dark:bg-gray-700'
                             />
                             <div className='flex-1 min-w-0'>
                               <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
@@ -1695,7 +1695,7 @@ const UserSection = ({
                                   );
                                 }
                               }}
-                              className='appearance-auto accent-green-600 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700'
+                              className='appearance-auto accent-primary-600 w-4 h-4 rounded border-gray-300 text-primary-600 dark:border-gray-600 dark:bg-gray-700'
                             />
                             <div className='flex-1 min-w-0'>
                               <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
@@ -1820,10 +1820,10 @@ const UserSection = ({
                   </div>
 
                   <div className='mb-6'>
-                    <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+                    <div className='bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4'>
                       <div className='flex items-center space-x-2 mb-2'>
                         <svg
-                          className='w-5 h-5 text-blue-600 dark:text-blue-400'
+                          className='w-5 h-5 text-primary-600 dark:text-primary-400'
                           fill='none'
                           stroke='currentColor'
                           viewBox='0 0 24 24'
@@ -1835,11 +1835,11 @@ const UserSection = ({
                             d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                           />
                         </svg>
-                        <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
+                        <span className='text-sm font-medium text-primary-800 dark:text-primary-300'>
                           配置说明
                         </span>
                       </div>
-                      <p className='text-sm text-blue-700 dark:text-blue-400 mt-1'>
+                      <p className='text-sm text-primary-700 dark:text-primary-400 mt-1'>
                         提示：选择"无用户组"为无限制，选择特定用户组将限制用户只能访问该用户组允许的采集源
                       </p>
                     </div>
@@ -1860,7 +1860,7 @@ const UserSection = ({
                         const value = e.target.value;
                         setSelectedUserGroups(value ? [value] : []);
                       }}
-                      className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
+                      className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors'
                     >
                       <option value=''>无用户组（无限制）</option>
                       {userGroups.map((group) => (
@@ -2022,10 +2022,10 @@ const UserSection = ({
                         </p>
                       </div>
                     ) : (
-                      <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4'>
+                      <div className='bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4'>
                         <div className='flex items-center space-x-2'>
                           <svg
-                            className='w-5 h-5 text-green-600 dark:text-green-400'
+                            className='w-5 h-5 text-primary-600 dark:text-primary-400'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'
@@ -2037,7 +2037,7 @@ const UserSection = ({
                               d='M5 13l4 4L19 7'
                             />
                           </svg>
-                          <span className='text-sm font-medium text-green-800 dark:text-green-300'>
+                          <span className='text-sm font-medium text-primary-800 dark:text-primary-300'>
                             ✅ 当前没有用户使用此用户组
                           </span>
                         </div>
@@ -2215,10 +2215,10 @@ const UserSection = ({
                   </div>
 
                   <div className='mb-6'>
-                    <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4'>
+                    <div className='bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4'>
                       <div className='flex items-center space-x-2 mb-2'>
                         <svg
-                          className='w-5 h-5 text-blue-600 dark:text-blue-400'
+                          className='w-5 h-5 text-primary-600 dark:text-primary-400'
                           fill='none'
                           stroke='currentColor'
                           viewBox='0 0 24 24'
@@ -2230,11 +2230,11 @@ const UserSection = ({
                             d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                           />
                         </svg>
-                        <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
+                        <span className='text-sm font-medium text-primary-800 dark:text-primary-300'>
                           批量操作说明
                         </span>
                       </div>
-                      <p className='text-sm text-blue-700 dark:text-blue-400'>
+                      <p className='text-sm text-primary-700 dark:text-primary-400'>
                         将为选中的 <strong>{selectedUsers.size} 个用户</strong>{' '}
                         设置用户组，选择"无用户组"为无限制
                       </p>
@@ -2246,7 +2246,7 @@ const UserSection = ({
                       </label>
                       <select
                         onChange={(e) => setSelectedUserGroup(e.target.value)}
-                        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
+                        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors'
                         value={selectedUserGroup}
                       >
                         <option value=''>无用户组（无限制）</option>

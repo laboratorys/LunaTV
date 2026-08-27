@@ -8,10 +8,10 @@ import { createPortal } from 'react-dom';
 export const styles = {
   // 主要操作按钮（蓝色）- 用于配置、设置、确认等
   primary:
-    'px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors',
+    'px-3 py-1.5 text-sm font-medium bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-lg transition-colors',
   // 成功操作按钮（绿色）- 用于添加、启用、保存等
   success:
-    'px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-lg transition-colors',
+    'px-3 py-1.5 text-sm font-medium bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-lg transition-colors',
   // 危险操作按钮（红色）- 用于删除、禁用、重置等
   danger:
     'px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg transition-colors',
@@ -23,10 +23,10 @@ export const styles = {
     'px-3 py-1.5 text-sm font-medium bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-lg transition-colors',
   // 小尺寸主要按钮
   primarySmall:
-    'px-2 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md transition-colors',
+    'px-2 py-1 text-xs font-medium bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-md transition-colors',
   // 小尺寸成功按钮
   successSmall:
-    'px-2 py-1 text-xs font-medium bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-md transition-colors',
+    'px-2 py-1 text-xs font-medium bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-md transition-colors',
   // 小尺寸危险按钮
   dangerSmall:
     'px-2 py-1 text-xs font-medium bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-md transition-colors',
@@ -38,9 +38,9 @@ export const styles = {
     'px-2 py-1 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-md transition-colors',
   // 圆角小按钮（用于表格操作）
   roundedPrimary:
-    'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 dark:text-blue-200 transition-colors',
+    'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 hover:bg-primary-200 dark:bg-primary-900/40 dark:hover:bg-primary-900/60 dark:text-primary-200 transition-colors',
   roundedSuccess:
-    'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/40 dark:hover:bg-green-900/60 dark:text-green-200 transition-colors',
+    'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 hover:bg-primary-200 dark:bg-primary-900/40 dark:hover:bg-primary-900/60 dark:text-primary-200 transition-colors',
   roundedDanger:
     'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 dark:text-red-200 transition-colors',
   roundedSecondary:
@@ -55,7 +55,7 @@ export const styles = {
   disabledSmall:
     'px-2 py-1 text-xs font-medium bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-md transition-colors',
   // 开关按钮样式
-  toggleOn: 'bg-green-600 dark:bg-green-600',
+  toggleOn: 'bg-primary-600 dark:bg-primary-600',
   toggleOff: 'bg-gray-200 dark:bg-gray-700',
   toggleThumb: 'bg-white',
   toggleThumbOn: 'translate-x-6',
@@ -64,7 +64,7 @@ export const styles = {
   quickAction:
     'px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors',
   input:
-    'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent',
+    'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent',
   roundedCard:
     'relative z-40 p-6 bg-white/50 dark:bg-gray-800/20 backdrop-blur-sm border border-gray-200/50 dark:border-white/5 rounded-3xl space-y-6',
 };
@@ -109,7 +109,7 @@ export const AlertModal = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className='w-8 h-8 text-green-500' />;
+        return <CheckCircle className='w-8 h-8 text-primary-500' />;
       case 'error':
         return <AlertCircle className='w-8 h-8 text-red-500' />;
       case 'warning':
@@ -122,13 +122,13 @@ export const AlertModal = ({
   const getBgColor = () => {
     switch (type) {
       case 'success':
-        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+        return 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800';
       case 'error':
         return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
       case 'warning':
         return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
       default:
-        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+        return 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800';
     }
   };
 

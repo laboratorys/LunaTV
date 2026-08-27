@@ -194,7 +194,7 @@ const CategorySection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               category.type === 'movie'
-                ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
             }`}
           >
@@ -211,7 +211,7 @@ const CategorySection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !category.disabled
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >

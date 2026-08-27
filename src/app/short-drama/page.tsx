@@ -131,7 +131,7 @@ function ShortDramaPageClient() {
           {hasMore && (
             <div ref={loadingRef} className='flex justify-center mt-12 py-8'>
               {isLoadingMore && (
-                <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500'></div>
+                <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500'></div>
               )}
             </div>
           )}

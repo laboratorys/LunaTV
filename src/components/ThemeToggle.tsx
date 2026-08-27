@@ -25,7 +25,7 @@ export function ThemeToggle({ size = 20 }: ThemeToggleProps) {
           : 'light'
         : t;
 
-    const color = actualTheme === 'dark' ? '#0c111c' : '#f9fbfe';
+    const color = actualTheme === 'dark' ? '#0a0a0a' : '#f9fbfe';
 
     if (!meta) {
       const newMeta = document.createElement('meta');

@@ -1,6 +1,9 @@
+'use client';
+
 import { Radio, X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ActionItem {
   id: string;
@@ -40,6 +43,12 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Portal 需要在客户端挂载后才能渲染到 document.body
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 控制动画状态
   useEffect(() => {
@@ -136,14 +145,14 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     }
   }, [isVisible, onClose]);
 
-  if (!isVisible) return null;
+  if (!isVisible || !mounted) return null;
 
   const getActionColor = (color: ActionItem['color']) => {
     switch (color) {
       case 'danger':
         return 'text-red-600 dark:text-red-400';
       case 'primary':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-primary-600 dark:text-primary-400';
       default:
         return 'text-gray-700 dark:text-gray-300';
     }
@@ -154,13 +163,13 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
       case 'danger':
         return 'hover:bg-red-50/50 dark:hover:bg-red-900/10';
       case 'primary':
-        return 'hover:bg-green-50/50 dark:hover:bg-green-900/10';
+        return 'hover:bg-primary-50/50 dark:hover:bg-primary-900/10';
       default:
         return 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20';
     }
   };
 
-  return (
+  return createPortal(
     <div
       className='fixed inset-0 z-9999 flex items-end justify-center'
       onTouchMove={(e) => {
@@ -174,7 +183,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     >
       {/* 背景遮罩 */}
       <div
-        className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ease-out ${
           isAnimating ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
@@ -187,7 +196,6 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           e.preventDefault();
         }}
         style={{
-          backdropFilter: 'blur(4px)',
           willChange: 'opacity',
           touchAction: 'none', // 禁用所有触摸操作
         }}
@@ -353,7 +361,8 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

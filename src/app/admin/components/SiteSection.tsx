@@ -84,7 +84,7 @@ export default function SiteSection({
           {/* 基本设置 */}
           <div className={`${styles.roundedCard}`}>
             <div className='flex items-center gap-2 mb-5'>
-              <Globe className='text-green-500 w-5 h-5' />
+              <Globe className='text-primary-500 w-5 h-5' />
               <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                 基本设置
               </h3>
@@ -120,7 +120,7 @@ export default function SiteSection({
             }`}
           >
             <div className='flex items-center gap-2  mb-5'>
-              <Link2 className='text-green-500 w-5 h-5' />
+              <Link2 className='text-primary-500 w-5 h-5' />
               <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                 数据代理
               </h3>
@@ -251,7 +251,7 @@ export default function SiteSection({
                     href='https://github.com/cmliu'
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='text-[11px] text-green-600/80 hover:text-green-500 dark:text-green-400/80 transition-colors flex items-center gap-1'
+                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
                   >
                     @CMLiussss <ExternalLink size={10} />
                   </a>
@@ -259,7 +259,7 @@ export default function SiteSection({
                     href='https://douban.com'
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='text-[11px] text-green-600/80 hover:text-green-500 dark:text-green-400/80 transition-colors flex items-center gap-1'
+                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
                   >
                     豆瓣电影 <ExternalLink size={10} />
                   </a>
@@ -267,7 +267,7 @@ export default function SiteSection({
                     href='https://bgm.tv'
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='text-[11px] text-green-600/80 hover:text-green-500 dark:text-green-400/80 transition-colors flex items-center gap-1'
+                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
                   >
                     Bangumi <ExternalLink size={10} />
                   </a>
@@ -282,7 +282,7 @@ export default function SiteSection({
           className={`${styles.roundedCard} relative ${isDropdownOpen ? '' : 'z-0'}`}
         >
           <div className='flex items-center gap-2 mb-5'>
-            <ShieldCheck className='text-green-500 w-5 h-5' />
+            <ShieldCheck className='text-primary-500 w-5 h-5' />
             <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
               系统策略
             </h3>

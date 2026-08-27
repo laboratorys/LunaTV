@@ -166,7 +166,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   <item.icon
                     className={`h-6 w-6 transition-all duration-300 ease-in-out ${
                       active
-                        ? 'text-green-600 dark:text-green-400'
+                        ? 'text-primary-600 dark:text-primary-400'
                         : 'text-gray-400 dark:text-gray-500'
                     }`}
                     strokeWidth={active ? 2.5 : 2}
@@ -175,7 +175,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                   <span
                     className={`text-xs transition-all duration-300 ease-in-out ${
                       active
-                        ? 'text-green-600 dark:text-green-400 font-bold'
+                        ? 'text-primary-600 dark:text-primary-400 font-bold'
                         : 'text-gray-500 dark:text-gray-400 font-medium'
                     }`}
                   >

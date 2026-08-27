@@ -143,7 +143,7 @@ const ButtonTextSelector = <T extends string | number>({
                     active:scale-95
                     ${
                       selectedValue === opt.value
-                        ? 'bg-green-500 border-green-500 text-white font-semibold shadow-sm'
+                        ? 'bg-primary-500 border-primary-500 text-white font-semibold shadow-sm'
                         : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
                     }
                   `}
@@ -165,7 +165,7 @@ const ButtonTextSelector = <T extends string | number>({
         {label && (
           <button
             onClick={() => setShowAllOptions(true)}
-            className='flex items-center gap-1 px-1 py-1 text-[12px] sm:text-sm font-bold text-gray-400 hover:text-green-600 transition-colors shrink-0'
+            className='flex items-center gap-1 px-1 py-1 text-[12px] sm:text-sm font-bold text-gray-400 hover:text-primary-600 transition-colors shrink-0'
           >
             {label}
             <LayoutGrid size={14} className='sm:size-4' />
@@ -203,7 +203,7 @@ const ButtonTextSelector = <T extends string | number>({
                   onClick={() => handleParentClick(option)}
                   className={`px-3 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap snap-center ${
                     selectedValue === option.value
-                      ? 'bg-white dark:bg-gray-700 text-green-600 shadow-sm ring-1 ring-black/5'
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm ring-1 ring-black/5'
                       : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
                   }`}
                 >
@@ -249,7 +249,7 @@ const ButtonTextSelector = <T extends string | number>({
                   }}
                   className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-md border transition-colors ${
                     selectedSubValue === child.value
-                      ? 'bg-green-500 text-white border-green-500'
+                      ? 'bg-primary-500 text-white border-primary-500'
                       : 'bg-transparent text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >

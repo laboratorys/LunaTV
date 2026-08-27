@@ -143,7 +143,7 @@ export default function SiteSection({
           <div className='p-6 bg-white/50 dark:bg-gray-800/20 backdrop-blur-sm border border-gray-200/50 dark:border-white/5 rounded-3xl space-y-6'>
             <div className='flex flex-col sm:flex-row sm:items-center gap-2 mb-2'>
               <div className='flex items-center gap-2'>
-                <RefreshCw className='text-emerald-500 w-5 h-5' />
+                <RefreshCw className='text-primary-500 w-5 h-5' />
                 <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                   配置订阅
                 </h3>
@@ -203,12 +203,12 @@ export default function SiteSection({
         <div className='p-6 bg-white/50 dark:bg-gray-800/20 backdrop-blur-sm border border-gray-200/50 dark:border-white/5 rounded-3xl space-y-6 flex flex-col'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
-              <FileJson className='text-blue-500 w-5 h-5' />
+              <FileJson className='text-primary-500 w-5 h-5' />
               <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
                 配置文件内容
               </h3>
             </div>
-            <span className='text-[10px] bg-blue-500/10 text-blue-500 px-2 py-1 rounded-lg font-bold uppercase'>
+            <span className='text-[10px] bg-primary-500/10 text-primary-500 px-2 py-1 rounded-lg font-bold uppercase'>
               JSON Mode
             </span>
           </div>
@@ -219,7 +219,7 @@ export default function SiteSection({
               onChange={(e) => handleChange('ConfigFile', e.target.value)}
               rows={22}
               spellCheck={false}
-              className={`${styles.input} rounded-2xl! text-[13px] leading-relaxed resize-none h-125 transition-all border-blue-500/10 focus:border-blue-500/30 dark:bg-black/20`}
+              className={`${styles.input} rounded-2xl! text-[13px] leading-relaxed resize-none h-125 transition-all border-primary-500/10 focus:border-primary-500/30 dark:bg-black/20`}
               placeholder='请输入配置文件内容...'
             />
           </div>

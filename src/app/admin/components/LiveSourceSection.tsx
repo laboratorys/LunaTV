@@ -286,7 +286,7 @@ const LiveSourceSection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !liveSource.disabled
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
@@ -361,7 +361,7 @@ const LiveSourceSection = ({
               className={`px-3 py-1.5 text-sm font-medium flex items-center space-x-2 ${
                 isRefreshing || isLoading('refreshLiveSources')
                   ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-lg'
-                  : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors'
+                  : 'bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-lg transition-colors'
               }`}
             >
               <span>

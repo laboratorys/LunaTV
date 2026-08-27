@@ -17,6 +17,7 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { parseCustomTimeFormat } from '@/lib/time';
+import { getThemePrimaryColor } from '@/lib/utils';
 
 import EpgScrollableRow from '@/components/EpgScrollableRow';
 import PageLayout from '@/components/PageLayout';
@@ -1043,7 +1044,7 @@ function LivePageClient() {
           playsInline: true,
           autoPlayback: false,
           airplay: true,
-          theme: '#22c55e',
+          theme: getThemePrimaryColor(),
           lang: 'zh-cn',
           hotkey: false,
           fastForward: false, // 直播不需要快进
@@ -1241,17 +1242,17 @@ function LivePageClient() {
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画直播图标 */}
             <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>📺</div>
                 {/* 旋转光环 */}
-                <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                <div className='absolute -inset-2 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl opacity-20 animate-spin'></div>
               </div>
 
               {/* 浮动粒子效果 */}
               <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
+                <div className='absolute top-2 left-2 w-2 h-2 bg-primary-400 rounded-full animate-bounce'></div>
                 <div
-                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
+                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce'
                   style={{ animationDelay: '0.5s' }}
                 ></div>
                 <div
@@ -1267,21 +1268,21 @@ function LivePageClient() {
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'loading'
-                      ? 'bg-green-500 scale-125'
-                      : 'bg-green-500'
+                      ? 'bg-primary-500 scale-125'
+                      : 'bg-primary-500'
                   }`}
                 ></div>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'fetching'
-                      ? 'bg-green-500 scale-125'
-                      : 'bg-green-500'
+                      ? 'bg-primary-500 scale-125'
+                      : 'bg-primary-500'
                   }`}
                 ></div>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'ready'
-                      ? 'bg-green-500 scale-125'
+                      ? 'bg-primary-500 scale-125'
                       : 'bg-gray-300'
                   }`}
                 ></div>
@@ -1290,7 +1291,7 @@ function LivePageClient() {
               {/* 进度条 */}
               <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
                 <div
-                  className='h-full bg-linear-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
+                  className='h-full bg-linear-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-1000 ease-out'
                   style={{
                     width:
                       loadingStage === 'loading'
@@ -1348,7 +1349,7 @@ function LivePageClient() {
             <div className='space-y-3'>
               <button
                 onClick={() => window.location.reload()}
-                className='w-full px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full px-6 py-3 bg-linear-to-r from-primary-500 to-cyan-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
               >
                 🔄 重新尝试
               </button>
@@ -1365,7 +1366,7 @@ function LivePageClient() {
         {/* 第一行：页面标题 */}
         <div className='py-1 hidden md:block'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 max-w-[80%]'>
-            <Radio className='w-5 h-5 text-blue-500 shrink-0' />
+            <Radio className='w-5 h-5 text-primary-500 shrink-0' />
             <div className='min-w-0 flex-1'>
               <div className='truncate'>
                 {currentSource?.name}
@@ -1417,7 +1418,7 @@ function LivePageClient() {
                 className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
                   isChannelListCollapsed
                     ? 'bg-orange-400 animate-pulse'
-                    : 'bg-green-400'
+                    : 'bg-primary-400'
                 }`}
               ></div>
             </button>
@@ -1516,9 +1517,9 @@ function LivePageClient() {
                   <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-500 transition-all duration-300'>
                     <div className='text-center max-w-md mx-auto px-6'>
                       <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                           <div className='text-white text-4xl'>📺</div>
-                          <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                          <div className='absolute -inset-2 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl opacity-20 animate-spin'></div>
                         </div>
                       </div>
                       <div className='space-y-2'>
@@ -1548,8 +1549,8 @@ function LivePageClient() {
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                       ${
                         activeTab === 'channels'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : 'text-gray-700 hover:text-primary-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-primary-400 hover:bg-black/3 dark:hover:bg-white/3'
                       }
                     `.trim()}
                   >
@@ -1560,8 +1561,8 @@ function LivePageClient() {
                     className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                       ${
                         activeTab === 'sources'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : 'text-gray-700 hover:text-primary-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-primary-400 hover:bg-black/3 dark:hover:bg-white/3'
                       }
                     `.trim()}
                   >
@@ -1631,8 +1632,8 @@ function LivePageClient() {
                                    isSwitchingSource
                                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
                                      : selectedGroup === group
-                                       ? 'text-green-500 dark:text-green-400'
-                                       : 'text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'
+                                       ? 'text-primary-500 dark:text-primary-400'
+                                       : 'text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400'
                                  }
                                `.trim()}
                             >
@@ -1644,7 +1645,7 @@ function LivePageClient() {
                               </div>
                               {selectedGroup === group &&
                                 !isSwitchingSource && (
-                                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 dark:bg-green-400' />
+                                  <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 dark:bg-primary-400' />
                                 )}
                             </button>
                           ))}
@@ -1670,7 +1671,7 @@ function LivePageClient() {
                                 isSwitchingSource
                                   ? 'opacity-50 cursor-not-allowed'
                                   : isActive
-                                    ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
+                                    ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-300 dark:border-primary-700'
                                     : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                               }`}
                             >
@@ -1741,7 +1742,7 @@ function LivePageClient() {
                               className={`flex items-start gap-3 px-2 py-3 rounded-lg transition-all select-none duration-200 relative
                                 ${
                                   isCurrentSource
-                                    ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
+                                    ? 'bg-primary-500/10 dark:bg-primary-500/20 border-primary-500/30 border'
                                     : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
                                 }`.trim()}
                             >
@@ -1765,7 +1766,7 @@ function LivePageClient() {
 
                               {/* 当前标识 */}
                               {isCurrentSource && (
-                                <div className='absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full'></div>
+                                <div className='absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full'></div>
                               )}
                             </div>
                           );

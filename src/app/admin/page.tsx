@@ -145,8 +145,8 @@ function AdminPageClient() {
           {/* 标题区 */}
           <div className='pt-8 pb-4 flex items-center gap-3'>
             <div className='flex items-center gap-3'>
-              <div className='p-2.5 bg-emerald-500/10 rounded-xl'>
-                <LayoutDashboard className='text-emerald-500 w-7 h-7' />
+              <div className='p-2.5 bg-primary-500/10 rounded-xl'>
+                <LayoutDashboard className='text-primary-500 w-7 h-7' />
               </div>
               <h1 className='text-2xl font-bold dark:text-white text-gray-900 tracking-tight'>
                 管理面板
@@ -175,8 +175,8 @@ function AdminPageClient() {
         {/* 标题区 */}
         <div className='pt-8 pb-4 flex items-center gap-3'>
           <div className='flex items-center gap-3'>
-            <div className='p-2.5 bg-emerald-500/10 rounded-xl'>
-              <LayoutDashboard className='text-emerald-500 w-7 h-7' />
+            <div className='p-2.5 bg-primary-500/10 rounded-xl'>
+              <LayoutDashboard className='text-primary-500 w-7 h-7' />
             </div>
             <h1 className='text-2xl font-bold dark:text-white text-gray-900 tracking-tight'>
               管理面板
@@ -205,7 +205,7 @@ function AdminPageClient() {
                       relative flex items-center gap-2.5 px-5 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl whitespace-nowrap max-md:gap-1.5 max-md:px-3 max-md:py-2 max-md:text-xs
                       ${
                         isActive
-                          ? 'text-emerald-600 dark:text-emerald-400 bg-white dark:bg-gray-700 shadow-[0_4px_14px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] ring-1 ring-black/5 dark:ring-white/10'
+                          ? 'text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-700 shadow-[0_4px_14px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] ring-1 ring-black/5 dark:ring-white/10'
                           : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-300/40 dark:hover:bg-white/5'
                       }
                     `}
@@ -213,7 +213,7 @@ function AdminPageClient() {
                     <span
                       className={`transition-all duration-300 ${
                         isActive
-                          ? 'scale-110 opacity-100 text-emerald-500'
+                          ? 'scale-110 opacity-100 text-primary-500'
                           : 'opacity-60'
                       }`}
                     >
@@ -222,7 +222,7 @@ function AdminPageClient() {
                     <span className='relative z-10'>{tab.label}</span>
 
                     {isActive && (
-                      <span className='absolute inset-0 rounded-xl bg-emerald-500/2 dark:bg-emerald-400/2 pointer-events-none' />
+                      <span className='absolute inset-0 rounded-xl bg-primary-500/2 dark:bg-primary-400/2 pointer-events-none' />
                     )}
                   </button>
                 );

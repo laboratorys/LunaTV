@@ -44,3 +44,4 @@ sitemap-*.xml
 src/lib/runtime.ts
 public/manifest.json
 API.md
+.workbuddy

@@ -24,6 +24,7 @@ import {
 import { SearchResult } from '@/lib/types';
 import {
   filterAdsFromM3U8Common,
+  getThemePrimaryColor,
   getVideoResolutionFromM3u8,
   processImageUrl,
 } from '@/lib/utils';
@@ -1423,7 +1424,7 @@ export default function PlayPageClient() {
         playsInline: true,
         autoPlayback: false,
         airplay: true,
-        theme: '#22c55e',
+        theme: getThemePrimaryColor(),
         lang: 'zh-cn',
         hotkey: false,
         fastForward: true,
@@ -1874,7 +1875,7 @@ export default function PlayPageClient() {
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画影院图标 */}
             <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                 <div className='text-white text-4xl'>
                   {loadingStage === 'searching' && '🔍'}
                   {loadingStage === 'preferring' && '⚡'}
@@ -1882,14 +1883,14 @@ export default function PlayPageClient() {
                   {loadingStage === 'ready' && '✨'}
                 </div>
                 {/* 旋转光环 */}
-                <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                <div className='absolute -inset-2 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl opacity-20 animate-spin'></div>
               </div>
 
               {/* 浮动粒子效果 */}
               <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
+                <div className='absolute top-2 left-2 w-2 h-2 bg-primary-400 rounded-full animate-bounce'></div>
                 <div
-                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
+                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce'
                   style={{ animationDelay: '0.5s' }}
                 ></div>
                 <div
@@ -1905,26 +1906,26 @@ export default function PlayPageClient() {
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'searching' || loadingStage === 'fetching'
-                      ? 'bg-green-500 scale-125'
+                      ? 'bg-primary-500 scale-125'
                       : loadingStage === 'preferring' ||
                           loadingStage === 'ready'
-                        ? 'bg-green-500'
+                        ? 'bg-primary-500'
                         : 'bg-gray-300'
                   }`}
                 ></div>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'preferring'
-                      ? 'bg-green-500 scale-125'
+                      ? 'bg-primary-500 scale-125'
                       : loadingStage === 'ready'
-                        ? 'bg-green-500'
+                        ? 'bg-primary-500'
                         : 'bg-gray-300'
                   }`}
                 ></div>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
                     loadingStage === 'ready'
-                      ? 'bg-green-500 scale-125'
+                      ? 'bg-primary-500 scale-125'
                       : 'bg-gray-300'
                   }`}
                 ></div>
@@ -1933,7 +1934,7 @@ export default function PlayPageClient() {
               {/* 进度条 */}
               <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
                 <div
-                  className='h-full bg-linear-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000 ease-out'
+                  className='h-full bg-linear-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-1000 ease-out'
                   style={{
                     width:
                       loadingStage === 'searching' ||
@@ -2009,7 +2010,7 @@ export default function PlayPageClient() {
                     ? router.push(`/search?q=${encodeURIComponent(videoTitle)}`)
                     : router.back()
                 }
-                className='w-full px-6 py-3 bg-linear-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full px-6 py-3 bg-linear-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-primary-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
               >
                 {videoTitle ? '🔍 返回搜索' : '← 返回上页'}
               </button>
@@ -2081,7 +2082,7 @@ export default function PlayPageClient() {
                 className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
                   isEpisodeSelectorCollapsed
                     ? 'bg-orange-400 animate-pulse'
-                    : 'bg-green-400'
+                    : 'bg-primary-400'
                 }`}
               ></div>
             </button>
@@ -2150,17 +2151,17 @@ export default function PlayPageClient() {
                     <div className='text-center max-w-md mx-auto px-6'>
                       {/* 动画影院图标 */}
                       <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+                        <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
                           <div className='text-white text-4xl'>🎬</div>
                           {/* 旋转光环 */}
-                          <div className='absolute -inset-2 bg-linear-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+                          <div className='absolute -inset-2 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl opacity-20 animate-spin'></div>
                         </div>
 
                         {/* 浮动粒子效果 */}
                         <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                          <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
+                          <div className='absolute top-2 left-2 w-2 h-2 bg-primary-400 rounded-full animate-bounce'></div>
                           <div
-                            className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
+                            className='absolute top-4 right-4 w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce'
                             style={{ animationDelay: '0.5s' }}
                           ></div>
                           <div
@@ -2231,7 +2232,7 @@ export default function PlayPageClient() {
               {/* 关键信息行 */}
               <div className='flex flex-wrap items-center gap-3 text-base mb-4 opacity-80 shrink-0 text-gray-900 dark:text-gray-100'>
                 {detail?.class && (
-                  <span className='text-green-600 font-semibold'>
+                  <span className='text-primary-600 font-semibold'>
                     {detail.class}
                   </span>
                 )}
@@ -2277,7 +2278,7 @@ export default function PlayPageClient() {
                         rel='noopener noreferrer'
                         className='absolute top-3 left-3'
                       >
-                        <div className='bg-green-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:bg-green-600 hover:scale-[1.1] transition-all duration-300 ease-out'>
+                        <div className='bg-primary-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:bg-primary-600 hover:scale-[1.1] transition-all duration-300 ease-out'>
                           <svg
                             width='16'
                             height='16'

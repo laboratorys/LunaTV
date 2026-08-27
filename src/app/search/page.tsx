@@ -721,7 +721,7 @@ function SearchPageClient() {
                       bg-gray-50/80 text-gray-700 border border-gray-200/50 placeholder-gray-400
                       dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:placeholder-gray-500
                       focus:outline-none 
-                      focus:ring-2 focus:ring-green-400 
+                      focus:ring-2 focus:ring-primary-400 
                       focus:border-transparent
                       focus:bg-white dark:focus:bg-gray-700'
               />
@@ -781,7 +781,7 @@ function SearchPageClient() {
                   )}
                   {isLoading && useFluidSearch && (
                     <span className='ml-2 inline-block align-middle'>
-                      <span className='inline-block h-3 w-3 border-2 border-gray-300 border-t-green-500 rounded-full animate-spin'></span>
+                      <span className='inline-block h-3 w-3 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin'></span>
                     </span>
                   )}
                 </h2>
@@ -817,7 +817,7 @@ function SearchPageClient() {
                         setViewMode(viewMode === 'agg' ? 'all' : 'agg')
                       }
                     />
-                    <div className='w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
+                    <div className='w-9 h-5 bg-gray-300 rounded-full peer-checked:bg-primary-500 transition-colors dark:bg-gray-600'></div>
                     <div className='absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4'></div>
                   </div>
                 </label>
@@ -825,7 +825,7 @@ function SearchPageClient() {
               {searchResults.length === 0 ? (
                 isLoading ? (
                   <div className='flex justify-center items-center h-40'>
-                    <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-green-500'></div>
+                    <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500'></div>
                   </div>
                 ) : (
                   <div className='text-center text-gray-500 py-8 dark:text-gray-400'>
@@ -971,7 +971,7 @@ function SearchPageClient() {
       {/* 返回顶部悬浮按钮 */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 z-500 w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
+        className={`fixed bottom-20 md:bottom-6 right-6 z-500 w-12 h-12 bg-primary-500/90 hover:bg-primary-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
           showBackToTop
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'

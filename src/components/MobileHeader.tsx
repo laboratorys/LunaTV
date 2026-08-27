@@ -18,7 +18,7 @@ const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
   const displayTitle = title || siteName;
   const titleColorClass = title
     ? 'text-gray-900 dark:text-white'
-    : 'text-green-600';
+    : 'text-primary-600';
 
   return (
     <header className='md:hidden fixed top-0 left-0 right-0 z-999 w-full bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-800/50 transition-colors duration-300'>
@@ -47,7 +47,7 @@ const MobileHeader = ({ showBackButton = false, title }: MobileHeaderProps) => {
                   className='object-contain'
                 />
               </div>
-              <span className='ml-2 text-xl font-bold text-green-600 tracking-tight truncate'>
+              <span className='ml-2 text-xl font-bold text-primary-600 tracking-tight truncate'>
                 {siteName}
               </span>
             </Link>

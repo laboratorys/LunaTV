@@ -56,7 +56,7 @@ function VersionDisplay() {
             updateStatus === UpdateStatus.HAS_UPDATE
               ? 'text-yellow-600 dark:text-yellow-400'
               : updateStatus === UpdateStatus.NO_UPDATE
-                ? 'text-green-600 dark:text-green-400'
+                ? 'text-primary-600 dark:text-primary-400'
                 : ''
           }`}
         >
@@ -150,7 +150,7 @@ function LoginPageClient() {
   };
 
   return (
-    <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50 dark:bg-zinc-950'>
+    <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50 dark:bg-neutral-950'>
       <div className='absolute top-4 right-4'>
         <ThemeToggle size={24} />
       </div>
@@ -165,7 +165,7 @@ function LoginPageClient() {
               height={32}
               className='mr-2'
             />
-            <h1 className='text-green-600 tracking-tight text-3xl font-extrabold bg-clip-text'>
+            <h1 className='text-primary-600 tracking-tight text-3xl font-extrabold bg-clip-text'>
               {siteName}
             </h1>
           </div>
@@ -185,7 +185,7 @@ function LoginPageClient() {
                 <input
                   type='text'
                   autoComplete='username'
-                  className='block w-full rounded-lg border-0 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
+                  className='block w-full rounded-lg border-0 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
                   placeholder='输入用户名'
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -203,7 +203,7 @@ function LoginPageClient() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 autoComplete={isRegister ? 'new-password' : 'current-password'}
-                className='block w-full rounded-lg border-0 py-3 pl-10 pr-12 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
+                className='block w-full rounded-lg border-0 py-3 pl-10 pr-12 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
                 placeholder={isRegister ? '设置访问密码' : '输入访问密码'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -232,7 +232,7 @@ function LoginPageClient() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   autoComplete='new-password'
-                  className='block w-full rounded-lg border-0 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
+                  className='block w-full rounded-lg border-0 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white/60 dark:bg-zinc-800/60'
                   placeholder='确认访问密码'
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -245,7 +245,7 @@ function LoginPageClient() {
             <p
               className={`text-sm text-center ${
                 error.includes('成功')
-                  ? 'text-green-600 font-medium'
+                  ? 'text-primary-600 font-medium'
                   : 'text-red-600'
               } dark:text-red-400`}
             >
@@ -256,7 +256,7 @@ function LoginPageClient() {
           <button
             type='submit'
             disabled={!password || loading || (isRegister && !confirmPassword)}
-            className='inline-flex w-full justify-center items-center gap-2 rounded-lg bg-green-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+            className='inline-flex w-full justify-center items-center gap-2 rounded-lg bg-primary-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50'
           >
             {isRegister ? (
               <UserPlus className='w-5 h-5' />
@@ -274,7 +274,7 @@ function LoginPageClient() {
                 setError(null);
                 setConfirmPassword('');
               }}
-              className='text-sm text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors font-medium'
+              className='text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium'
             >
               {isRegister ? '已经有账号？去登录' : '没有账号？立即注册'}
             </button>

@@ -83,25 +83,25 @@ export default function DownloadPage() {
       <div className='px-4 sm:px-10 py-8 min-h-screen relative max-w-7xl mx-auto'>
         {/* 背景光晕 */}
         <div className='fixed inset-0 -z-10 overflow-hidden pointer-events-none'>
-          <div className='absolute top-[-10%] right-[-10%] w-125 h-125 bg-green-200/20 dark:bg-green-600/10 rounded-full blur-[120px]' />
-          <div className='absolute bottom-[10%] left-[-10%] w-125 h-125 bg-emerald-200/20 dark:bg-emerald-600/10 rounded-full blur-[100px]' />
+          <div className='absolute top-[-10%] right-[-10%] w-125 h-125 bg-primary-200/20 dark:bg-primary-600/10 rounded-full blur-[120px]' />
+          <div className='absolute bottom-[10%] left-[-10%] w-125 h-125 bg-primary-200/20 dark:bg-primary-600/10 rounded-full blur-[100px]' />
         </div>
 
         {/* 1. 头部标题 */}
         <div className='mb-16 flex flex-col items-center text-center'>
-          <div className='inline-flex items-center gap-2 bg-green-500/10 dark:bg-green-400/10 px-3 py-1 rounded-full mb-6 border border-green-500/20'>
+          <div className='inline-flex items-center gap-2 bg-primary-500/10 dark:bg-primary-400/10 px-3 py-1 rounded-full mb-6 border border-primary-500/20'>
             <Zap
               size={14}
-              className='text-green-600 dark:text-green-400 fill-current'
+              className='text-primary-600 dark:text-primary-400 fill-current'
             />
-            <span className='text-xs font-bold text-green-700 dark:text-green-300 uppercase tracking-wider'>
+            <span className='text-xs font-bold text-primary-700 dark:text-primary-300 uppercase tracking-wider'>
               Lab Edition
             </span>
           </div>
 
           <h1 className='text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4'>
             TVBox{' '}
-            <span className='bg-linear-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent'>
+            <span className='bg-linear-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent'>
               魔改版
             </span>
           </h1>
@@ -118,10 +118,10 @@ export default function DownloadPage() {
           {packageList.map((pkg, idx) => (
             <div
               key={idx}
-              className='relative group bg-white/80 dark:bg-gray-800/50 rounded-4xl p-6 border border-gray-200 dark:border-gray-700/50 backdrop-blur-md hover:border-green-500/50 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.15)]'
+              className='relative group bg-white/80 dark:bg-gray-800/50 rounded-4xl p-6 border border-gray-200 dark:border-gray-700/50 backdrop-blur-md hover:border-primary-500/50 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(34,197,94,0.15)]'
             >
               <div className='flex justify-between items-start mb-6'>
-                <div className='p-3 bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/10 rounded-2xl text-green-600 dark:text-green-400 shadow-sm group-hover:scale-110 transition-transform duration-300'>
+                <div className='p-3 bg-linear-to-br from-primary-50 to-primary-50 dark:from-primary-500/20 dark:to-primary-500/10 rounded-2xl text-primary-600 dark:text-primary-400 shadow-sm group-hover:scale-110 transition-transform duration-300'>
                   {pkg.icon}
                 </div>
                 <div className='px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-lg tracking-wider'>
@@ -153,13 +153,13 @@ export default function DownloadPage() {
               <div className='space-y-3'>
                 <button
                   onClick={() => handleDownload(pkg.config.url)}
-                  className='w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/20 active:scale-[0.96] transition-all'
+                  className='w-full bg-linear-to-r from-primary-600 to-primary-600 hover:from-primary-500 hover:to-primary-500 text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 active:scale-[0.96] transition-all'
                 >
                   <Download size={18} strokeWidth={2.5} /> 立即下载
                 </button>
                 <button
                   onClick={() => handleDownload(pkg.config.mirror)}
-                  className='w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-semibold text-gray-400 hover:text-green-600 dark:text-gray-500 dark:hover:text-green-400 transition-colors'
+                  className='w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-semibold text-gray-400 hover:text-primary-600 dark:text-gray-500 dark:hover:text-primary-400 transition-colors'
                 >
                   <ExternalLink size={14} /> 备用下载
                 </button>
@@ -170,9 +170,9 @@ export default function DownloadPage() {
 
         {/* 3. 底部特性区 */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          <div className='lg:col-span-2 bg-linear-to-br from-white/50 to-green-50/30 dark:from-gray-800/50 dark:to-green-900/5 rounded-[2.5rem] p-8 border border-gray-200 dark:border-gray-700/50 shadow-sm'>
+          <div className='lg:col-span-2 bg-linear-to-br from-white/50 to-primary-50/30 dark:from-gray-800/50 dark:to-primary-900/5 rounded-[2.5rem] p-8 border border-gray-200 dark:border-gray-700/50 shadow-sm'>
             <h2 className='flex items-center gap-2 font-bold text-gray-900 dark:text-gray-100 mb-8'>
-              <div className='p-2 bg-green-500 rounded-lg text-white'>
+              <div className='p-2 bg-primary-500 rounded-lg text-white'>
                 <Cpu size={20} />
               </div>
               版本选择指南
@@ -197,7 +197,7 @@ export default function DownloadPage() {
                 },
               ].map((item, i) => (
                 <div key={i} className='flex gap-4'>
-                  <div className='h-2 w-2 rounded-full bg-green-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.6)]' />
+                  <div className='h-2 w-2 rounded-full bg-primary-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.6)]' />
                   <div>
                     <h4 className='text-sm font-bold text-gray-800 dark:text-gray-200 mb-1'>
                       {item.title}
@@ -231,9 +231,9 @@ export default function DownloadPage() {
             ].map((item, i) => (
               <div
                 key={i}
-                className='group flex items-center gap-4 p-5 bg-white/60 dark:bg-gray-800/40 rounded-3xl border border-gray-100 dark:border-gray-700 hover:border-green-500/40 transition-all cursor-default'
+                className='group flex items-center gap-4 p-5 bg-white/60 dark:bg-gray-800/40 rounded-3xl border border-gray-100 dark:border-gray-700 hover:border-primary-500/40 transition-all cursor-default'
               >
-                <div className='p-3 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 rounded-2xl group-hover:bg-green-500 group-hover:text-white transition-all duration-300'>
+                <div className='p-3 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-2xl group-hover:bg-primary-500 group-hover:text-white transition-all duration-300'>
                   {item.icon}
                 </div>
                 <div>
