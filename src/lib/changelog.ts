@@ -11,6 +11,23 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.4',
+    date: '2026-08-27',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      '主题色抽象为 `primary` 主题 token，统一主色并支持后续一键换色',
+      '统一品牌色：移除 emerald 绿色混用，后台信息色（blue/sky）也并入主色，全站仅一套主题色',
+      '统一遮罩毛玻璃模糊写法，统一使用 Tailwind `backdrop-blur` 类',
+      '播放器（ArtPlayer）主题色改为读取 CSS 变量，跟随主题 token 自动切换',
+      '暗色模式灰阶去蓝相，由蓝黑改为中性灰（neutral）',
+    ],
+    fixed: [
+      '【移动端】修复在豆瓣等分页（使用虚拟滚动 VirtualGrid）下，节目卡片右键菜单遮罩无法全屏显示的问题',
+    ],
+  },
+  {
     version: '5.1.3',
     date: '2026-08-18',
     added: [
