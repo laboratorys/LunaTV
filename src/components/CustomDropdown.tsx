@@ -124,11 +124,11 @@ const CustomDropdown = ({
                   option.disabled
                     ? 'opacity-40 cursor-not-allowed'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                } ${value === option.value ? 'bg-green-50 dark:bg-green-900/20 text-green-600' : ''}`}
+                } ${value === option.value ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600' : ''}`}
               >
                 <span>{option.label}</span>
                 {value === option.value && (
-                  <Check className='w-4 h-4 text-green-600' />
+                  <Check className='w-4 h-4 text-primary-600' />
                 )}
               </button>
             ))}

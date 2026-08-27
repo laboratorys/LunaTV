@@ -50,6 +50,12 @@ export default async function RootLayout({
   let doubanImageProxyType =
     process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent';
   let doubanImageProxy = process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY || '';
+  let bgmProxyType =
+    process.env.NEXT_PUBLIC_BGM_PROXY_TYPE || 'cmliussss-cdn-tencent';
+  let bgmProxy = process.env.NEXT_PUBLIC_BGM_PROXY || '';
+  let bgmImageProxyType =
+    process.env.NEXT_PUBLIC_BGM_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent';
+  let bgmImageProxy = process.env.NEXT_PUBLIC_BGM_IMAGE_PROXY || '';
   let disableYellowFilter =
     process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true';
   let fluidSearch = process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false';
@@ -73,6 +79,10 @@ export default async function RootLayout({
     doubanProxy = config.SiteConfig.DoubanProxy;
     doubanImageProxyType = config.SiteConfig.DoubanImageProxyType;
     doubanImageProxy = config.SiteConfig.DoubanImageProxy;
+    bgmProxyType = config.SiteConfig.BgmProxyType;
+    bgmProxy = config.SiteConfig.BgmProxy;
+    bgmImageProxyType = config.SiteConfig.BgmImageProxyType;
+    bgmImageProxy = config.SiteConfig.BgmImageProxy;
     disableYellowFilter = config.SiteConfig.DisableYellowFilter;
     customCategories = config.CustomCategories.filter(
       (category) => !category.disabled,
@@ -97,6 +107,10 @@ export default async function RootLayout({
     DOUBAN_PROXY: doubanProxy,
     DOUBAN_IMAGE_PROXY_TYPE: doubanImageProxyType,
     DOUBAN_IMAGE_PROXY: doubanImageProxy,
+    BGM_PROXY_TYPE: bgmProxyType,
+    BGM_PROXY: bgmProxy,
+    BGM_IMAGE_PROXY_TYPE: bgmImageProxyType,
+    BGM_IMAGE_PROXY: bgmImageProxy,
     DISABLE_YELLOW_FILTER: disableYellowFilter,
     CUSTOM_CATEGORIES: customCategories,
     FLUID_SEARCH: fluidSearch,
@@ -125,7 +139,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}
+        className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-neutral-950 dark:text-gray-200`}
       >
         <ThemeProvider
           attribute='class'

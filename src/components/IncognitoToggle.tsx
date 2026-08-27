@@ -22,7 +22,7 @@ export function IncognitoToggle({ active, onToggle }: Props) {
       className={`
         relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer items-center rounded-full 
         transition-colors duration-200 ease-in-out
-        ${active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}
+        ${active ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'}
       `}
     >
       <span

@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
         };
       });
       adminConfig.UserConfig.Users = allUsers as any;
-      await db.saveAdminConfig(adminConfig);
       await setCachedConfig(adminConfig);
       return NextResponse.json({ ok: true });
     } catch (err) {

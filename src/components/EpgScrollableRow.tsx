@@ -164,7 +164,7 @@ export default function EpgScrollableRow({
         </div>
         <div className='min-h-25 sm:min-h-30 flex items-center justify-center'>
           <div className='flex items-center gap-3 sm:gap-4 text-gray-500 dark:text-gray-400'>
-            <div className='w-5 h-5 sm:w-6 sm:h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin'></div>
+            <div className='w-5 h-5 sm:w-6 sm:h-6 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin'></div>
             <span className='text-sm sm:text-base'>加载节目单...</span>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function EpgScrollableRow({
         {currentPlayingIndex !== -1 && (
           <button
             onClick={scrollToCurrentProgram}
-            className='flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 bg-gray-300/50 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700 transition-all duration-200'
+            className='flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 bg-gray-300/50 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-all duration-200'
             title='滚动到当前播放位置'
           >
             <Target className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
@@ -233,11 +233,11 @@ export default function EpgScrollableRow({
                 key={index}
                 className={`shrink-0 w-36 sm:w-48 p-2 sm:p-3 rounded-lg border transition-all duration-200 flex flex-col min-h-25 sm:min-h-30 ${
                   isPlaying
-                    ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30'
+                    ? 'bg-primary-500/10 dark:bg-primary-500/20 border-primary-500/30'
                     : isFinishedProgram
                       ? 'bg-gray-300/50 dark:bg-gray-800 border-gray-300 dark:border-gray-700'
                       : isUpcomingProgram
-                        ? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30'
+                        ? 'bg-primary-500/10 dark:bg-primary-500/20 border-primary-500/30'
                         : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
@@ -246,11 +246,11 @@ export default function EpgScrollableRow({
                   <span
                     className={`text-xs font-medium ${
                       isPlaying
-                        ? 'text-green-600 dark:text-green-400'
+                        ? 'text-primary-600 dark:text-primary-400'
                         : isFinishedProgram
                           ? 'text-gray-500 dark:text-gray-400'
                           : isUpcomingProgram
-                            ? 'text-blue-600 dark:text-blue-400'
+                            ? 'text-primary-600 dark:text-primary-400'
                             : 'text-gray-600 dark:text-gray-300'
                     }`}
                   >
@@ -265,11 +265,11 @@ export default function EpgScrollableRow({
                 <div
                   className={`text-xs sm:text-sm font-medium flex-1 ${
                     isPlaying
-                      ? 'text-green-900 dark:text-green-100'
+                      ? 'text-primary-900 dark:text-primary-100'
                       : isFinishedProgram
                         ? 'text-gray-600 dark:text-gray-400'
                         : isUpcomingProgram
-                          ? 'text-blue-900 dark:text-blue-100'
+                          ? 'text-primary-900 dark:text-primary-100'
                           : 'text-gray-900 dark:text-gray-100'
                   }`}
                   style={{
@@ -289,8 +289,8 @@ export default function EpgScrollableRow({
                 {/* 正在播放状态在底部 */}
                 {isPlaying && (
                   <div className='mt-auto pt-1 sm:pt-2 flex items-center gap-1 sm:gap-1.5 shrink-0'>
-                    <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse'></div>
-                    <span className='text-xs text-green-600 dark:text-green-400 font-medium'>
+                    <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary-500 rounded-full animate-pulse'></div>
+                    <span className='text-xs text-primary-600 dark:text-primary-400 font-medium'>
                       正在播放
                     </span>
                   </div>

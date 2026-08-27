@@ -89,7 +89,7 @@ export default function CopyableInput({
           onClick={copyToClipboard}
           className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${
             copied
-              ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+              ? 'text-primary-500 bg-primary-50 dark:bg-primary-500/10'
               : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
           title={copied ? '已复制' : '复制到剪贴板'}

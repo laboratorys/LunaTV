@@ -287,6 +287,29 @@ export async function getDoubanImageProxyConfig(): Promise<{
   };
 }
 
+function getBgmImageProxyConfig(): {
+  proxyType:
+    | 'server'
+    | 'cmliussss-cdn-cf'
+    | 'cmliussss-cdn-ali'
+    | 'cmliussss-cdn-tencent'
+    | 'custom';
+  proxyUrl: string;
+} {
+  let bgmImageProxyType =
+    localStorage.getItem('bgmImageProxyType') ||
+    (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY_TYPE ||
+    'cmliussss-cdn-cf';
+  const bgmImageProxy =
+    localStorage.getItem('bgmImageProxyUrl') ||
+    (window as any).RUNTIME_CONFIG?.BGM_IMAGE_PROXY ||
+    '';
+  return {
+    proxyType: bgmImageProxyType,
+    proxyUrl: bgmImageProxy,
+  };
+}
+
 export function processImageUrl(
   originalUrl: string,
   proxyType: string,
@@ -296,7 +319,26 @@ export function processImageUrl(
   if (!originalUrl) return originalUrl;
   //bgm.tv的图片走代理
   if (originalUrl.includes('bgm.tv')) {
-    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+    const { proxyType, proxyUrl } = getBgmImageProxyConfig();
+    switch (proxyType) {
+      case 'server':
+        return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+      case 'cmliussss-cdn-tencent':
+        return originalUrl.replace(
+          /lain\d*?\.bgm\.tv/g,
+          'img.doubanio.cmliussss.net',
+        );
+      case 'cmliussss-cdn-ali':
+        return originalUrl.replace(
+          /lain\d*?\.bgm\.tv/g,
+          'img.doubanio.cmliussss.com',
+        );
+      case 'custom':
+        return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+
+      default:
+        return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+    }
   }
   // 仅处理豆瓣图片代理
   if (!originalUrl.includes('doubanio.com')) {

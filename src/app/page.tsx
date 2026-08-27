@@ -12,6 +12,7 @@ import {
   History,
   Tv,
 } from 'lucide-react';
+import { RotateCw, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -26,6 +27,8 @@ import {
   clearAllPlayRecords,
   getAllFavorites,
   getAllPlayRecords,
+  refreshAllFavorites,
+  refreshAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { getDoubanCategories } from '@/lib/douban.client';
@@ -54,6 +57,8 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshingFavorites, setIsRefreshingFavorites] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -296,15 +301,43 @@ function HomeClient() {
                   我的收藏
                 </h2>
                 {favoriteItems.length > 0 && (
-                  <button
-                    className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    onClick={async () => {
-                      await clearAllFavorites();
-                      setFavoriteItems([]);
-                    }}
-                  >
-                    清空
-                  </button>
+                  <div className='flex items-center gap-3'>
+                    {/* 刷新失效海报 按钮 */}
+                    <button
+                      className={`p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors ${
+                        isRefreshingFavorites
+                          ? 'animate-spin opacity-60 pointer-events-none'
+                          : ''
+                      }`}
+                      title='刷新失效海报'
+                      disabled={isRefreshingFavorites}
+                      onClick={async () => {
+                        try {
+                          setIsRefreshingFavorites(true);
+                          // 调用前端定义的刷新收藏海报方法，触发后全自动异步更新
+                          await refreshAllFavorites();
+                        } catch (err) {
+                          console.error('刷新收藏海报异常:', err);
+                        } finally {
+                          setIsRefreshingFavorites(false);
+                        }
+                      }}
+                    >
+                      <RotateCw className='w-4 h-4' />
+                    </button>
+
+                    {/* 清空 按钮 */}
+                    <button
+                      className='p-1 rounded text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-800 transition-colors'
+                      title='清空'
+                      onClick={async () => {
+                        await clearAllFavorites();
+                        setFavoriteItems([]);
+                      }}
+                    >
+                      <Trash2 className='w-4 h-4' />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
@@ -335,15 +368,42 @@ function HomeClient() {
                   播放记录
                 </h2>
                 {playRecords.length > 0 && (
-                  <button
-                    className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    onClick={async () => {
-                      await clearAllPlayRecords();
-                      setPlayRecords([]);
-                    }}
-                  >
-                    清空
-                  </button>
+                  <div className='flex items-center gap-3'>
+                    {/* 刷新失效海报 按钮 */}
+                    <button
+                      className={`p-1 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors ${
+                        isRefreshing
+                          ? 'animate-spin opacity-60 pointer-events-none'
+                          : ''
+                      }`}
+                      title='刷新失效海报'
+                      disabled={isRefreshing}
+                      onClick={async () => {
+                        try {
+                          setIsRefreshing(true);
+                          await refreshAllPlayRecords();
+                        } catch (err) {
+                          console.error(err);
+                        } finally {
+                          setIsRefreshing(false);
+                        }
+                      }}
+                    >
+                      <RotateCw className='w-4 h-4' />
+                    </button>
+
+                    {/* 清空 按钮 */}
+                    <button
+                      className='p-1 rounded text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-800 transition-colors'
+                      title='清空'
+                      onClick={async () => {
+                        await clearAllPlayRecords();
+                        setPlayRecords([]);
+                      }}
+                    >
+                      <Trash2 className='w-4 h-4' />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-8'>
@@ -706,7 +766,7 @@ function HomeClient() {
             }}
           >
             <div className='flex justify-between items-start mb-4'>
-              <h3 className='text-2xl font-bold tracking-tight text-gray-800 dark:text-white border-b border-green-500 pb-1'>
+              <h3 className='text-2xl font-bold tracking-tight text-gray-800 dark:text-white border-b border-primary-500 pb-1'>
                 提示
               </h3>
               <button
@@ -716,8 +776,8 @@ function HomeClient() {
               ></button>
             </div>
             <div className='mb-6'>
-              <div className='relative overflow-hidden rounded-lg mb-4 bg-green-50 dark:bg-green-900/20'>
-                <div className='absolute inset-y-0 left-0 w-1.5 bg-green-500 dark:bg-green-400'></div>
+              <div className='relative overflow-hidden rounded-lg mb-4 bg-primary-50 dark:bg-primary-900/20'>
+                <div className='absolute inset-y-0 left-0 w-1.5 bg-primary-500 dark:bg-primary-400'></div>
                 <p className='ml-4 text-gray-600 dark:text-gray-300 leading-relaxed'>
                   {announcement}
                 </p>
@@ -725,7 +785,7 @@ function HomeClient() {
             </div>
             <button
               onClick={() => handleCloseAnnouncement(announcement)}
-              className='w-full rounded-lg bg-linear-to-r from-green-600 to-green-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 transition-all duration-300 transform hover:-translate-y-0.5'
+              className='w-full rounded-lg bg-linear-to-r from-primary-600 to-primary-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-primary-700 hover:to-primary-800 dark:from-primary-600 dark:to-primary-700 dark:hover:from-primary-700 dark:hover:to-primary-800 transition-all duration-300 transform hover:-translate-y-0.5'
             >
               我知道了
             </button>

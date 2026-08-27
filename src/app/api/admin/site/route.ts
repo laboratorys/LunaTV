@@ -3,8 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
-import { db } from '@/lib/db';
+import { getConfig, setCachedConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
 
@@ -37,6 +36,10 @@ export async function POST(request: NextRequest) {
       DoubanProxy,
       DoubanImageProxyType,
       DoubanImageProxy,
+      BgmProxyType,
+      BgmProxy,
+      BgmImageProxyType,
+      BgmImageProxy,
       DisableYellowFilter,
       FluidSearch,
       OpenRegister,
@@ -49,6 +52,10 @@ export async function POST(request: NextRequest) {
       DoubanProxy: string;
       DoubanImageProxyType: string;
       DoubanImageProxy: string;
+      BgmProxyType: string;
+      BgmProxy: string;
+      BgmImageProxyType: string;
+      BgmImageProxy: string;
       DisableYellowFilter: boolean;
       FluidSearch: boolean;
       OpenRegister: boolean;
@@ -64,6 +71,10 @@ export async function POST(request: NextRequest) {
       typeof DoubanProxy !== 'string' ||
       typeof DoubanImageProxyType !== 'string' ||
       typeof DoubanImageProxy !== 'string' ||
+      typeof BgmProxyType !== 'string' ||
+      typeof BgmProxy !== 'string' ||
+      typeof BgmImageProxyType !== 'string' ||
+      typeof BgmImageProxy !== 'string' ||
       typeof DisableYellowFilter !== 'boolean' ||
       typeof FluidSearch !== 'boolean' ||
       typeof OpenRegister !== 'boolean'
@@ -94,14 +105,17 @@ export async function POST(request: NextRequest) {
       DoubanProxy,
       DoubanImageProxyType,
       DoubanImageProxy,
+      BgmProxyType,
+      BgmProxy,
+      BgmImageProxyType,
+      BgmImageProxy,
       DisableYellowFilter,
       FluidSearch,
       OpenRegister,
     };
 
-    // 写入数据库
-    await db.saveAdminConfig(adminConfig);
-
+    // 写入数据库、缓存
+    await setCachedConfig(adminConfig);
     return NextResponse.json(
       { ok: true },
       {

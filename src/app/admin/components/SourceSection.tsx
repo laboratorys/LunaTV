@@ -353,7 +353,7 @@ const SourceSection = ({
         return {
           text: '检测中',
           className:
-            'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
+            'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300',
           icon: '⟳',
           message: result.message,
         };
@@ -361,7 +361,7 @@ const SourceSection = ({
         return {
           text: '有效',
           className:
-            'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300',
+            'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300',
           icon: '✓',
           message: result.message,
         };
@@ -415,7 +415,8 @@ const SourceSection = ({
             type='checkbox'
             checked={selectedSources.has(source.key)}
             onChange={(e) => handleSelectSource(source.key, e.target.checked)}
-            className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+            onPointerDown={(e) => e.stopPropagation()}
+            className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
           />
         </td>
         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
@@ -440,7 +441,7 @@ const SourceSection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !source.disabled
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
@@ -772,11 +773,11 @@ const SourceSection = ({
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         >
           <div
-            className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-112 overflow-y-auto overflow-x-auto relative'
+            className='admin-table-scroll border border-gray-200 dark:border-gray-700 rounded-lg max-h-112 overflow-y-auto overflow-x-auto relative'
             data-table='source-list'
           >
-            <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-              <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
+            <table className='min-w-max md:min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
+              <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10 whitespace-nowrap'>
                 <tr>
                   <th className='w-8' />
                   <th className='w-12 px-2 py-3 text-center'>
@@ -784,7 +785,8 @@ const SourceSection = ({
                       type='checkbox'
                       checked={selectAll}
                       onChange={(e) => handleSelectAll(e.target.checked)}
-                      className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
                     />
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
@@ -816,9 +818,20 @@ const SourceSection = ({
                 strategy={verticalListSortingStrategy}
               >
                 <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
-                  {sources.map((source) => (
-                    <DraggableRow key={source.key} source={source} />
-                  ))}
+                  {sources.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className='px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400'
+                      >
+                        暂无数据
+                      </td>
+                    </tr>
+                  ) : (
+                    sources.map((source) => (
+                      <DraggableRow key={source.key} source={source} />
+                    ))
+                  )}
                 </tbody>
               </SortableContext>
             </table>

@@ -264,6 +264,21 @@ export function cleanHtmlTags(text: string): string {
   return he.decode(cleanedText);
 }
 
+/**
+ * 读取主题色 CSS 变量（globals.css @theme 中注册的 --color-primary-* 色阶）
+ * 供 ArtPlayer 等无法使用 Tailwind 类的场景使用，换主题色时自动跟随
+ */
+export function getThemePrimaryColor(
+  shade: 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 = 500,
+): string {
+  const fallback = '#22c55e';
+  if (typeof window === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--color-primary-${shade}`)
+    .trim();
+  return value || fallback;
+}
+
 export const CURRENT_VERSION =
   (process.env.GIT_BRANCH || 'main') === 'dev'
     ? CURRENT_VERSION_DEV

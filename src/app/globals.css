@@ -12,18 +12,18 @@
   /* 1. 自定义字体映射 */
   --font-primary: 'Inter', var(--font-sans);
 
-  /* 2. 注册自定义颜色 */
+  /* 2. 注册自定义颜色（主题色 token：换主题色只需改这里，Tailwind 类与 ArtPlayer 均读取此处） */
   --color-dark: #222222;
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+  --color-primary-50: #f0fdf4;
+  --color-primary-100: #dcfce7;
+  --color-primary-200: #bbf7d0;
+  --color-primary-300: #86efac;
+  --color-primary-400: #4ade80;
+  --color-primary-500: #22c55e;
+  --color-primary-600: #16a34a;
+  --color-primary-700: #15803d;
+  --color-primary-800: #166534;
+  --color-primary-900: #14532d;
 
   /* 3. 注册自定义动画 */
   --animate-flicker: flicker 3s linear infinite;
@@ -114,6 +114,23 @@
   --foreground-rgb: 255, 255, 255;
 }
 
+/* 🎨 暗色模式灰阶中性化：Tailwind 内置 gray 掺蓝相，此处在 .dark 作用域
+   将 --color-gray-* 覆盖为 neutral（纯灰）色板值，亮色模式不受影响。
+   所有 bg-gray-* / text-gray-* / border-gray-* 类自动跟随。 */
+html.dark {
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
+  --color-gray-950: #0a0a0a;
+}
+
 /* 🚀 全局基础与业务自定义工具类平铺书写 */
 
 .scrollbar-hide {
@@ -157,16 +174,16 @@ html:not(.dark) body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.1);
+  background: rgba(38, 38, 38, 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3);
+  background: rgba(115, 115, 115, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.5);
+  background: rgba(115, 115, 115, 0.5);
 }
 
 /* 视频卡片悬停效果 */
@@ -209,6 +226,66 @@ html:not(.dark) body {
 
 *::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+
+/* 配置表格在移动端保留底部横向滚动条 */
+.admin-table-scroll {
+  scrollbar-width: auto;
+}
+
+.admin-table-scroll::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.admin-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(115, 115, 115, 0.5);
+  border-radius: 4px;
+}
+
+/* 管理面板移动端操作区：按钮紧凑并允许自然换行 */
+@media (max-width: 767px) {
+  .admin-panel .admin-toggle {
+    width: 3rem;
+    height: 1.5rem;
+    min-height: 1.5rem;
+    padding: 0;
+  }
+
+  .admin-panel button:not(.admin-toggle) {
+    min-height: 2.25rem;
+  }
+
+  .admin-panel .flex.justify-end,
+  .admin-panel .flex.justify-center {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-panel .space-x-2 > :not([hidden]) ~ :not([hidden]),
+  .admin-panel .space-x-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0;
+  }
+
+  .admin-panel button[class*='px-6'] {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  .admin-panel button[class*='px-4'] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .admin-panel button[class*='py-3'] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .admin-panel button[class*='py-2.5'] {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 /* View Transitions API 动画 */

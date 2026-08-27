@@ -18,11 +18,11 @@ const ConfigToggle: React.FC<ConfigToggleProps> = ({
 }) => {
   return (
     <div
-      className='flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-900/40 border border-gray-200/50 dark:border-white/5 rounded-2xl transition-all hover:border-green-500/30 group cursor-pointer'
+      className='flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-900/40 border border-gray-200/50 dark:border-white/5 rounded-2xl transition-all hover:border-primary-500/30 group cursor-pointer'
       onClick={onChange}
     >
       <div className='flex flex-col gap-0.5 pr-4'>
-        <div className='text-sm font-semibold dark:text-white text-gray-800 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors'>
+        <div className='text-sm font-semibold dark:text-white text-gray-800 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors'>
           {label}
         </div>
         {description && (
@@ -34,9 +34,9 @@ const ConfigToggle: React.FC<ConfigToggleProps> = ({
 
       <button
         type='button'
-        className={`shrink-0 w-12 h-6 rounded-full transition-all duration-300 relative ${
+        className={`admin-toggle shrink-0 w-12 h-6 rounded-full transition-all duration-300 relative ${
           enabled
-            ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
+            ? 'bg-primary-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
             : 'bg-gray-300 dark:bg-gray-700'
         }`}
       >

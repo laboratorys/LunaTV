@@ -63,7 +63,7 @@ const CategorySection = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -102,7 +102,7 @@ const CategorySection = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleCategory_${query}_${type}`, () =>
-      callCategoryApi({ action, query, type })
+      callCategoryApi({ action, query, type }),
     ).catch(() => {
       console.error('操作失败', action, query, type);
     });
@@ -110,7 +110,7 @@ const CategorySection = ({
 
   const handleDelete = (query: string, type: 'movie' | 'tv') => {
     withLoading(`deleteCategory_${query}_${type}`, () =>
-      callCategoryApi({ action: 'delete', query, type })
+      callCategoryApi({ action: 'delete', query, type }),
     ).catch(() => {
       console.error('操作失败', 'delete', query, type);
     });
@@ -142,10 +142,10 @@ const CategorySection = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = categories.findIndex(
-      (c) => `${c.query}:${c.type}` === active.id
+      (c) => `${c.query}:${c.type}` === active.id,
     );
     const newIndex = categories.findIndex(
-      (c) => `${c.query}:${c.type}` === over.id
+      (c) => `${c.query}:${c.type}` === over.id,
     );
     setCategories((prev) => arrayMove(prev, oldIndex, newIndex));
     setOrderChanged(true);
@@ -154,7 +154,7 @@ const CategorySection = ({
   const handleSaveOrder = () => {
     const order = categories.map((c) => `${c.query}:${c.type}`);
     withLoading('saveCategoryOrder', () =>
-      callCategoryApi({ action: 'sort', order })
+      callCategoryApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -194,7 +194,7 @@ const CategorySection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               category.type === 'movie'
-                ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
             }`}
           >
@@ -211,7 +211,7 @@ const CategorySection = ({
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !category.disabled
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-800 dark:text-primary-300'
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
@@ -222,7 +222,7 @@ const CategorySection = ({
           <button
             onClick={() => handleToggleEnable(category.query, category.type)}
             disabled={isLoading(
-              `toggleCategory_${category.query}_${category.type}`
+              `toggleCategory_${category.query}_${category.type}`,
             )}
             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
               !category.disabled ? styles.roundedDanger : styles.roundedSuccess
@@ -238,7 +238,7 @@ const CategorySection = ({
             <button
               onClick={() => handleDelete(category.query, category.type)}
               disabled={isLoading(
-                `deleteCategory_${category.query}_${category.type}`
+                `deleteCategory_${category.query}_${category.type}`,
               )}
               className={`${styles.roundedSecondary} ${
                 isLoading(`deleteCategory_${category.query}_${category.type}`)
@@ -343,8 +343,8 @@ const CategorySection = ({
           autoScroll={false}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
         >
-          <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'>
-            <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+          <div className='admin-table-scroll border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'>
+            <table className='min-w-max md:min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap'>
               <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
                 <tr>
                   <th className='w-8' />
@@ -370,12 +370,23 @@ const CategorySection = ({
                 strategy={verticalListSortingStrategy}
               >
                 <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
-                  {categories.map((category) => (
-                    <DraggableRow
-                      key={`${category.query}:${category.type}`}
-                      category={category}
-                    />
-                  ))}
+                  {categories.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className='px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400'
+                      >
+                        暂无数据
+                      </td>
+                    </tr>
+                  ) : (
+                    categories.map((category) => (
+                      <DraggableRow
+                        key={`${category.query}:${category.type}`}
+                        category={category}
+                      />
+                    ))
+                  )}
                 </tbody>
               </SortableContext>
             </table>
