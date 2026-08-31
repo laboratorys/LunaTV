@@ -7,12 +7,13 @@ import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
 
-async function fetchShortDramaData(page: number, snapshotId?: string) {
+async function fetchShortDramaData(snapshotId?: string, nextOffset?: number) {
   const url = new URL('/api/short-drama', window.location.origin);
-  url.searchParams.set('page', page.toString());
-  url.searchParams.set('pageSize', '24');
   if (snapshotId) {
     url.searchParams.set('snapshotId', snapshotId);
+  }
+  if (nextOffset !== undefined) {
+    url.searchParams.set('nextOffset', nextOffset.toString());
   }
 
   const res = await fetch(url.toString());
@@ -23,10 +24,10 @@ function ShortDramaPageClient() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const snapshotIdRef = useRef<string | undefined>(undefined);
+  const nextOffsetRef = useRef<number | undefined>(undefined);
   const loadingRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -35,12 +36,15 @@ function ShortDramaPageClient() {
     const initLoad = async () => {
       try {
         setLoading(true);
-        const res = await fetchShortDramaData(1);
+        const res = await fetchShortDramaData();
         if (res.code === 200) {
           setData(res.data.list);
-          setHasMore(res.data.list.length > 0);
+          setHasMore(!!res.data.hasMore);
           if (res.data.snapshotId) {
             snapshotIdRef.current = res.data.snapshotId;
+          }
+          if (res.data.nextOffset !== undefined) {
+            nextOffsetRef.current = res.data.nextOffset;
           }
         }
       } catch (err) {
@@ -58,14 +62,18 @@ function ShortDramaPageClient() {
 
     setIsLoadingMore(true);
     try {
-      const nextPage = page + 1;
-      const res = await fetchShortDramaData(nextPage, snapshotIdRef.current);
+      const res = await fetchShortDramaData(
+        snapshotIdRef.current,
+        nextOffsetRef.current,
+      );
       if (res.code === 200 && res.data.list.length > 0) {
         setData((prev) => [...prev, ...res.data.list]);
-        setPage(nextPage);
-        setHasMore(res.data.list.length === 24);
+        setHasMore(!!res.data.hasMore);
         if (res.data.snapshotId) {
           snapshotIdRef.current = res.data.snapshotId;
+        }
+        if (res.data.nextOffset !== undefined) {
+          nextOffsetRef.current = res.data.nextOffset;
         }
       } else {
         setHasMore(false);
@@ -75,7 +83,7 @@ function ShortDramaPageClient() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [page, isLoadingMore, hasMore]);
+  }, [isLoadingMore, hasMore]);
 
   // 滚动监听
   useEffect(() => {
