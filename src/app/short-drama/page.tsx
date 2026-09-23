@@ -7,14 +7,9 @@ import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
 
-async function fetchShortDramaData(snapshotId?: string, nextOffset?: number) {
+async function fetchShortDramaData(page = 1) {
   const url = new URL('/api/short-drama', window.location.origin);
-  if (snapshotId) {
-    url.searchParams.set('snapshotId', snapshotId);
-  }
-  if (nextOffset !== undefined) {
-    url.searchParams.set('nextOffset', nextOffset.toString());
-  }
+  url.searchParams.set('page', page.toString());
 
   const res = await fetch(url.toString());
   return res.json();
@@ -26,8 +21,7 @@ function ShortDramaPageClient() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const snapshotIdRef = useRef<string | undefined>(undefined);
-  const nextOffsetRef = useRef<number | undefined>(undefined);
+  const pageRef = useRef<number>(1);
   const loadingRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -36,16 +30,11 @@ function ShortDramaPageClient() {
     const initLoad = async () => {
       try {
         setLoading(true);
-        const res = await fetchShortDramaData();
+        const res = await fetchShortDramaData(1);
         if (res.code === 200) {
           setData(res.data.list);
           setHasMore(!!res.data.hasMore);
-          if (res.data.snapshotId) {
-            snapshotIdRef.current = res.data.snapshotId;
-          }
-          if (res.data.nextOffset !== undefined) {
-            nextOffsetRef.current = res.data.nextOffset;
-          }
+          pageRef.current = res.data.nextOffset ?? 2;
         }
       } catch (err) {
         console.error('加载短剧失败:', err);
@@ -62,19 +51,11 @@ function ShortDramaPageClient() {
 
     setIsLoadingMore(true);
     try {
-      const res = await fetchShortDramaData(
-        snapshotIdRef.current,
-        nextOffsetRef.current,
-      );
+      const res = await fetchShortDramaData(pageRef.current);
       if (res.code === 200 && res.data.list.length > 0) {
         setData((prev) => [...prev, ...res.data.list]);
         setHasMore(!!res.data.hasMore);
-        if (res.data.snapshotId) {
-          snapshotIdRef.current = res.data.snapshotId;
-        }
-        if (res.data.nextOffset !== undefined) {
-          nextOffsetRef.current = res.data.nextOffset;
-        }
+        pageRef.current = res.data.nextOffset ?? pageRef.current + 1;
       } else {
         setHasMore(false);
       }

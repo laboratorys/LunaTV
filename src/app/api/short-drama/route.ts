@@ -4,10 +4,9 @@ import { fetchHotShortDramaPaged } from '@/lib/short-drama.client';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const snapshotId = searchParams.get('snapshotId') || undefined;
-  const nextOffsetRaw = searchParams.get('nextOffset');
-  const nextOffset = nextOffsetRaw !== null ? Number(nextOffsetRaw) : undefined;
-  const data = await fetchHotShortDramaPaged(snapshotId, nextOffset);
+  const pageRaw = searchParams.get('page');
+  const page = pageRaw !== null ? Number(pageRaw) : 1;
+  const data = await fetchHotShortDramaPaged(page);
 
   if (data.list.length === 0) {
     return NextResponse.json({ error: 'No data found' }, { status: 404 });
