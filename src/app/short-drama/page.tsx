@@ -7,13 +7,9 @@ import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
 
-async function fetchShortDramaData(page: number, snapshotId?: string) {
+async function fetchShortDramaData(page = 1) {
   const url = new URL('/api/short-drama', window.location.origin);
   url.searchParams.set('page', page.toString());
-  url.searchParams.set('pageSize', '24');
-  if (snapshotId) {
-    url.searchParams.set('snapshotId', snapshotId);
-  }
 
   const res = await fetch(url.toString());
   return res.json();
@@ -23,10 +19,9 @@ function ShortDramaPageClient() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const snapshotIdRef = useRef<string | undefined>(undefined);
+  const pageRef = useRef<number>(1);
   const loadingRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -38,10 +33,8 @@ function ShortDramaPageClient() {
         const res = await fetchShortDramaData(1);
         if (res.code === 200) {
           setData(res.data.list);
-          setHasMore(res.data.list.length > 0);
-          if (res.data.snapshotId) {
-            snapshotIdRef.current = res.data.snapshotId;
-          }
+          setHasMore(!!res.data.hasMore);
+          pageRef.current = res.data.nextOffset ?? 2;
         }
       } catch (err) {
         console.error('加载短剧失败:', err);
@@ -58,15 +51,11 @@ function ShortDramaPageClient() {
 
     setIsLoadingMore(true);
     try {
-      const nextPage = page + 1;
-      const res = await fetchShortDramaData(nextPage, snapshotIdRef.current);
+      const res = await fetchShortDramaData(pageRef.current);
       if (res.code === 200 && res.data.list.length > 0) {
         setData((prev) => [...prev, ...res.data.list]);
-        setPage(nextPage);
-        setHasMore(res.data.list.length === 24);
-        if (res.data.snapshotId) {
-          snapshotIdRef.current = res.data.snapshotId;
-        }
+        setHasMore(!!res.data.hasMore);
+        pageRef.current = res.data.nextOffset ?? pageRef.current + 1;
       } else {
         setHasMore(false);
       }
@@ -75,7 +64,7 @@ function ShortDramaPageClient() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [page, isLoadingMore, hasMore]);
+  }, [isLoadingMore, hasMore]);
 
   // 滚动监听
   useEffect(() => {

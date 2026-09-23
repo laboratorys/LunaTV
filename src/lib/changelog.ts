@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.5',
+    date: '2026-08-31',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: ['修复热门短剧数据加载失败'],
+  },
+  {
     version: '5.1.4',
     date: '2026-08-27',
     added: [
@@ -34,7 +45,7 @@ export const changelog: ChangelogEntry[] = [
       // 无新增内容
     ],
     changed: ['年代筛选增加2026'],
-    fixed: ['修复短剧热门数据加载失败'],
+    fixed: ['修复热门短剧数据加载失败'],
   },
   {
     version: '5.1.2',

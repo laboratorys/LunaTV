@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
       config.TvBoxConfig?.expireSeconds > 0;
     if (isCached) {
       const cacheData = await db.getCacheByKey(
-        `${TVBOX_CATEGORY_KEY}${keySuffix}`
+        `${TVBOX_CATEGORY_KEY}${keySuffix}`,
       );
       if (cacheData) {
         console.log(
-          `【tvbox】categoryContent return from cache:${TVBOX_CATEGORY_KEY}${keySuffix}`
+          `【tvbox】categoryContent return from cache:${TVBOX_CATEGORY_KEY}${keySuffix}`,
         );
         return NextResponse.json(cacheData);
       }
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         tags,
         sort,
         pageStart,
-        pageSize
+        pageSize,
       );
       if (isCached) {
         db.setCacheByKey(
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
             list: items || [],
             limit: pageSize,
           },
-          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2,
         );
       }
 
@@ -113,10 +113,7 @@ export async function POST(request: NextRequest) {
     } else if (tid === 'short-drama') {
       const data: {
         list: ShortDramaItem[];
-        total: number;
-        page: number;
-        totalPage: number;
-      } = await fetchHotShortDramaPaged(pg, pageSize);
+      } = await fetchHotShortDramaPaged();
       const items: TvboxContentItem[] = data.list.map((item) => ({
         vod_id: `${encodeURIComponent(item.vod_name)}&short_drama=1`,
         vod_name: item.vod_name,
@@ -130,7 +127,7 @@ export async function POST(request: NextRequest) {
             list: items || [],
             limit: pageSize,
           },
-          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+          config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2,
         );
       }
       return commonReturn(items, pageSize);
@@ -141,7 +138,7 @@ export async function POST(request: NextRequest) {
       category,
       type,
       pageStart,
-      pageSize
+      pageSize,
     );
     if (isCached) {
       db.setCacheByKey(
@@ -150,7 +147,7 @@ export async function POST(request: NextRequest) {
           list: items || [],
           limit: pageSize,
         },
-        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2
+        config?.TvBoxConfig?.expireSeconds ?? 60 * 60 * 2,
       );
     }
     return commonReturn(items, pageSize);
