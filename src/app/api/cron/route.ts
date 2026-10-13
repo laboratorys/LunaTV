@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 
-import { getConfig, refineConfig } from '@/lib/config';
+import { getConfig, refineConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
 import { refreshLiveChannels } from '@/lib/live';
@@ -66,7 +66,7 @@ async function refreshAllLiveChannels() {
   await Promise.all(refreshPromises);
 
   // 保存配置
-  await db.saveAdminConfig(config);
+  await setCachedConfig(config);
 }
 
 async function refreshConfig() {
@@ -105,7 +105,7 @@ async function refreshConfig() {
       config.ConfigFile = decodedContent;
       config.ConfigSubscribtion.LastCheck = new Date().toISOString();
       config = refineConfig(config);
-      await db.saveAdminConfig(config);
+      await setCachedConfig(config);
     } catch (e) {
       console.error('刷新配置失败:', e);
     }

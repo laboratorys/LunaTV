@@ -3,7 +3,7 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
-import { hashPassword, verifyPassword } from './bcrypt';
+import { verifyPassword } from './bcrypt';
 import { DbUser, Favorite, IStorage, PlayRecord, SkipConfig } from './types';
 import { generateShortKey } from './utils';
 
@@ -225,7 +225,7 @@ export class UpstashRedisStorage implements IStorage {
   async changePassword(userName: string, newPassword: string): Promise<void> {
     const userData = await this.getUser(userName);
     if (userData !== null) {
-      userData.password = await hashPassword(newPassword);
+      userData.password = newPassword;
       await withRetry(() =>
         this.client.set(this.userPwdKey(userName), JSON.stringify(userData)),
       );
