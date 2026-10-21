@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.6',
+    date: '2026-10-13',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: ['upstash存储时，添加用户失败'],
+  },
+  {
     version: '5.1.5',
     date: '2026-08-31',
     added: [
