@@ -89,6 +89,12 @@ const gitInfo = getGitRepositoryInfo();
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: false,
+  // 生产环境构建时移除 console.log/info/debug（保留 error/warn 便于线上排查）
+  compiler:
+    process.env.NODE_ENV === 'production'
+      ? { removeConsole: { exclude: ['error', 'warn'] } }
+      : {},
+
   allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS
     ? process.env.ALLOWED_DEV_ORIGINS.split(',')
     : [],
