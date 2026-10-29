@@ -53,7 +53,7 @@ export interface Favorite {
   total_episodes: number;
   save_time: number;
   search_title?: string;
-  origin?: 'vod' | 'live';
+  origin?: 'vod' | 'live' | 'douban' | 'bangumi';
 }
 
 // ---- 缓存数据结构 ----
@@ -493,7 +493,16 @@ async function fetchFromApi<T>(path: string): Promise<T> {
  * 生成存储key
  */
 export function generateStorageKey(source: string, id: string): string {
-  return `${source}+${id}`;
+  return source ? `${source}+${id}` : id;
+}
+
+// 解析存储key：source 可能为空（无 + 分隔符时 source 为 ''）
+export function parseStorageKey(key: string): { source: string; id: string } {
+  const plusIndex = key.indexOf('+');
+  if (plusIndex === -1) {
+    return { source: '', id: key };
+  }
+  return { source: key.slice(0, plusIndex), id: key.slice(plusIndex + 1) };
 }
 
 // ---- API ----

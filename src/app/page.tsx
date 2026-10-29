@@ -27,6 +27,7 @@ import {
   clearAllPlayRecords,
   getAllFavorites,
   getAllPlayRecords,
+  parseStorageKey,
   refreshAllFavorites,
   refreshAllPlayRecords,
   subscribeToDataUpdates,
@@ -169,9 +170,7 @@ function HomeClient() {
     const sorted = Object.entries(allFavorites)
       .sort(([, a], [, b]) => b.save_time - a.save_time)
       .map(([key, fav]) => {
-        const plusIndex = key.indexOf('+');
-        const source = key.slice(0, plusIndex);
-        const id = key.slice(plusIndex + 1);
+        const { source, id } = parseStorageKey(key);
 
         // 查找对应的播放记录，获取当前集数
         const playRecord = allPlayRecords[key];
@@ -258,8 +257,7 @@ function HomeClient() {
 
   // 从 key 中解析 source 和 id
   const parseKey = (key: string) => {
-    const [source, id] = key.split('+');
-    return { source, id };
+    return parseStorageKey(key);
   };
   const handleCloseAnnouncement = (announcement: string) => {
     setShowAnnouncement(false);
@@ -346,8 +344,18 @@ function HomeClient() {
                     <VideoCard
                       query={item.search_title}
                       {...item}
-                      from='favorite'
+                      from={
+                        item.origin === 'douban' || item.origin === 'bangumi'
+                          ? 'douban'
+                          : 'favorite'
+                      }
                       type={item.episodes > 1 ? 'tv' : ''}
+                      douban_id={
+                        item.origin === 'douban' || item.origin === 'bangumi'
+                          ? Number(item.id)
+                          : undefined
+                      }
+                      isBangumi={item.origin === 'bangumi'}
                     />
                   </div>
                 ))}

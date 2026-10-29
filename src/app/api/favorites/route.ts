@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
-import { db } from '@/lib/db';
+import { db, parseStorageKey } from '@/lib/db';
 import { Favorite } from '@/lib/types';
 import { handleTVBoxFromFavRecord } from '@/lib/utils';
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (authInfo.username !== process.env.USERNAME) {
       // 非站长，检查用户存在或被封禁
       const user = config.UserConfig.Users.find(
-        (u) => u.username === authInfo.username
+        (u) => u.username === authInfo.username,
       );
       if (!user) {
         return NextResponse.json({ error: '用户不存在' }, { status: 401 });
@@ -44,11 +44,11 @@ export async function GET(request: NextRequest) {
 
     // 查询单条收藏
     if (key) {
-      const [source, id] = key.split('+');
-      if (!source || !id) {
+      const { source, id } = parseStorageKey(key);
+      if (!id) {
         return NextResponse.json(
           { error: 'Invalid key format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const fav = await db.getFavorite(authInfo.username, source, id);
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     console.error('获取收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     if (authInfo.username !== process.env.USERNAME) {
       // 非站长，检查用户存在或被封禁
       const user = config.UserConfig.Users.find(
-        (u) => u.username === authInfo.username
+        (u) => u.username === authInfo.username,
       );
       if (!user) {
         return NextResponse.json({ error: '用户不存在' }, { status: 401 });
@@ -99,23 +99,23 @@ export async function POST(request: NextRequest) {
     if (!key || !favorite) {
       return NextResponse.json(
         { error: 'Missing key or favorite' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 验证必要字段
-    if (!favorite.title || !favorite.source_name) {
+    if (!favorite.title) {
       return NextResponse.json(
         { error: 'Invalid favorite data' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const [source, id] = key.split('+');
-    if (!source || !id) {
+    const { source, id } = parseStorageKey(key);
+    if (!id) {
       return NextResponse.json(
         { error: 'Invalid key format' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
         id,
         handleTVBoxFromFavRecord(
           finalFavorite,
-          config?.SiteConfig.SiteName ?? ''
-        )
+          config?.SiteConfig.SiteName ?? '',
+        ),
       );
     } else {
       await db.saveFavorite(authInfo.username, source, id, finalFavorite);
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     console.error('保存收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -166,7 +166,7 @@ export async function DELETE(request: NextRequest) {
     if (authInfo.username !== process.env.USERNAME) {
       // 非站长，检查用户存在或被封禁
       const user = config.UserConfig.Users.find(
-        (u) => u.username === authInfo.username
+        (u) => u.username === authInfo.username,
       );
       if (!user) {
         return NextResponse.json({ error: '用户不存在' }, { status: 401 });
@@ -182,11 +182,11 @@ export async function DELETE(request: NextRequest) {
 
     if (key) {
       // 删除单条
-      const [source, id] = key.split('+');
-      if (!source || !id) {
+      const { source, id } = parseStorageKey(key);
+      if (!id) {
         return NextResponse.json(
           { error: 'Invalid key format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
       await db.deleteFavorite(username, source, id);
@@ -200,7 +200,7 @@ export async function DELETE(request: NextRequest) {
     console.error('删除收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
