@@ -122,13 +122,13 @@ export const AlertModal = ({
   const getBgColor = () => {
     switch (type) {
       case 'success':
-        return 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800';
+        return 'bg-primary-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
       case 'error':
-        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+        return 'bg-red-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
       case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
+        return 'bg-yellow-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
       default:
-        return 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800';
+        return 'bg-primary-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -139,7 +139,7 @@ export const AlertModal = ({
       }`}
     >
       <div
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-sm w-full border ${getBgColor()} transition-all duration-200 ${
+        className={`rounded-lg shadow-xl max-w-sm w-full border ${getBgColor()} transition-all duration-200 ${
           isVisible ? 'scale-100' : 'scale-95'
         }`}
       >
