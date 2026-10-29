@@ -41,6 +41,7 @@ export interface AdminConfig {
     name: string;
     api: string;
     detail?: string;
+    filter_ads?: boolean; // 该源是否插播广告（缺省 false）
     from: 'config' | 'custom';
     disabled?: boolean;
   }[];

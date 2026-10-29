@@ -69,7 +69,8 @@ export default async function RootLayout({
   let shortDrama = true;
   let source = false;
   let live = false;
-  let adRules = '';
+  // 源 key -> 是否插播广告（需要配合播放器去广告开关）
+  let sourceFilterAds: Record<string, boolean> = {};
   if (storageType !== 'localstorage') {
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
@@ -97,7 +98,13 @@ export default async function RootLayout({
     shortDrama = config.FeaturesConfig?.shortDrama ?? true;
     source = config.FeaturesConfig?.source ?? false;
     live = config.FeaturesConfig?.live ?? false;
-    adRules = config.AdRules || '';
+    // 只取来自配置文件的源：自定义源（from='custom')没有 filter_ads 信息，
+    // 不在 map 里，客户端按未知源沿用旧行为。
+    sourceFilterAds = Object.fromEntries(
+      (config.SourceConfig || [])
+        .filter((s) => s.from === 'config')
+        .map((s) => [s.key, s.filter_ads === true]),
+    );
   }
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取
@@ -119,7 +126,7 @@ export default async function RootLayout({
     SHOW_SHORT_DRAMA: shortDrama,
     SHOW_SOURCE: source,
     SHOW_LIVE: live,
-    AD_RULES: adRules,
+    SOURCE_FILTER_ADS: sourceFilterAds,
   };
 
   return (

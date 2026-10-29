@@ -340,6 +340,27 @@ div[data-media-provider] video {
   height: 100%;
 }
 
+/* 屏蔽 ArtPlayer 自带 notice：它会连带播放/暂停等提示一起弹，改用自己的顶部提示 */
+html .art-video-player.art-notice-show .art-notice {
+  display: none !important;
+}
+
+/* 自定义播放器顶部提示 */
+@keyframes player-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.player-toast {
+  animation: player-toast-in 0.2s ease-out;
+}
+
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {

@@ -21,9 +21,14 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import {
+  applyAdUrls,
+  browserPcrProbe,
+  filterAdsByPcr,
+  type PcrFilterResult,
+} from '@/lib/pcrAdFilter';
 import { SearchResult } from '@/lib/types';
 import {
-  filterAdsFromM3U8Common,
   getThemePrimaryColor,
   getVideoResolutionFromM3u8,
   processImageUrl,
@@ -96,21 +101,14 @@ export default function PlayPageClient() {
     }
     return true;
   });
-  const blockAdEnabledRef = useRef(blockAdEnabled);
-  useEffect(() => {
-    blockAdEnabledRef.current = blockAdEnabled;
-  }, [blockAdEnabled]);
-  const [blockAdRules] = useState<string>(() => {
+  // 各源是否插播广告（来自订阅配置的 filter_ads 字段，缺省 false）
+  const [sourceFilterAdsMap] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined') {
       const runtimeConfig = (window as any).RUNTIME_CONFIG;
-      return runtimeConfig?.AD_RULES || '';
+      return runtimeConfig?.SOURCE_FILTER_ADS || {};
     }
-    return '';
+    return {};
   });
-  const blockAdRulesRef = useRef(blockAdRules);
-  useEffect(() => {
-    blockAdRulesRef.current = blockAdRules;
-  }, [blockAdRules]);
 
   // 视频基本信息
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
@@ -123,6 +121,18 @@ export default function PlayPageClient() {
   );
   const [currentId, setCurrentId] = useState(searchParams.get('id') || '');
   const [one] = useState(searchParams.get('one') || '');
+
+  // 真正生效的广告过滤开关 = 播放器开关 && 该源标记了插播广告
+  const pcrEnabledRef = useRef(true);
+  useEffect(() => {
+    const allowedBySource = sourceFilterAdsMap[currentSource] ?? true; // 未知源沿用旧行为
+    pcrEnabledRef.current = blockAdEnabled && allowedBySource;
+    if (blockAdEnabled && !allowedBySource) {
+      console.log(
+        `[PcrAd] 源 ${currentSource} 未标记 filter_ads，跳过广告过滤`,
+      );
+    }
+  }, [blockAdEnabled, currentSource, sourceFilterAdsMap]);
 
   // 搜索所需信息
   const [searchTitle] = useState(searchParams.get('stitle') || '');
@@ -210,7 +220,7 @@ export default function PlayPageClient() {
   // 换源加载状态
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoLoadingStage, setVideoLoadingStage] = useState<
-    'initing' | 'sourceChanging'
+    'initing' | 'sourceChanging' | 'adFiltering'
   >('initing');
 
   // 播放进度保存相关
@@ -224,11 +234,27 @@ export default function PlayPageClient() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   //广告相关
-  const adRuleJson = useRef<any>({});
-  const adM3u8Ref = useRef<string>(''); // 存储广告 M3U8 文本
-  const adNoticeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [showAdNotice, setShowAdNotice] = useState<boolean>(false); // 控制提示显示
-  const [adCount, setAdCount] = useState<number>(0);
+  const pcrDoneRef = useRef<Map<string, { main: string; adBreaks: number }>>(
+    new Map(),
+  ); // playlistUrl -> { 清洗后的 m3u8, 已过滤广告处数 }
+  const pcrPrefetchRef = useRef<Set<string>>(new Set()); // 已预过滤的下一集地址
+  const prefetchTimerRef = useRef<NodeJS.Timeout | null>(null); // 下一集预过滤的延迟调度
+  const adNoticeRef = useRef<number>(0); // 待显示的已过滤广告处数，manifest 解析后再弹
+  // 自定义顶部提示：ArtPlayer 自带 notice 会连带播放/暂停等提示一起弹，这里自己实现
+  const [toast, setToast] = useState<string>('');
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const showToast = (text: string, duration = 3000) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(text);
+    toastTimerRef.current = setTimeout(() => setToast(''), duration);
+  };
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (prefetchTimerRef.current) clearTimeout(prefetchTimerRef.current);
+    },
+    [],
+  );
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
   // -----------------------------------------------------------------------------
@@ -639,16 +665,156 @@ export default function PlayPageClient() {
         .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
   };
-  const remoteFilterFnRef = useRef<
-    ((blocks: any[], baseUrl: string) => any) | null
-  >(null);
+  const runAdFilter = async (
+    m3u8: string,
+    playlistUrl: string,
+  ): Promise<PcrFilterResult> => {
+    const baseUrl = playlistUrl.substring(0, playlistUrl.lastIndexOf('/') + 1);
+    try {
+      const result = await filterAdsByPcr(m3u8, baseUrl, browserPcrProbe, (m) =>
+        console.log('[PcrAd]', m),
+      );
+      if (result.removed && result.adBreaks > 0) {
+        console.log(
+          `%c[PcrAd] 已过滤插播广告 ${result.adBreaks} 条（移除 ${result.adCount} 个分片）`,
+          'color:#22c55e;font-weight:bold',
+        );
+        console.log(
+          '[PcrAd] 广告 m3u8（TS 已拼接为绝对地址，可直接用于测试）：\n' +
+            result.ads,
+        );
+        adNoticeRef.current = result.adBreaks;
+      } else {
+        console.log('[PcrAd] 未检测到可疑广告段');
+      }
+      return result;
+    } catch (e) {
+      console.error('[PcrAd] 检测失败:', e);
+      return {
+        main: m3u8,
+        ads: '',
+        adCount: 0,
+        adBreaks: 0,
+        removed: false,
+        adUrls: [],
+        skipped: 'error',
+      };
+    }
+  };
+  const showAdFilteredNotice = (breaks: number) => {
+    showToast(`🛡️ 已过滤插播广告 ${breaks} 条`, 4000);
+  };
+  // playlist 内容哈希：用于判断缓存的广告过滤结果是否仍然有效。
+  // 内容（分片序列）未变则复用缓存，变了则主动失效重新探测；不再依赖 TTL。
+  const hashPlaylist = async (text: string): Promise<string> => {
+    try {
+      const data = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    } catch {
+      // 非安全上下文（无 crypto.subtle）退化：用长度+行数指纹，仅作兜底
+      return `len:${text.length}:lines:${text.split('\n').length}`;
+    }
+  };
+  // 查询后端缓存的过滤结果（以播放地址为标识）
+  const fetchPcrCache = async (playlistUrl: string) => {
+    try {
+      const res = await fetch(
+        `/api/pcrad?url=${encodeURIComponent(playlistUrl)}`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data && Array.isArray(data.adUrls)) return data;
+      return null;
+    } catch {
+      return null;
+    }
+  };
+  // 过滤结果回写后端（skipped 的不确定结果不缓存）
+  const savePcrCache = async (
+    playlistUrl: string,
+    result: PcrFilterResult,
+    playlistText: string,
+  ) => {
+    if (result.skipped) return;
+    const playlistHash = await hashPlaylist(playlistText);
+    fetch('/api/pcrad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: playlistUrl,
+        adUrls: result.adUrls,
+        adCount: result.adCount,
+        adBreaks: result.adBreaks,
+        playlistHash,
+      }),
+    }).catch(() => {});
+  };
+  // 当前集播放期间，自动预过滤下一集并缓存到后端
+  const prefetchNextEpisodeAds = async () => {
+    const d = detailRef.current;
+    const nextIdx = currentEpisodeIndexRef.current + 1;
+    const url = d?.episodes?.[nextIdx];
+    if (!url || !pcrEnabledRef.current) return;
+    // 已过滤过（本次会话内存命中）就不再重复过滤
+    if (pcrDoneRef.current.has(url) || pcrPrefetchRef.current.has(url)) return;
+    pcrPrefetchRef.current.add(url);
+    console.log(`[PcrAd] 开始预过滤下一集（第 ${nextIdx + 1} 集）`);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const text = await res.text();
+      if (!text || text.includes('#EXT-X-STREAM-INF')) return;
+      // playlist 内容未变则缓存仍有效，跳过昂贵的 PCR 探测
+      const currentHash = await hashPlaylist(text);
+      const remote = await fetchPcrCache(url);
+      if (remote && remote.playlistHash === currentHash) {
+        console.log('[PcrAd] 下一集缓存有效（playlist 未变），跳过预过滤');
+        pcrDoneRef.current.set(url, {
+          main: applyAdUrls(
+            text,
+            url.substring(0, url.lastIndexOf('/') + 1),
+            remote.adUrls,
+          ),
+          adBreaks: remote.adBreaks || 0,
+        });
+        return;
+      }
+      const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
+      const result = await filterAdsByPcr(text, baseUrl, browserPcrProbe, (m) =>
+        console.log('[PcrAd:next]', m),
+      );
+      savePcrCache(url, result, text);
+      pcrDoneRef.current.set(url, {
+        main: result.main,
+        adBreaks: result.removed ? result.adBreaks : 0,
+      });
+      console.log(
+        `[PcrAd] 下一集预过滤完成${result.removed ? `：${result.adBreaks} 处广告` : '（无广告）'}`,
+      );
+    } catch (e) {
+      console.error('[PcrAd] 下一集预过滤失败:', e);
+      pcrPrefetchRef.current.delete(url); // 允许后续重试
+    }
+  };
+  // 延迟调度下一集预过滤：起播后 8s 再跑，避免抢占当前集的起播带宽。
+  // 只保证「有一次待执行的预取」，重复调用不会叠加。
+  const scheduleNextEpisodePrefetch = () => {
+    if (!pcrEnabledRef.current) return;
+    if (prefetchTimerRef.current) return;
+    prefetchTimerRef.current = setTimeout(() => {
+      prefetchTimerRef.current = null;
+      void prefetchNextEpisodeAds();
+    }, 8000);
+  };
   class CustomHlsJsLoader extends Hls.DefaultConfig.loader {
     constructor(config: any) {
       super(config);
     }
 
     load(context: any, config: any, callbacks: any) {
-      const currentM3u8Url = context.url;
       let finalCallbacks = callbacks;
 
       if (context.type === 'manifest' || context.type === 'level') {
@@ -656,63 +822,88 @@ export default function PlayPageClient() {
 
         finalCallbacks = {
           ...callbacks,
-          onSuccess: (
+          onSuccess: async (
             response: any,
             stats: any,
             ctx: any,
             networkDetails?: any,
           ) => {
             if (response.data && typeof response.data === 'string') {
-              if (response.data.includes('#EXT-X-STREAM-INF')) {
-                return originalOnSuccess(response, stats, ctx, networkDetails);
-              }
-
               if (
-                ctx.url.startsWith('blob:') ||
-                response.data.includes('#EXT-X-DISCONTINUITY') === false
+                response.data.includes('#EXT-X-STREAM-INF') ||
+                ctx.url.startsWith('blob:')
               ) {
                 return originalOnSuccess(response, stats, ctx, networkDetails);
               }
-              if (
-                adRuleJson.current &&
-                adRuleJson.current[currentSourceRef.current]
-              ) {
-                try {
-                  remoteFilterFnRef.current = new Function(
-                    'blocks',
-                    'baseUrl',
-                    adRuleJson.current[currentSourceRef.current],
-                  ) as (blocks: any[], baseUrl: string) => any;
-                  console.log('✅ 广告过滤规则已就绪');
-                } catch (err) {
-                  console.error('❌ 解析广告规则规则 Function 失败:', err);
+              // PCR 广告过滤：在真正播放前完成检测并替换播放列表
+              if (pcrEnabledRef.current) {
+                const cached = pcrDoneRef.current.get(ctx.url);
+                if (cached !== undefined && typeof cached.main === 'string') {
+                  response.data = cached.main;
+                  // 内存命中（同集重复播放）：同样需要回填待弹提示的处数
+                  adNoticeRef.current = cached.adBreaks || 0;
+                } else {
+                  // 先查后端缓存（以播放地址为标识），命中且 playlist 内容未变则直接按缓存过滤
+                  let applied = false;
+                  try {
+                    const remote = await fetchPcrCache(ctx.url);
+                    const currentHash = await hashPlaylist(response.data);
+                    if (
+                      remote &&
+                      Array.isArray(remote.adUrls) &&
+                      remote.playlistHash === currentHash
+                    ) {
+                      const baseUrl = ctx.url.substring(
+                        0,
+                        ctx.url.lastIndexOf('/') + 1,
+                      );
+                      const main = applyAdUrls(
+                        response.data,
+                        baseUrl,
+                        remote.adUrls,
+                      );
+                      pcrDoneRef.current.set(ctx.url, {
+                        main,
+                        adBreaks: remote.adBreaks || 0,
+                      });
+                      response.data = main;
+                      applied = true;
+                      console.log(
+                        '[PcrAd] 命中后端缓存（playlist 内容未变），直接应用过滤结果',
+                      );
+                      adNoticeRef.current = remote.adBreaks || 0;
+                    } else if (remote) {
+                      console.log(
+                        '[PcrAd] 后端缓存存在但 playlist 内容已变化，重新探测',
+                      );
+                    }
+                  } catch (e) {
+                    console.error('[PcrAd] 查询后端缓存失败:', e);
+                  }
+                  if (!applied) {
+                    const originalData = response.data; // 过滤前的原始 playlist，用于内容哈希
+                    setVideoLoadingStage('adFiltering');
+                    try {
+                      const result = await runAdFilter(originalData, ctx.url);
+                      pcrDoneRef.current.set(ctx.url, {
+                        main: result.main,
+                        adBreaks: result.removed ? result.adBreaks : 0,
+                      });
+                      response.data = result.main;
+                      savePcrCache(ctx.url, result, originalData);
+                    } catch (e) {
+                      console.error('[PcrAd] 过滤失败，回退原播放列表:', e);
+                      pcrDoneRef.current.set(ctx.url, {
+                        main: response.data,
+                        adBreaks: 0,
+                      });
+                    }
+                  }
                 }
-              } else {
-                remoteFilterFnRef.current = null;
-                console.log('⚠️ 当前源没有广告过滤规则');
+                // 当前集就绪后，延迟预过滤下一集（避免抢占起播带宽）。
+                // 放在分支外：内存命中 / 后端缓存命中 / 真实 PCR 三条路径都要触发。
+                scheduleNextEpisodePrefetch();
               }
-
-              const filterFn = remoteFilterFnRef.current;
-
-              // 执行你的通用过滤函数
-              const { main, ads, adCount } = filterAdsFromM3U8Common(
-                response.data,
-                currentM3u8Url,
-                filterFn,
-                false,
-              );
-
-              if (ads) {
-                setAdCount(adCount || 0);
-                adM3u8Ref.current = ads;
-                if (adNoticeTimerRef.current)
-                  clearTimeout(adNoticeTimerRef.current);
-                setShowAdNotice(true);
-                adNoticeTimerRef.current = setTimeout(() => {
-                  setShowAdNotice(false);
-                }, 5000);
-              }
-              response.data = main;
             }
             return originalOnSuccess(response, stats, ctx, networkDetails);
           },
@@ -856,17 +1047,6 @@ export default function PlayPageClient() {
       setDetail(detailData);
       if (currentEpisodeIndex >= detailData.episodes.length) {
         setCurrentEpisodeIndex(0);
-      }
-      if (blockAdRulesRef.current) {
-        // 初始化去广告脚本 ---
-        setLoadingMessage('🛡️ 正在加载广告规则...');
-        try {
-          const res = await fetch(blockAdRulesRef.current);
-          const json = await res.json();
-          adRuleJson.current = json;
-        } catch (error) {
-          console.error('广告过滤规则加载失败，将使用默认播放逻辑:', error);
-        }
       }
       // 规范URL参数
       const newUrl = new URL(window.location.href);
@@ -1054,6 +1234,9 @@ export default function PlayPageClient() {
       if (artPlayerRef.current && artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
+      // 显示加载蒙层（去广告时会被切换为“正在进行广告过滤”）
+      setIsVideoLoading(true);
+      setVideoLoadingStage('initing');
       // 更新索引
       setCurrentEpisodeIndex(episodeNumber);
     }
@@ -1066,6 +1249,8 @@ export default function PlayPageClient() {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
+      setIsVideoLoading(true);
+      setVideoLoadingStage('initing');
       setCurrentEpisodeIndex(idx - 1);
     }
   };
@@ -1077,6 +1262,8 @@ export default function PlayPageClient() {
       if (artPlayerRef.current && !artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
+      setIsVideoLoading(true);
+      setVideoLoadingStage('initing');
       setCurrentEpisodeIndex(idx + 1);
     }
   };
@@ -1135,9 +1322,7 @@ export default function PlayPageClient() {
       if (artPlayerRef.current && artPlayerRef.current.volume < 1) {
         artPlayerRef.current.volume =
           Math.round((artPlayerRef.current.volume + 0.1) * 10) / 10;
-        artPlayerRef.current.notice.show = `音量: ${Math.round(
-          artPlayerRef.current.volume * 100,
-        )}`;
+        showToast(`音量: ${Math.round(artPlayerRef.current.volume * 100)}`);
         e.preventDefault();
       }
     }
@@ -1147,9 +1332,7 @@ export default function PlayPageClient() {
       if (artPlayerRef.current && artPlayerRef.current.volume > 0) {
         artPlayerRef.current.volume =
           Math.round((artPlayerRef.current.volume - 0.1) * 10) / 10;
-        artPlayerRef.current.notice.show = `音量: ${Math.round(
-          artPlayerRef.current.volume * 100,
-        )}`;
+        showToast(`音量: ${Math.round(artPlayerRef.current.volume * 100)}`);
         e.preventDefault();
       }
     }
@@ -1486,7 +1669,7 @@ export default function PlayPageClient() {
               maxBufferSize: 60 * 1000 * 1000, // 约 60MB，超出后触发清理
 
               /* 自定义loader */
-              loader: blockAdEnabledRef.current
+              loader: pcrEnabledRef.current
                 ? CustomHlsJsLoader
                 : Hls.DefaultConfig.loader,
             });
@@ -1494,6 +1677,26 @@ export default function PlayPageClient() {
             hls.loadSource(url);
             hls.attachMedia(video);
             video.hls = hls;
+
+            let firstManifestParsed = false;
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              const art = artPlayerRef.current;
+              if (art) {
+                // 过滤会延迟 manifest 就绪，ArtPlayer 的 autoplay 可能在源就绪前
+                // 就触发失败；manifest 解析完成（过滤后的列表已就绪）后补一次 play，
+                // 确保过滤结束后自动起播（仅首次解析时，避免 level 切换反复触发）。
+                if (!firstManifestParsed && art.paused) {
+                  video.play().catch(() => {});
+                }
+                // 顶部广告过滤提示延后到 manifest 解析后再弹，避免在播放器初始化
+                // 阶段被内部时序覆盖/提前自动隐藏（缓存命中路径尤为明显）。
+                if (!firstManifestParsed && adNoticeRef.current > 0) {
+                  showAdFilteredNotice(adNoticeRef.current);
+                  adNoticeRef.current = 0;
+                }
+              }
+              firstManifestParsed = true;
+            });
 
             ensureVideoSource(video, url);
 
@@ -1526,7 +1729,12 @@ export default function PlayPageClient() {
           {
             html: '去广告',
             icon: '<text x="50%" y="50%" font-size="20" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">AD</text>',
-            tooltip: blockAdEnabled ? '已开启' : '已关闭',
+            tooltip:
+              blockAdEnabled && sourceFilterAdsMap[currentSource] === false
+                ? '该源无插播广告'
+                : blockAdEnabled
+                  ? '已开启'
+                  : '已关闭',
             onClick() {
               const newVal = !blockAdEnabled;
               try {
@@ -1698,6 +1906,22 @@ export default function PlayPageClient() {
 
       // 监听视频可播放事件，这时恢复播放进度更可靠
       artPlayerRef.current.on('video:canplay', () => {
+        // 兜底：manifest 阶段未弹出的广告过滤提示，在这里补弹一次
+        if (adNoticeRef.current > 0) {
+          showAdFilteredNotice(adNoticeRef.current);
+          adNoticeRef.current = 0;
+        }
+        // 兜底：某些路径（缓存命中、恢复播放）不会走到 loader 的调度，这里再补一次
+        scheduleNextEpisodePrefetch();
+        // 兜底起播：过滤（尤其是命中缓存）后仍暂停时，再尝试一次
+        if (artPlayerRef.current.paused) {
+          try {
+            const p = artPlayerRef.current.play();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          } catch {
+            // 自动播放被浏览器策略拦截时忽略，由用户手动点击
+          }
+        }
         // 若存在需要恢复的播放进度，则跳转
         if (resumeTimeRef.current && resumeTimeRef.current > 0) {
           try {
@@ -1728,7 +1952,6 @@ export default function PlayPageClient() {
           ) {
             artPlayerRef.current.playbackRate = lastPlaybackRateRef.current;
           }
-          artPlayerRef.current.notice.show = '';
         }, 0);
 
         // 隐藏换源加载状态
@@ -1753,9 +1976,9 @@ export default function PlayPageClient() {
           currentTime < skipConfigRef.current.intro_time
         ) {
           artPlayerRef.current.currentTime = skipConfigRef.current.intro_time;
-          artPlayerRef.current.notice.show = `已跳过片头 (${formatTime(
-            skipConfigRef.current.intro_time,
-          )})`;
+          showToast(
+            `已跳过片头 (${formatTime(skipConfigRef.current.intro_time)})`,
+          );
         }
 
         // 跳过片尾
@@ -1773,9 +1996,9 @@ export default function PlayPageClient() {
           } else {
             artPlayerRef.current.pause();
           }
-          artPlayerRef.current.notice.show = `已跳过片尾 (${formatTime(
-            skipConfigRef.current.outro_time,
-          )})`;
+          showToast(
+            `已跳过片尾 (${formatTime(skipConfigRef.current.outro_time)})`,
+          );
         }
       });
 
@@ -1840,34 +2063,6 @@ export default function PlayPageClient() {
       cleanupPlayer();
     };
   }, []);
-  const playAdTest = async () => {
-    if (!adM3u8Ref.current || !artPlayerRef.current) return;
-    setShowAdNotice(false);
-    if (adNoticeTimerRef.current) {
-      clearTimeout(adNoticeTimerRef.current);
-      adNoticeTimerRef.current = null;
-    }
-    const art = artPlayerRef.current;
-    const hls = art.video.hls;
-    if (hls) {
-      hls.config.lowLatencyMode = true;
-      hls.config.backBufferLength = 0;
-      hls.config.maxBufferHole = 1.0;
-      hls.config.nudgeOffset = 0.2;
-      hls.config.nudgeMaxRetry = 20;
-      hls.config.appendErrorMaxRetry = 15;
-    }
-    const blob = new Blob([adM3u8Ref.current], {
-      type: 'application/x-mpegURL',
-    });
-    const adUrl = URL.createObjectURL(blob);
-    try {
-      await artPlayerRef.current.switchUrl(adUrl);
-      art.play();
-    } catch (err) {
-      console.error('切换失败:', err);
-    }
-  };
   if (loading) {
     return (
       <PageLayout activePath='/play'>
@@ -2174,11 +2369,26 @@ export default function PlayPageClient() {
                       {/* 换源消息 */}
                       <div className='space-y-2'>
                         <p className='text-xl font-semibold text-white animate-pulse'>
-                          {videoLoadingStage === 'sourceChanging'
-                            ? '🔄 切换播放源...'
-                            : '🔄 视频加载中...'}
+                          {videoLoadingStage === 'adFiltering'
+                            ? '🛡️ 正在进行广告过滤...'
+                            : videoLoadingStage === 'sourceChanging'
+                              ? '🔄 切换播放源...'
+                              : '🔄 视频加载中...'}
                         </p>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 自定义播放器顶部提示（替代 ArtPlayer 自带 notice） */}
+                {toast && (
+                  <div className='absolute top-4 left-1/2 -translate-x-1/2 z-600 pointer-events-none'>
+                    <div className='player-toast flex items-center gap-2 px-4 py-2 rounded-full shadow-lg bg-linear-to-r from-primary-500 to-primary-600 text-white text-xs sm:text-sm font-medium whitespace-nowrap'>
+                      <span className='relative flex h-2 w-2 shrink-0'>
+                        <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70'></span>
+                        <span className='relative inline-flex rounded-full h-2 w-2 bg-white'></span>
+                      </span>
+                      <span>{toast}</span>
                     </div>
                   </div>
                 )}
@@ -2306,50 +2516,6 @@ export default function PlayPageClient() {
           </div>
         </div>
       </div>
-      {showAdNotice && (
-        <div className='fixed top-20 left-1/2 -translate-x-1/2 z-9999 bg-black/90 text-white px-4 py-3 rounded-full shadow-2xl border border-yellow-500/30 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 backdrop-blur-md whitespace-nowrap min-w-75 justify-between'>
-          <div className='flex items-center gap-2'>
-            <span className='relative flex h-2 w-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-yellow-500'></span>
-            </span>
-            <span className='text-xs sm:text-sm font-medium'>
-              🛡️ 已过滤插播广告{adCount}条
-            </span>
-          </div>
-
-          <div className='flex items-center gap-2 pl-2'>
-            <button
-              onClick={playAdTest}
-              className='bg-yellow-600 hover:bg-yellow-500 text-[10px] sm:text-xs px-3 py-1.5 rounded-full transition-colors font-bold text-black'
-            >
-              点击测试
-            </button>
-            <button
-              onClick={() => {
-                setShowAdNotice(false);
-                if (adNoticeTimerRef.current)
-                  clearTimeout(adNoticeTimerRef.current);
-              }}
-              className='text-gray-400 hover:text-white transition-colors p-1'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </PageLayout>
   );
 }
