@@ -66,15 +66,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { key, record }: { key: string; record: PlayRecord } = body;
 
+    const { key, record }: { key: string; record: PlayRecord } = body;
     if (!key || !record) {
       return NextResponse.json(
         { error: 'Missing key or record' },
         { status: 400 },
       );
     }
-
     // 验证播放记录数据
     if (!record.title || !record.source_name || record.index < 1) {
       return NextResponse.json(
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
     // 从key中解析source和id
     const [source, id] = key.split('+');
     if (!source || !id) {
@@ -91,6 +89,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
     const dbRecord = await db.getPlayRecord(authInfo.username, source, id);
     const finalRecord = {
       ...record,
