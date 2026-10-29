@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
         await db.changePassword(username, password);
       }
       // 验证成功，设置认证cookie
-      const response = NextResponse.json({ ok: true });
+      const response = NextResponse.json({ ok: true, server: 'LabTV' });
       const cookieValue = await generateAuthCookie(
         username,
         password,
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
         await db.changePassword(username, password);
       }
       // 验证成功，设置认证cookie
-      const response = NextResponse.json({ ok: true });
+      const response = NextResponse.json({ ok: true, server: 'LabTV' });
       const cookieValue = await generateAuthCookie(
         username,
         password,
