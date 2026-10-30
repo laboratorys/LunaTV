@@ -78,7 +78,9 @@ export default function DanmuApiSection({
         )}
         {source === 'site' && (
           <div className='text-xs px-3 py-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-300'>
-            当前弹幕 API 已在站点配置中生效，将覆盖配置文件中的同名配置。
+            当前弹幕 API
+            已在站点配置中生效；重新拉取配置订阅时会同步为订阅文件里的
+            danmu_api。
           </div>
         )}
 

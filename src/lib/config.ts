@@ -188,9 +188,11 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   // 将 Map 转换回数组
   adminConfig.LiveConfig = Array.from(currentLives.values());
 
-  // 弹幕 API：站点配置优先，未设置时回落到配置文件
+  // 弹幕 API：订阅文件的 danmu_api 优先，每次拉取保存都同步覆盖到站点配置。
+  // 与 api_site/lives/custom_category 一致，文件为权威来源；手动在站点配置里
+  // 改的值会被下一次拉取覆盖。文件未提供 danmu_api 时保留现有配置不动。
   const fileDanmuApi = fileConfig.danmu_api;
-  if (fileDanmuApi?.url && !adminConfig.SiteConfig.DanmuApi?.url) {
+  if (fileDanmuApi?.url) {
     adminConfig.SiteConfig.DanmuApi = {
       url: fileDanmuApi.url,
       token: fileDanmuApi.token,
