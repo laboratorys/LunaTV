@@ -11,15 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: '5.1.6',
-    date: '2026-10-13',
+    version: '5.1.7',
+    date: '2026-10-23',
     added: [
-      // 无新增内容
+      '使用新的去广告方案',
+      '增加对LabTV移动端的支持',
+      '收藏增强：支持收藏豆瓣、BGM、短剧等影视信息',
     ],
     changed: [
       // 无变更内容
     ],
-    fixed: ['upstash存储时，添加用户失败'],
+    fixed: ['换源播放时，播放记录会重复的问题'],
   },
   {
     version: '5.1.5',
