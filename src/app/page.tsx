@@ -87,7 +87,7 @@ function HomeClient() {
     source_name: string;
     currentEpisode?: number;
     search_title?: string;
-    origin?: 'vod' | 'live';
+    origin?: 'vod' | 'live' | 'douban' | 'bangumi';
   };
 
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
