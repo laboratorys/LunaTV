@@ -35,6 +35,10 @@ interface ConfigFileStruct {
   lives?: {
     [key: string]: LiveCfg;
   };
+  danmu_api?: {
+    url: string;
+    token?: string;
+  };
 }
 
 export const API_CONFIG = {
@@ -183,6 +187,16 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   // 将 Map 转换回数组
   adminConfig.LiveConfig = Array.from(currentLives.values());
+
+  // 弹幕 API：站点配置优先，未设置时回落到配置文件
+  const fileDanmuApi = fileConfig.danmu_api;
+  if (fileDanmuApi?.url && !adminConfig.SiteConfig.DanmuApi?.url) {
+    adminConfig.SiteConfig.DanmuApi = {
+      url: fileDanmuApi.url,
+      token: fileDanmuApi.token,
+    };
+  }
+
   return adminConfig;
 }
 
@@ -232,6 +246,7 @@ async function getInitConfig(
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
       FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
       OpenRegister: process.env.NEXT_PUBLIC_OPEN_REGISTER === 'true',
+      DanmuApi: null,
     },
     UserConfig: {
       Users: [],
@@ -382,6 +397,9 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   }
   if (!adminConfig.SiteConfig.BgmProxy) {
     adminConfig.SiteConfig.BgmProxy = '';
+  }
+  if (adminConfig.SiteConfig.DanmuApi === undefined) {
+    adminConfig.SiteConfig.DanmuApi = null;
   }
   // 站长变更自检
   // const ownerUser = process.env.USERNAME;

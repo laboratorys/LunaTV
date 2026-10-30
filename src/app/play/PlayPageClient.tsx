@@ -3,11 +3,20 @@
 'use client';
 
 import Artplayer from 'artplayer';
+import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { type DanmuRefLike, resolveDanmuOverlap } from '@/lib/danmuOverlap';
+import {
+  applyDanmuDensity,
+  type DanmuStyleSettings,
+  loadDanmuStyle,
+  saveDanmuStyle,
+} from '@/lib/danmuStyle';
 import {
   deleteFavorite,
   deletePlayRecord,
@@ -33,8 +42,12 @@ import {
   getVideoResolutionFromM3u8,
   processImageUrl,
 } from '@/lib/utils';
+import { useDanmu } from '@/hooks/useDanmu';
 
+import DanmuManualMatchModal from '@/components/DanmuManualMatchModal';
+import DanmuSettingsPanel from '@/components/DanmuSettingsPanel';
 import EpisodeSelector from '@/components/EpisodeSelector';
+import FullscreenPortal from '@/components/FullscreenPortal';
 import PageLayout from '@/components/PageLayout';
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
@@ -51,6 +64,26 @@ interface WakeLockSentinel {
   addEventListener(type: 'release', listener: () => void): void;
   removeEventListener(type: 'release', listener: () => void): void;
 }
+
+/** 底部控制条高度（进度条所在区域），弹幕需避开 */
+const DANMU_BOTTOM_RESERVED = 56;
+/** 顶部预留高度，避免弹幕全部挤在同一水平带 */
+const DANMU_TOP_RESERVED = 10;
+
+/**
+ * 计算弹幕上下边距（像素）。
+ * 插件 margin 仅支持像素或百分比字符串，这里统一用像素：
+ * 下边距 = 播放器高度 × (1 - 显示区域) + 控制条高度，保证弹幕不压住进度条。
+ */
+const buildDanmuMargin = (
+  displayArea: number,
+  playerHeight: number,
+): [number, number] => {
+  const area = Math.min(1, Math.max(0.1, displayArea));
+  const height = playerHeight > 0 ? playerHeight : 0;
+  const bottom = Math.round(height * (1 - area)) + DANMU_BOTTOM_RESERVED;
+  return [DANMU_TOP_RESERVED, bottom];
+};
 
 export default function PlayPageClient() {
   const router = useRouter();
@@ -229,6 +262,8 @@ export default function PlayPageClient() {
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
+  // 记录播放器创建时所用的 danmuEnabled，变化时需重建播放器（插件集合变化）
+  const danmuEnabledAtCreateRef = useRef(false);
 
   // Wake Lock 相关
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -255,6 +290,189 @@ export default function PlayPageClient() {
     },
     [],
   );
+
+  // ---------------- 弹幕 ----------------
+  // 未配置弹幕 API 时不加载插件、不展示开关与面板
+  const [danmuEnabled, setDanmuEnabled] = useState(false);
+  // 惰性初始化：首屏即读取本地样式，避免插件以默认值挂载
+  const [danmuStyle, setDanmuStyle] = useState<DanmuStyleSettings>(() =>
+    loadDanmuStyle(),
+  );
+  const [danmuPanelOpen, setDanmuPanelOpen] = useState(false);
+  // 弹幕设置面板挂到播放器内部：全屏时只有播放器元素在视口内，
+  // 放在页面层的面板会不可见
+  const [danmuPortalTarget, setDanmuPortalTarget] =
+    useState<HTMLElement | null>(null);
+  const [danmuMatchOpen, setDanmuMatchOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/server-config')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setDanmuEnabled(!!data?.DanmuEnabled);
+      })
+      .catch(() => {
+        if (!cancelled) setDanmuEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const danmuVideoKey =
+    detail?.douban_id != null
+      ? `douban-${detail.douban_id}`
+      : `${detail?.source || ''}-${detail?.id || videoTitle}`;
+
+  const {
+    danmuList,
+    loading: danmuLoading,
+    error: danmuError,
+    candidates: danmuCandidates,
+    matchedInfo: danmuMatchedInfo,
+    manualSearch: danmuManualSearch,
+    applyMatch: danmuApplyMatch,
+    resetToAuto: danmuResetToAuto,
+  } = useDanmu({
+    enabled: danmuEnabled,
+    title: videoTitle,
+    year: videoYear,
+    episode: currentEpisodeIndex + 1,
+    videoKey: danmuVideoKey,
+  });
+
+  const updateDanmuStyle = (patch: Partial<DanmuStyleSettings>) => {
+    setDanmuStyle((prev) => {
+      const next = { ...prev, ...patch };
+      // 仅当相关字段确有变化才产生新状态，避免与插件 show/hide 事件互相触发
+      // 形成无限渲染循环（循环会反复触发 plugin.config 的 reset，导致弹幕无法上屏）。
+      const changed = (Object.keys(patch) as (keyof DanmuStyleSettings)[]).some(
+        (k) => prev[k] !== next[k],
+      );
+      if (!changed) return prev;
+      saveDanmuStyle(patch);
+      return next;
+    });
+  };
+
+  // 最近一次成功载入插件的弹幕条数（插件未对外暴露 queue，改用事件记录）
+  const danmuLoadedCountRef = useRef(0);
+
+  // 将弹幕推送到播放器插件
+  const pushDanmuToPlugin = useCallback(() => {
+    if (!danmuEnabled) return;
+    const plugin = artPlayerRef.current?.plugins?.artplayerPluginDanmuku as
+      | {
+          load: (list?: unknown[]) => Promise<unknown>;
+          isHide?: boolean;
+          option?: { visible?: boolean };
+        }
+      | undefined;
+    if (!plugin) {
+      console.warn(
+        '[Danmu][DEBUG] 推送跳过：播放器插件未挂载（plugins.artplayerPluginDanmuku 为空）',
+      );
+      return;
+    }
+    const art = artPlayerRef.current;
+    // 密度抽稀：按时间窗口均匀保留，模拟 B 站的同屏密度效果
+    const list = applyDanmuDensity(danmuList, danmuStyle.density);
+    console.info('[Danmu][DEBUG] 推送开始', {
+      total: danmuList.length,
+      afterDensity: list.length,
+      density: danmuStyle.density,
+      currentTime: art?.currentTime || 0,
+      firstItem: list[0],
+    });
+    // 先 load() 清空旧弹幕（切集/重复调用时避免弹幕叠加），再载入新数据
+    plugin
+      .load()
+      .then(() =>
+        plugin.load(
+          list.map((item) => ({
+            text: item.text,
+            time: item.time,
+            color: item.color,
+            mode: item.mode,
+          })),
+        ),
+      )
+      .then(() => {
+        const a = artPlayerRef.current;
+        console.info('[Danmu][DEBUG] 推送完成', {
+          loadedCount: danmuLoadedCountRef.current,
+          isHide: plugin.isHide,
+          pluginVisible: plugin.option?.visible,
+          playing: a?.playing,
+          currentTime: a?.currentTime,
+          playerHeight: a?.height,
+        });
+      })
+      .catch((err) => console.error('[Danmu][DEBUG] 载入弹幕失败:', err));
+  }, [danmuEnabled, danmuList, danmuStyle.density]);
+
+  // 播放器创建回调中需调用最新版本，用 ref 避免重建播放器
+  const pushDanmuRef = useRef(pushDanmuToPlugin);
+  useEffect(() => {
+    pushDanmuRef.current = pushDanmuToPlugin;
+  }, [pushDanmuToPlugin]);
+
+  // 弹幕数据变化时推送到播放器插件
+  useEffect(() => {
+    pushDanmuToPlugin();
+  }, [pushDanmuToPlugin]);
+
+  // 上一次已应用到插件的样式，用于只下发变化的字段：
+  // 插件的 config() 只要收到 fontSize 就会 reset()（把已载入弹幕全部退回队列），
+  // 因此绝不能每次调样式都全量下发，否则拖滑块时会不断重置、非常卡。
+  const danmuAppliedStyleRef = useRef<DanmuStyleSettings | null>(null);
+
+  const applyDanmuStyle = useCallback(() => {
+    if (!danmuEnabled) return;
+    const plugin = artPlayerRef.current?.plugins?.artplayerPluginDanmuku as
+      | { config: (option: Record<string, unknown>) => unknown }
+      | undefined;
+    if (!plugin) return;
+
+    const prev = danmuAppliedStyleRef.current;
+    const patch: Record<string, unknown> = {};
+    if (!prev || prev.opacity !== danmuStyle.opacity) {
+      patch.opacity = danmuStyle.opacity;
+    }
+    if (!prev || prev.speed !== danmuStyle.speed) {
+      patch.speed = danmuStyle.speed;
+    }
+    if (!prev || prev.visible !== danmuStyle.visible) {
+      patch.visible = danmuStyle.visible;
+    }
+    if (!prev || prev.fontSize !== danmuStyle.fontSize) {
+      patch.fontSize = danmuStyle.fontSize;
+    }
+    if (!prev || prev.displayArea !== danmuStyle.displayArea) {
+      patch.margin = buildDanmuMargin(
+        danmuStyle.displayArea,
+        artPlayerRef.current?.height || 0,
+      );
+    }
+    if (Object.keys(patch).length === 0) return;
+
+    danmuAppliedStyleRef.current = danmuStyle;
+    console.info('[Danmu][DEBUG] 应用样式配置', patch);
+    plugin.config(patch);
+  }, [danmuStyle, danmuEnabled]);
+
+  // 弹幕样式变化时同步到插件
+  useEffect(() => {
+    applyDanmuStyle();
+  }, [applyDanmuStyle]);
+
+  // 播放器重建后插件是新的实例，需要重新下发一次完整样式
+  const applyDanmuStyleRef = useRef(applyDanmuStyle);
+  useEffect(() => {
+    applyDanmuStyleRef.current = applyDanmuStyle;
+  }, [applyDanmuStyle]);
+
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
   // -----------------------------------------------------------------------------
@@ -1555,8 +1773,11 @@ export default function PlayPageClient() {
       typeof window !== 'undefined' &&
       typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
 
-    // 非WebKit浏览器且播放器已存在，使用switch方法切换
-    if (!isWebkit && artPlayerRef.current) {
+    // 非WebKit浏览器且播放器已存在，使用switch方法切换。
+    // 但 danmuEnabled 变化会改变插件集合（挂载/卸载弹幕插件），此时必须重建播放器，
+    // 否则走 switch 捷径会保留无弹幕插件的旧播放器，导致弹幕永远不显示。
+    const danmuChanged = danmuEnabledAtCreateRef.current !== danmuEnabled;
+    if (!isWebkit && artPlayerRef.current && !danmuChanged) {
       artPlayerRef.current.switch = videoUrl;
       artPlayerRef.current.title = `${videoTitle} - 第${
         currentEpisodeIndex + 1
@@ -1582,6 +1803,40 @@ export default function PlayPageClient() {
       Artplayer.USE_RAF = false;
       Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
+      // 弹幕插件隔离：初始化失败时仅跳过弹幕，不阻断播放
+      let danmuPlugins: ReturnType<typeof artplayerPluginDanmuku>[] = [];
+      if (danmuEnabled) {
+        try {
+          danmuPlugins = [
+            artplayerPluginDanmuku({
+              danmuku: [],
+              speed: danmuStyle.speed,
+              opacity: danmuStyle.opacity,
+              fontSize: danmuStyle.fontSize,
+              color: '#FFFFFF',
+              mode: 0,
+              margin: [DANMU_TOP_RESERVED, '10%'],
+              modes: [0, 1, 2],
+              antiOverlap: true,
+              synchronousPlayback: false,
+              lockTime: 5,
+              maxLength: 200,
+              theme: 'dark',
+              heatmap: false,
+              visible: danmuStyle.visible,
+              emitter: false,
+              // 插件默认 width:512，窄屏时会把整条弹幕栏挪到播放器层
+              // （点开关触发的 resize 也会），置 0 让它始终留在控制栏
+              width: 0,
+            }),
+          ];
+        } catch (err) {
+          console.error('[Danmu] 弹幕插件初始化失败，已跳过:', err);
+          danmuPlugins = [];
+        }
+      }
+
+      danmuEnabledAtCreateRef.current = danmuEnabled;
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
@@ -1590,7 +1845,7 @@ export default function PlayPageClient() {
         isLive: false,
         muted: false,
         autoplay: true,
-        pip: true,
+        pip: false,
         autoSize: false,
         autoMini: false,
         screenshot: false,
@@ -1606,7 +1861,7 @@ export default function PlayPageClient() {
         mutex: true,
         playsInline: true,
         autoPlayback: false,
-        airplay: true,
+        airplay: false,
         theme: getThemePrimaryColor(),
         lang: 'zh-cn',
         hotkey: false,
@@ -1647,6 +1902,8 @@ export default function PlayPageClient() {
             },
           },
         ],
+        // 弹幕插件：仅在配置了弹幕 API 时挂载（失败已在上游隔离）
+        plugins: danmuPlugins,
         // HLS 支持配置
         customType: {
           m3u8: function (video: HTMLVideoElement, url: string) {
@@ -1757,6 +2014,22 @@ export default function PlayPageClient() {
               return newVal ? '当前开启' : '当前关闭';
             },
           },
+          ...(danmuEnabled
+            ? [
+                {
+                  html: '弹幕配置',
+                  icon: '<text x="50%" y="50%" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">弹</text>',
+                  tooltip: '打开弹幕设置',
+                  onClick() {
+                    // 弹幕设置面板唯一入口：先收起设置面板，只保留弹幕配置面板
+                    const art = artPlayerRef.current;
+                    if (art?.setting) art.setting.show = false;
+                    setDanmuPanelOpen(true);
+                    return '';
+                  },
+                },
+              ]
+            : []),
           {
             name: '跳过片头片尾',
             html: '跳过片头片尾',
@@ -1850,11 +2123,38 @@ export default function PlayPageClient() {
           );
         }
       });
+      // 弹幕栏始终显示在控制栏：插件窄屏时会把整栏挪到播放器层，
+      // 这里统一挂回控制栏，避免开关按钮消失。
+      const syncDanmuBar = () => {
+        const art = artPlayerRef.current;
+        const center = art?.template?.$controlsCenter as
+          | HTMLElement
+          | undefined;
+        const playerEl = art?.template?.$player as HTMLElement | undefined;
+        if (!art || !center) return;
+        const bar =
+          center.querySelector<HTMLElement>('.artplayer-plugin-danmuku') ||
+          playerEl?.querySelector<HTMLElement>('.artplayer-plugin-danmuku');
+        if (!bar) return;
+        // 注意：plugin.mount() 内部会调 reset() → resize()，窄屏下又会被挪回
+        // 播放器层，所以这里直接移动 DOM。
+        if (bar.parentElement !== center) center.appendChild(bar);
+        bar.style.display = 'flex';
+      };
+      syncDanmuBar();
+
       artPlayerRef.current.on('fullscreen', (state: any) => {
         const topBar = document.getElementById('exit-fullscreen-btn');
         if (topBar) {
           topBar.style.display = state ? 'block' : 'none';
         }
+        syncDanmuBar();
+      });
+      artPlayerRef.current.on('fullscreenWeb', () => {
+        syncDanmuBar();
+      });
+      artPlayerRef.current.on('resize', () => {
+        syncDanmuBar();
       });
       const exitBtn = document.getElementById('exit-fullscreen-btn');
       if (exitBtn) {
@@ -1865,12 +2165,106 @@ export default function PlayPageClient() {
       }
       artPlayerRef.current.on('ready', () => {
         setError(null);
+        // 插件就绪后按当前屏幕/全屏状态同步弹幕栏显隐
+        syncDanmuBar();
+        // 面板需挂在播放器内部才能在全屏时可见
+        setDanmuPortalTarget(
+          (artPlayerRef.current?.template?.$player as HTMLElement) ?? null,
+        );
 
         // 播放器就绪后，如果正在播放则请求 Wake Lock
         if (artPlayerRef.current && !artPlayerRef.current.paused) {
           requestWakeLock();
         }
+
+        // 插件在播放器创建后才可用，此时补推一次弹幕
+        pushDanmuRef.current();
+        // 新插件实例需要重新应用一次完整样式（字号/透明度/上下边距等）
+        danmuAppliedStyleRef.current = null;
+        applyDanmuStyleRef.current();
+
+        // 调试钩子：控制台执行 __lunaDanmu() 查看弹幕插件内部状态
+        (window as unknown as Record<string, unknown>).__lunaDanmu = () => {
+          const p = artPlayerRef.current?.plugins?.artplayerPluginDanmuku as
+            | {
+                isHide?: boolean;
+                isStop?: boolean;
+                option?: { visible?: boolean; margin?: unknown };
+              }
+            | undefined;
+          const art = artPlayerRef.current;
+          const info = {
+            pluginMounted: !!p,
+            loadedCount: danmuLoadedCountRef.current,
+            isHide: p?.isHide,
+            isStop: p?.isStop,
+            pluginVisible: p?.option?.visible,
+            margin: p?.option?.margin,
+            playing: art?.playing,
+            currentTime: art?.currentTime,
+            playerHeight: art?.height,
+          };
+          console.table(info);
+          return info;
+        };
+        if (danmuEnabled) {
+          console.info(
+            '[Danmu][DEBUG] 播放器就绪，控制台执行 __lunaDanmu() 可查看弹幕插件状态',
+          );
+        }
       });
+
+      // 同步插件自带开关的显示状态到本地设置
+      if (danmuEnabled) {
+        artPlayerRef.current.on('artplayerPluginDanmuku:show', () => {
+          updateDanmuStyle({ visible: true });
+        });
+        artPlayerRef.current.on('artplayerPluginDanmuku:hide', () => {
+          updateDanmuStyle({ visible: false });
+        });
+        // 调试：记录插件关键事件
+        artPlayerRef.current.on(
+          'artplayerPluginDanmuku:loaded',
+          (queue: unknown) => {
+            const count = Array.isArray(queue) ? queue.length : 0;
+            danmuLoadedCountRef.current = count;
+            console.info('[Danmu][DEBUG] 事件 loaded, queue=', count);
+          },
+        );
+        artPlayerRef.current.on(
+          'artplayerPluginDanmuku:error',
+          (err: unknown) => {
+            console.error('[Danmu][DEBUG] 事件 error', err);
+          },
+        );
+        let visibleLogCount = 0;
+        artPlayerRef.current.on(
+          'artplayerPluginDanmuku:visible',
+          (danmu: unknown) => {
+            // 插件只对同 mode 做防重叠，这里补一层跨模式的行避让
+            const plugin = artPlayerRef.current?.plugins
+              ?.artplayerPluginDanmuku as
+              | { marginTop?: number; marginBottom?: number }
+              | undefined;
+            resolveDanmuOverlap(
+              danmu as DanmuRefLike,
+              plugin?.marginTop ?? DANMU_TOP_RESERVED,
+              plugin?.marginBottom ?? 0,
+            );
+            visibleLogCount += 1;
+            if (visibleLogCount <= 5 || visibleLogCount % 500 === 0) {
+              console.info(
+                '[Danmu][DEBUG] 事件 visible #' + visibleLogCount,
+                danmu,
+              );
+            }
+          },
+        );
+        // 打开播放器设置面板时收起弹幕配置面板，避免两个浮层重叠
+        artPlayerRef.current.on('setting', (show: boolean) => {
+          if (show) setDanmuPanelOpen(false);
+        });
+      }
 
       // 监听播放状态变化，控制 Wake Lock
       artPlayerRef.current.on('play', () => {
@@ -2046,7 +2440,7 @@ export default function PlayPageClient() {
       console.error('创建播放器失败:', err);
       setError('播放器初始化失败');
     }
-  }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled]);
+  }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled, danmuEnabled]);
 
   // 当组件卸载时清理定时器、Wake Lock 和播放器资源
   useEffect(() => {
@@ -2066,8 +2460,8 @@ export default function PlayPageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/play'>
-        <div className='flex items-center justify-center min-h-screen bg-transparent'>
-          <div className='text-center max-w-md mx-auto px-6'>
+        <div className='fixed inset-x-0 top-14 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] flex items-center justify-center overflow-y-auto bg-transparent px-5 py-6 md:static md:inset-auto md:min-h-screen md:overflow-visible md:py-0'>
+          <div className='mx-auto w-full max-w-md text-center'>
             {/* 动画影院图标 */}
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
@@ -2096,7 +2490,7 @@ export default function PlayPageClient() {
             </div>
 
             {/* 进度指示器 */}
-            <div className='mb-6 w-80 mx-auto'>
+            <div className='mb-6 w-full max-w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
@@ -2158,8 +2552,8 @@ export default function PlayPageClient() {
   if (error) {
     return (
       <PageLayout activePath='/play'>
-        <div className='flex items-center justify-center min-h-screen bg-transparent'>
-          <div className='text-center max-w-md mx-auto px-6'>
+        <div className='fixed inset-x-0 top-14 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] flex items-center justify-center overflow-y-auto bg-transparent px-5 py-6 md:static md:inset-auto md:min-h-screen md:overflow-visible md:py-0'>
+          <div className='mx-auto w-full max-w-md text-center'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-red-500 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
@@ -2392,6 +2786,36 @@ export default function PlayPageClient() {
                     </div>
                   </div>
                 )}
+
+                {/* 弹幕设置面板：挂到播放器内部，全屏时同样可见 */}
+                {danmuEnabled &&
+                  danmuPanelOpen &&
+                  danmuPortalTarget &&
+                  createPortal(
+                    <DanmuSettingsPanel
+                      value={danmuStyle}
+                      statusText={
+                        danmuLoading
+                          ? '弹幕加载中...'
+                          : danmuError
+                            ? danmuError
+                            : danmuMatchedInfo
+                              ? `${danmuMatchedInfo.animeTitle}${
+                                  danmuMatchedInfo.episodeTitle
+                                    ? ` · ${danmuMatchedInfo.episodeTitle}`
+                                    : ''
+                                }`
+                              : '暂无匹配结果'
+                      }
+                      onChange={updateDanmuStyle}
+                      onClose={() => setDanmuPanelOpen(false)}
+                      onOpenMatch={() => {
+                        setDanmuPanelOpen(false);
+                        setDanmuMatchOpen(true);
+                      }}
+                    />,
+                    danmuPortalTarget,
+                  )}
               </div>
             </div>
 
@@ -2420,6 +2844,30 @@ export default function PlayPageClient() {
             </div>
           </div>
         </div>
+
+        {/* 弹幕匹配弹窗（求索切换） */}
+        {danmuEnabled && (
+          <FullscreenPortal>
+            <DanmuManualMatchModal
+              open={danmuMatchOpen}
+              title={videoTitle}
+              candidates={danmuCandidates}
+              loading={danmuLoading}
+              onClose={() => setDanmuMatchOpen(false)}
+              onSearch={danmuManualSearch}
+              onSelect={(candidate) => {
+                void danmuApplyMatch(candidate);
+                setDanmuMatchOpen(false);
+                showToast('已切换弹幕匹配');
+              }}
+              onResetAuto={() => {
+                void danmuResetToAuto();
+                setDanmuMatchOpen(false);
+                showToast('已恢复自动匹配');
+              }}
+            />
+          </FullscreenPortal>
+        )}
         {/* 详情展示 */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           {/* 文字区 */}

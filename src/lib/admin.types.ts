@@ -21,6 +21,10 @@ export interface AdminConfig {
     DisableYellowFilter: boolean;
     FluidSearch: boolean;
     OpenRegister: boolean;
+    DanmuApi?: {
+      url: string;
+      token?: string;
+    } | null;
   };
   UserConfig: {
     Users: {
