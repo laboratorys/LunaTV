@@ -21,6 +21,10 @@ export interface AdminConfig {
     DisableYellowFilter: boolean;
     FluidSearch: boolean;
     OpenRegister: boolean;
+    DanmuApi?: {
+      url: string;
+      token?: string;
+    } | null;
   };
   UserConfig: {
     Users: {
@@ -41,6 +45,7 @@ export interface AdminConfig {
     name: string;
     api: string;
     detail?: string;
+    filter_ads?: boolean; // 该源是否插播广告（缺省 false）
     from: 'config' | 'custom';
     disabled?: boolean;
   }[];

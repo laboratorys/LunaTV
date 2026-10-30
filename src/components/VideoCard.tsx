@@ -53,7 +53,7 @@ export interface VideoCardProps {
   type?: string;
   isBangumi?: boolean;
   isAggregate?: boolean;
-  origin?: 'vod' | 'live';
+  origin?: 'vod' | 'live' | 'douban' | 'bangumi';
   remark?: string;
 }
 
@@ -137,6 +137,14 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const actualSource = source;
     const actualId = id;
     const actualDoubanId = dynamicDoubanId;
+    // 收藏存储 key：豆瓣/番组计划卡片不传 source（key 为 +豆瓣ID）
+    const favSource = (from === 'douban' ? '' : actualSource) || '';
+    const favId =
+      (from === 'douban'
+        ? actualDoubanId != null
+          ? String(actualDoubanId)
+          : ''
+        : actualId) || '';
     const actualEpisodes = dynamicEpisodes;
     const actualYear = year;
     const actualQuery = query || '';
@@ -147,20 +155,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       : type;
     const actualRemark = dynamicRemark;
 
-    // 获取收藏状态（搜索结果页面不检查）
+    // 获取收藏状态（搜索结果页面不检查；允许 source 为空）
     useEffect(() => {
-      if (
-        from === 'douban' ||
-        from === 'search' ||
-        from === 'source' ||
-        !actualSource ||
-        !actualId
-      )
-        return;
+      if (from === 'search' || !favId) return;
 
       const fetchFavoriteStatus = async () => {
         try {
-          const fav = await isFavorited(actualSource, actualId);
+          const fav = await isFavorited(favSource, favId);
           setFavorited(fav);
         } catch (err) {
           throw new Error('检查收藏状态失败');
@@ -170,7 +171,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       fetchFavoriteStatus();
 
       // 监听收藏状态更新事件
-      const storageKey = generateStorageKey(actualSource, actualId);
+      const storageKey = generateStorageKey(favSource, favId);
       const unsubscribe = subscribeToDataUpdates(
         'favoritesUpdated',
         (newFavorites: Record<string, any>) => {
@@ -181,13 +182,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       );
 
       return unsubscribe;
-    }, [from, actualSource, actualId]);
+    }, [from, favSource, favId]);
 
     const handleToggleFavorite = useCallback(
       async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (from === 'douban' || !actualSource || !actualId) return;
+        if (!favId) return;
 
         try {
           // 确定当前收藏状态
@@ -196,7 +197,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
           if (currentFavorited) {
             // 如果已收藏，删除收藏
-            await deleteFavorite(actualSource, actualId);
+            await deleteFavorite(favSource, favId);
             if (from === 'search') {
               setSearchFavorited(false);
             } else {
@@ -204,12 +205,19 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             }
           } else {
             // 如果未收藏，添加收藏
-            await saveFavorite(actualSource, actualId, {
+            await saveFavorite(favSource, favId, {
               title: actualTitle,
-              source_name: source_name || '',
+              source_name: '', // 豆瓣/番组不传 source_name
+              origin:
+                from === 'douban'
+                  ? isBangumi
+                    ? 'bangumi'
+                    : 'douban'
+                  : undefined,
               year: actualYear || '',
               cover: actualPoster,
               total_episodes: actualEpisodes ?? 1,
+              ...(from === 'douban' ? { search_title: actualTitle } : {}),
               save_time: Date.now(),
             });
             if (from === 'search') {
@@ -224,8 +232,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       },
       [
         from,
-        actualSource,
-        actualId,
+        favSource,
+        favId,
         actualTitle,
         source_name,
         actualYear,
@@ -233,6 +241,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         actualEpisodes,
         favorited,
         searchFavorited,
+        isBangumi,
       ],
     );
 
@@ -428,7 +437,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           showSourceName: false,
           showProgress: false,
           showPlayButton: true,
-          showHeart: false,
+          showHeart: true,
           showCheckCircle: false,
           showDoubanLink: true,
           showRating: !!rate,
@@ -438,7 +447,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           showSourceName: false,
           showProgress: false,
           showPlayButton: true,
-          showHeart: false,
+          showHeart: true,
           showCheckCircle: false,
           showDoubanLink: false,
           showRating: rate && rate != '0.0',
@@ -475,7 +484,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       // 聚合源信息 - 直接在菜单中展示，不需要单独的操作项
 
       // 收藏/取消收藏操作
-      if (config.showHeart && from !== 'douban' && actualSource && actualId) {
+      if (config.showHeart && favId) {
         const currentFavorited =
           from === 'search' ? searchFavorited : favorited;
 

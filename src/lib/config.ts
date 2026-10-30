@@ -12,6 +12,7 @@ export interface ApiSite {
   api: string;
   name: string;
   detail?: string;
+  filter_ads?: boolean; // 该源是否插播广告（缺省按 false，配合播放器去广告开关才生效）
 }
 
 export interface LiveCfg {
@@ -34,7 +35,10 @@ interface ConfigFileStruct {
   lives?: {
     [key: string]: LiveCfg;
   };
-  ad_rules?: string;
+  danmu_api?: {
+    url: string;
+    token?: string;
+  };
 }
 
 export const API_CONFIG = {
@@ -82,6 +86,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
       existingSource.name = site.name;
       existingSource.api = site.api;
       existingSource.detail = site.detail;
+      existingSource.filter_ads = site.filter_ads === true;
       existingSource.from = 'config';
     } else {
       // 如果不存在，创建新条目
@@ -90,6 +95,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
         name: site.name,
         api: site.api,
         detail: site.detail,
+        filter_ads: site.filter_ads === true,
         from: 'config',
         disabled: false,
       });
@@ -181,7 +187,18 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
 
   // 将 Map 转换回数组
   adminConfig.LiveConfig = Array.from(currentLives.values());
-  adminConfig.AdRules = fileConfig.ad_rules || '';
+
+  // 弹幕 API：订阅文件的 danmu_api 优先，每次拉取保存都同步覆盖到站点配置。
+  // 与 api_site/lives/custom_category 一致，文件为权威来源；手动在站点配置里
+  // 改的值会被下一次拉取覆盖。文件未提供 danmu_api 时保留现有配置不动。
+  const fileDanmuApi = fileConfig.danmu_api;
+  if (fileDanmuApi?.url) {
+    adminConfig.SiteConfig.DanmuApi = {
+      url: fileDanmuApi.url,
+      token: fileDanmuApi.token,
+    };
+  }
+
   return adminConfig;
 }
 
@@ -231,6 +248,7 @@ async function getInitConfig(
         process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true',
       FluidSearch: process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false',
       OpenRegister: process.env.NEXT_PUBLIC_OPEN_REGISTER === 'true',
+      DanmuApi: null,
     },
     UserConfig: {
       Users: [],
@@ -250,7 +268,6 @@ async function getInitConfig(
       source: false,
       live: false,
     },
-    AdRules: cfgFile.ad_rules || '',
   };
 
   // 补充用户信息
@@ -383,6 +400,9 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   if (!adminConfig.SiteConfig.BgmProxy) {
     adminConfig.SiteConfig.BgmProxy = '';
   }
+  if (adminConfig.SiteConfig.DanmuApi === undefined) {
+    adminConfig.SiteConfig.DanmuApi = null;
+  }
   // 站长变更自检
   // const ownerUser = process.env.USERNAME;
 
@@ -498,6 +518,7 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
         name: s.name,
         api: s.api,
         detail: s.detail,
+        filter_ads: s.filter_ads,
       }));
   }
 
@@ -523,6 +544,7 @@ export async function getAvailableApiSites(user?: string): Promise<ApiSite[]> {
           name: s.name,
           api: s.api,
           detail: s.detail,
+          filter_ads: s.filter_ads,
         }));
     }
   }

@@ -340,6 +340,27 @@ div[data-media-provider] video {
   height: 100%;
 }
 
+/* 屏蔽 ArtPlayer 自带 notice：它会连带播放/暂停等提示一起弹，改用自己的顶部提示 */
+html .art-video-player.art-notice-show .art-notice {
+  display: none !important;
+}
+
+/* 自定义播放器顶部提示 */
+@keyframes player-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.player-toast {
+  animation: player-toast-in 0.2s ease-out;
+}
+
 /* 隐藏移动端竖屏时的 pip 按钮 */
 @media (max-width: 768px) {
   .art-control-pip {
@@ -353,4 +374,91 @@ div[data-media-provider] video {
   .art-control-volume {
     display: none !important;
   }
+}
+
+/* 弹幕插件主题色：把插件硬编码的 B 站蓝替换为站点主题色 */
+:root {
+  --danmu-accent: var(--color-primary-500, #22c55e);
+  --danmu-accent-hover: var(--color-primary-600, #16a34a);
+}
+
+.artplayer-plugin-danmuku .apd-check-on path,
+.artplayer-plugin-danmuku .apd-mode-0-off path,
+.artplayer-plugin-danmuku .apd-mode-1-off path,
+.artplayer-plugin-danmuku .apd-mode-2-off path {
+  fill: var(--danmu-accent) !important;
+}
+
+/* 弹幕开关按钮：默认白色，不使用主题色（避免与开启态的绿色冲突） */
+.artplayer-plugin-danmuku .apd-toggle-on path,
+.artplayer-plugin-danmuku .apd-toggle-off path {
+  fill: #ffffff !important;
+}
+
+/* 插件挂在 controls-center 里，ArtPlayer 默认把该容器设为 display:none，需显式恢复 */
+.art-video-player
+  .art-controls
+  .art-controls-center:has(.artplayer-plugin-danmuku) {
+  display: flex;
+}
+
+.artplayer-plugin-danmuku .apd-modes .apd-mode:hover,
+.artplayer-plugin-danmuku .apd-config-other .apd-other:hover {
+  color: var(--danmu-accent) !important;
+}
+
+.artplayer-plugin-danmuku .apd-slider .apd-slider-progress,
+.artplayer-plugin-danmuku .apd-slider .apd-slider-dot,
+.artplayer-plugin-danmuku .apd-send {
+  background-color: var(--danmu-accent) !important;
+}
+
+.artplayer-plugin-danmuku .apd-send:hover {
+  background-color: var(--danmu-accent-hover) !important;
+}
+
+[data-danmuku-mode='0'] .apd-style-mode [data-mode='0'],
+[data-danmuku-mode='1'] .apd-style-mode [data-mode='1'],
+[data-danmuku-mode='2'] .apd-style-mode [data-mode='2'] {
+  color: var(--danmu-accent) !important;
+}
+
+/* 隐藏插件自带的配置齿轮：与自定义「弹幕设置」面板重复 */
+.artplayer-plugin-danmuku .apd-config {
+  display: none !important;
+}
+
+/* 弹幕设置面板：需盖在播放器控制栏与设置面板之上 */
+.danmu-settings-panel {
+  z-index: 999;
+}
+
+/* 弹幕设置面板：滑块使用主题色（浏览器默认为蓝色），进度条由内联渐变绘制 */
+.danmu-settings-panel input[type='range'] {
+  accent-color: var(--danmu-accent);
+  height: 4px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.2);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.danmu-settings-panel input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--danmu-accent);
+  border: none;
+  cursor: pointer;
+}
+
+.danmu-settings-panel input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--danmu-accent);
+  border: none;
+  cursor: pointer;
 }

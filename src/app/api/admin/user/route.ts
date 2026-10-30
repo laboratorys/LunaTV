@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -506,7 +506,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 将更新后的配置写入数据库
-    await db.saveAdminConfig(adminConfig);
+    await setCachedConfig(adminConfig);
 
     return NextResponse.json(
       { ok: true },

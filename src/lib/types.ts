@@ -46,7 +46,7 @@ export interface Favorite {
   cover: string;
   save_time: number; // 记录保存时间（时间戳）
   search_title: string; // 搜索时使用的标题
-  origin?: 'vod' | 'live';
+  origin?: 'vod' | 'live' | 'douban' | 'bangumi';
   tvbox_record: KeepItem; //TVBox记录
 }
 

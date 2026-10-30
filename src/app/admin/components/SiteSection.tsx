@@ -1,13 +1,16 @@
 'use client';
 
 import { ExternalLink, Globe, Link2, Save, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { SectionConfigProps } from '@/lib/admin.types';
 
 import CustomDropdown from '@/components/CustomDropdown';
 
 import ConfigToggle from '@/app/admin/components/ConfigToggle';
+import DanmuApiSection, {
+  type DanmuSource,
+} from '@/app/admin/components/DanmuApiSection';
 import { styles, useLoadingState } from '@/app/admin/components/UIComponents';
 // 豆瓣代理预设选项
 const DOUBAN_PROXIES = [
@@ -77,210 +80,85 @@ export default function SiteSection({
   const handleChange = (key: string, value: any) => {
     setSiteConfig((prev: any) => ({ ...prev, [key]: value }));
   };
+
+  // 弹幕配置：站点配置优先，其次读取配置文件；写入统一走站点配置保存
+  const siteDanmu = siteConfig?.DanmuApi;
+  const [fileDanmu, setFileDanmu] = useState<{
+    url: string;
+    token: string;
+  } | null>(null);
+  useEffect(() => {
+    try {
+      const fileConfig = JSON.parse(config?.ConfigFile || '{}') as {
+        danmu_api?: { url?: string; token?: string };
+      };
+      setFileDanmu(
+        fileConfig.danmu_api?.url
+          ? {
+              url: fileConfig.danmu_api.url,
+              token: fileConfig.danmu_api.token || '',
+            }
+          : null,
+      );
+    } catch {
+      setFileDanmu(null);
+    }
+  }, [config]);
+
+  const danmuUrl = siteDanmu?.url || fileDanmu?.url || '';
+  const danmuToken = siteDanmu?.url
+    ? siteDanmu.token || ''
+    : fileDanmu?.token || '';
+  const danmuSource: DanmuSource = siteDanmu?.url
+    ? 'site'
+    : fileDanmu
+      ? 'file'
+      : 'none';
+
+  const handleDanmuUrl = (value: string) => {
+    handleChange('DanmuApi', { url: value, token: danmuToken });
+  };
+  const handleDanmuToken = (value: string) => {
+    handleChange('DanmuApi', { url: danmuUrl, token: value });
+  };
+
   return (
     <div className='space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32'>
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-        <div className='space-y-8'>
-          {/* 基本设置 */}
-          <div className={`${styles.roundedCard}`}>
-            <div className='flex items-center gap-2 mb-5'>
-              <Globe className='text-primary-500 w-5 h-5' />
-              <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
-                基本设置
-              </h3>
-            </div>
-            <div className='space-y-5'>
-              <div>
-                <label className='block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 ml-1'>
-                  网站名称
-                </label>
-                <input
-                  className={styles.input}
-                  value={siteConfig?.SiteName}
-                  onChange={(e) => handleChange('SiteName', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 ml-1'>
-                  站点公告
-                </label>
-                <textarea
-                  className={`${styles.input} rounded-2xl! h-32 resize-none transition-all`}
-                  value={siteConfig?.Announcement}
-                  onChange={(e) => handleChange('Announcement', e.target.value)}
-                />
-              </div>
-            </div>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch'>
+        {/* 基本设置 */}
+        <div className={`${styles.roundedCard}`}>
+          <div className='flex items-center gap-2 mb-5'>
+            <Globe className='text-primary-500 w-5 h-5' />
+            <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
+              基本设置
+            </h3>
           </div>
-
-          {/* 数据设置 */}
-          <div
-            className={`${styles.roundedCard} relative ${
-              isDropdownOpen ? 'z-30' : 'z-10'
-            }`}
-          >
-            <div className='flex items-center gap-2  mb-5'>
-              <Link2 className='text-primary-500 w-5 h-5' />
-              <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
-                数据代理
-              </h3>
+          <div className='space-y-5'>
+            <div>
+              <label className='block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 ml-1'>
+                网站名称
+              </label>
+              <input
+                className={styles.input}
+                value={siteConfig?.SiteName}
+                onChange={(e) => handleChange('SiteName', e.target.value)}
+              />
             </div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              {/* 数据接口代理 */}
-              <div className='space-y-2'>
-                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
-                  豆瓣API代理
-                </label>
-                <CustomDropdown
-                  options={DOUBAN_PROXIES}
-                  value={siteConfig?.DoubanProxyType || ''}
-                  onChange={(val: string) =>
-                    handleChange('DoubanProxyType', val)
-                  }
-                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
-                  className='w-full'
-                />
-                {siteConfig?.DoubanProxyType === 'custom' && (
-                  <input
-                    placeholder='请输入自定义数据代理地址'
-                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
-                    value={siteConfig.DoubanProxy || ''}
-                    onChange={(e) =>
-                      handleChange('CustomDoubanProxy', e.target.value)
-                    }
-                  />
-                )}
-                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
-                  选择获取豆瓣数据的方式
-                </p>
-              </div>
-
-              {/* 豆瓣图片代理 */}
-              <div className='space-y-2'>
-                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
-                  豆瓣图片代理
-                </label>
-                <CustomDropdown
-                  options={DOUBAN_IMAGE_PROXIES}
-                  value={siteConfig?.DoubanImageProxyType || ''}
-                  onChange={(val: string) =>
-                    handleChange('DoubanImageProxyType', val)
-                  }
-                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
-                  className='w-full'
-                />
-                {siteConfig?.DoubanImageProxyType === 'custom' && (
-                  <input
-                    placeholder='请输入自定义图片代理地址'
-                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
-                    value={siteConfig?.DoubanImageProxy || ''}
-                    onChange={(e) =>
-                      handleChange('CustomDoubanImageProxy', e.target.value)
-                    }
-                  />
-                )}
-                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
-                  选择获取豆瓣图片的方式
-                </p>
-              </div>
-              {/* 番组计划（BGM）代理 */}
-              <div className='space-y-2'>
-                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
-                  BGM API代理
-                </label>
-                <CustomDropdown
-                  options={BGM_PROXIES}
-                  value={siteConfig?.BgmProxyType || 'cmliussss-cdn-tencent'}
-                  onChange={(val: string) => handleChange('BgmProxyType', val)}
-                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
-                  className='w-full'
-                />
-                {siteConfig?.BgmProxyType === 'custom' && (
-                  <input
-                    placeholder='请输入自定义数据代理地址'
-                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
-                    value={siteConfig.BgmProxy || ''}
-                    onChange={(e) =>
-                      handleChange('CustomBgmProxy', e.target.value)
-                    }
-                  />
-                )}
-                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
-                  选择获取BGM数据的方式
-                </p>
-              </div>
-              {/* 番组计划（BGM）图片代理 */}
-              <div className='space-y-2'>
-                <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
-                  BGM 图片代理
-                </label>
-                <CustomDropdown
-                  options={BGM_IMAGE_PROXIES}
-                  value={
-                    siteConfig?.BgmImageProxyType || 'cmliussss-cdn-tencent'
-                  }
-                  onChange={(val: string) =>
-                    handleChange('BgmImageProxyType', val)
-                  }
-                  onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
-                  className='w-full'
-                />
-                {siteConfig?.BgmImageProxyType === 'custom' && (
-                  <input
-                    placeholder='请输入自定义 BGM 图片代理地址'
-                    className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
-                    value={siteConfig?.BgmImageProxy || ''}
-                    onChange={(e) =>
-                      handleChange('CustomBgmImageProxy', e.target.value)
-                    }
-                  />
-                )}
-                <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
-                  选择获取BGM图片的方式
-                </p>
-              </div>
-            </div>
-
-            <div className='pt-0 mt-1 space-y-2'>
-              <div className='px-1 flex items-center gap-2'>
-                <span className='text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500'>
-                  Thanks to:
-                </span>
-                <div className='flex items-center gap-3'>
-                  <a
-                    href='https://github.com/cmliu'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
-                  >
-                    @CMLiussss <ExternalLink size={10} />
-                  </a>
-                  <a
-                    href='https://douban.com'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
-                  >
-                    豆瓣电影 <ExternalLink size={10} />
-                  </a>
-                  <a
-                    href='https://bgm.tv'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
-                  >
-                    Bangumi <ExternalLink size={10} />
-                  </a>
-                </div>
-              </div>
+            <div>
+              <label className='block text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 ml-1'>
+                站点公告
+              </label>
+              <textarea
+                className={`${styles.input} rounded-2xl! h-80 resize-none transition-all`}
+                value={siteConfig?.Announcement}
+                onChange={(e) => handleChange('Announcement', e.target.value)}
+              />
             </div>
           </div>
         </div>
 
         {/* 系统策略 */}
-        <div
-          className={`${styles.roundedCard} relative ${isDropdownOpen ? '' : 'z-0'}`}
-        >
+        <div className={`${styles.roundedCard} relative`}>
           <div className='flex items-center gap-2 mb-5'>
             <ShieldCheck className='text-primary-500 w-5 h-5' />
             <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
@@ -345,6 +223,177 @@ export default function SiteSection({
             />
           </div>
         </div>
+
+        {/* 数据代理 */}
+        <div
+          className={`${styles.roundedCard} relative ${
+            isDropdownOpen ? 'z-30' : 'z-10'
+          }`}
+        >
+          <div className='flex items-center gap-2  mb-5'>
+            <Link2 className='text-primary-500 w-5 h-5' />
+            <h3 className='font-bold text-gray-900 dark:text-white text-lg'>
+              数据代理
+            </h3>
+          </div>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            {/* 数据接口代理 */}
+            <div className='space-y-2'>
+              <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                豆瓣API代理
+              </label>
+              <CustomDropdown
+                options={DOUBAN_PROXIES}
+                value={siteConfig?.DoubanProxyType || ''}
+                onChange={(val: string) => handleChange('DoubanProxyType', val)}
+                onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                className='w-full'
+              />
+              {siteConfig?.DoubanProxyType === 'custom' && (
+                <input
+                  placeholder='请输入自定义数据代理地址'
+                  className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                  value={siteConfig.DoubanProxy || ''}
+                  onChange={(e) =>
+                    handleChange('CustomDoubanProxy', e.target.value)
+                  }
+                />
+              )}
+              <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                选择获取豆瓣数据的方式
+              </p>
+            </div>
+
+            {/* 豆瓣图片代理 */}
+            <div className='space-y-2'>
+              <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                豆瓣图片代理
+              </label>
+              <CustomDropdown
+                options={DOUBAN_IMAGE_PROXIES}
+                value={siteConfig?.DoubanImageProxyType || ''}
+                onChange={(val: string) =>
+                  handleChange('DoubanImageProxyType', val)
+                }
+                onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                className='w-full'
+              />
+              {siteConfig?.DoubanImageProxyType === 'custom' && (
+                <input
+                  placeholder='请输入自定义图片代理地址'
+                  className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                  value={siteConfig?.DoubanImageProxy || ''}
+                  onChange={(e) =>
+                    handleChange('CustomDoubanImageProxy', e.target.value)
+                  }
+                />
+              )}
+              <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                选择获取豆瓣图片的方式
+              </p>
+            </div>
+            {/* 番组计划（BGM）代理 */}
+            <div className='space-y-2'>
+              <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                BGM API代理
+              </label>
+              <CustomDropdown
+                options={BGM_PROXIES}
+                value={siteConfig?.BgmProxyType || 'cmliussss-cdn-tencent'}
+                onChange={(val: string) => handleChange('BgmProxyType', val)}
+                onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                className='w-full'
+              />
+              {siteConfig?.BgmProxyType === 'custom' && (
+                <input
+                  placeholder='请输入自定义数据代理地址'
+                  className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                  value={siteConfig.BgmProxy || ''}
+                  onChange={(e) =>
+                    handleChange('CustomBgmProxy', e.target.value)
+                  }
+                />
+              )}
+              <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                选择获取BGM数据的方式
+              </p>
+            </div>
+            {/* 番组计划（BGM）图片代理 */}
+            <div className='space-y-2'>
+              <label className='block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1'>
+                BGM 图片代理
+              </label>
+              <CustomDropdown
+                options={BGM_IMAGE_PROXIES}
+                value={siteConfig?.BgmImageProxyType || 'cmliussss-cdn-tencent'}
+                onChange={(val: string) =>
+                  handleChange('BgmImageProxyType', val)
+                }
+                onOpenChange={(isOpen) => setIsDropdownOpen(isOpen)}
+                className='w-full'
+              />
+              {siteConfig?.BgmImageProxyType === 'custom' && (
+                <input
+                  placeholder='请输入自定义 BGM 图片代理地址'
+                  className={`${styles.input} text-[11px]! py-1.5! animate-in fade-in zoom-in-95 duration-200`}
+                  value={siteConfig?.BgmImageProxy || ''}
+                  onChange={(e) =>
+                    handleChange('CustomBgmImageProxy', e.target.value)
+                  }
+                />
+              )}
+              <p className='text-[11px] text-gray-400 dark:text-gray-500 italic px-1'>
+                选择获取BGM图片的方式
+              </p>
+            </div>
+          </div>
+
+          <div className='pt-0 mt-1 space-y-2'>
+            <div className='px-1 flex items-center gap-2'>
+              <span className='text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500'>
+                Thanks to:
+              </span>
+              <div className='flex items-center gap-3'>
+                <a
+                  href='https://github.com/cmliu'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
+                >
+                  @CMLiussss <ExternalLink size={10} />
+                </a>
+                <a
+                  href='https://douban.com'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
+                >
+                  豆瓣电影 <ExternalLink size={10} />
+                </a>
+                <a
+                  href='https://bgm.tv'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-[11px] text-primary-600/80 hover:text-primary-500 dark:text-primary-400/80 transition-colors flex items-center gap-1'
+                >
+                  Bangumi <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 弹幕配置 */}
+        <DanmuApiSection
+          url={danmuUrl}
+          token={danmuToken}
+          source={danmuSource}
+          onUrlChange={handleDanmuUrl}
+          onTokenChange={handleDanmuToken}
+          showAlert={showAlert}
+          showError={showError}
+          showSuccess={showSuccess}
+        />
       </div>
 
       {/* 保存按钮 */}

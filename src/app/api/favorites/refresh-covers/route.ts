@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getConfig } from '@/lib/config';
-import { db } from '@/lib/db';
+import { db, parseStorageKey } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
         const updatePromises = Object.entries(favorites).map(
           async ([key, favItem]: [string, any]) => {
-            const [source, id] = key.split('+');
+            const { source, id } = parseStorageKey(key);
             if (!source || !id) return;
 
             const apiSite = apiSites.find((site) => site.key === source);

@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       OpenRegister,
+      DanmuApi,
     } = body as {
       SiteName: string;
       Announcement: string;
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter: boolean;
       FluidSearch: boolean;
       OpenRegister: boolean;
+      DanmuApi?: { url?: string; token?: string } | null;
     };
 
     // 参数校验
@@ -82,6 +84,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
+    // 弹幕 API 参数校验（可选）
+    if (DanmuApi !== undefined && DanmuApi !== null) {
+      if (typeof DanmuApi !== 'object' || Array.isArray(DanmuApi)) {
+        return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
+      }
+      if (DanmuApi.url !== undefined && typeof DanmuApi.url !== 'string') {
+        return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
+      }
+      if (DanmuApi.token !== undefined && typeof DanmuApi.token !== 'string') {
+        return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
+      }
+    }
+
     const adminConfig = await getConfig();
 
     // 权限校验
@@ -94,6 +109,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
       }
     }
+
+    // 弹幕 API：地址为空则视为关闭（null），否则规范化
+    const normalizedDanmuApi =
+      DanmuApi &&
+      typeof DanmuApi === 'object' &&
+      !Array.isArray(DanmuApi) &&
+      DanmuApi.url?.trim()
+        ? { url: DanmuApi.url.trim(), token: DanmuApi.token || '' }
+        : null;
 
     // 更新缓存中的站点设置
     adminConfig.SiteConfig = {
@@ -112,6 +136,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       OpenRegister,
+      DanmuApi: normalizedDanmuApi,
     };
 
     // 写入数据库、缓存
