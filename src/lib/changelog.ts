@@ -12,16 +12,17 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
   {
     version: '5.1.7',
-    date: '2026-10-23',
+    date: '2026-10-30',
     added: [
-      '使用新的去广告方案',
+      '使用新的去广告方案，不再依赖于广告规则',
       '增加对LabTV移动端的支持',
       '收藏增强：支持收藏豆瓣、BGM、短剧等影视信息',
+      '增加对弹幕的支持（LogVar）',
     ],
     changed: [
       // 无变更内容
     ],
-    fixed: ['换源播放时，播放记录会重复的问题'],
+    fixed: ['换源播放时，播放记录会重复的问题', '收藏接口请求频繁'],
   },
   {
     version: '5.1.5',
