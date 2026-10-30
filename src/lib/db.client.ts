@@ -15,6 +15,10 @@
  */
 
 import { getAuthInfoFromBrowserCookie } from './auth';
+import {
+  isSameVideoRecord,
+  pickDuplicatePlayRecordKeys,
+} from './playRecordUtils';
 import { SkipConfig } from './types';
 
 // 全局错误触发函数
@@ -102,6 +106,9 @@ const SEARCH_HISTORY_LIMIT = 20;
 class HybridCacheManager {
   private static instance: HybridCacheManager;
 
+  // 内存层：首页几十张卡片会反复读缓存，避免每次都 JSON.parse 整个用户缓存
+  private memoryCache = new Map<string, UserCacheStore>();
+
   static getInstance(): HybridCacheManager {
     if (!HybridCacheManager.instance) {
       HybridCacheManager.instance = new HybridCacheManager();
@@ -130,10 +137,15 @@ class HybridCacheManager {
   private getUserCache(username: string): UserCacheStore {
     if (typeof window === 'undefined') return {};
 
+    const cacheKey = this.getUserCacheKey(username);
+    const cachedInMemory = this.memoryCache.get(cacheKey);
+    if (cachedInMemory) return cachedInMemory;
+
     try {
-      const cacheKey = this.getUserCacheKey(username);
       const cached = localStorage.getItem(cacheKey);
-      return cached ? JSON.parse(cached) : {};
+      const parsed = (cached ? JSON.parse(cached) : {}) as UserCacheStore;
+      this.memoryCache.set(cacheKey, parsed);
+      return parsed;
     } catch (error) {
       console.warn('获取用户缓存失败:', error);
       return {};
@@ -146,6 +158,9 @@ class HybridCacheManager {
   private saveUserCache(username: string, cache: UserCacheStore): void {
     if (typeof window === 'undefined') return;
 
+    const cacheKey = this.getUserCacheKey(username);
+    this.memoryCache.set(cacheKey, cache);
+
     try {
       // 检查缓存大小，超过15MB时清理旧数据
       const cacheSize = JSON.stringify(cache).length;
@@ -154,7 +169,6 @@ class HybridCacheManager {
         this.cleanOldCache(cache);
       }
 
-      const cacheKey = this.getUserCacheKey(username);
       localStorage.setItem(cacheKey, JSON.stringify(cache));
     } catch (error) {
       console.warn('保存用户缓存失败:', error);
@@ -164,8 +178,8 @@ class HybridCacheManager {
         error.name === 'QuotaExceededError'
       ) {
         this.clearAllCache();
+        this.memoryCache.set(cacheKey, cache);
         try {
-          const cacheKey = this.getUserCacheKey(username);
           localStorage.setItem(cacheKey, JSON.stringify(cache));
         } catch (retryError) {
           console.error('重试保存缓存仍然失败:', retryError);
@@ -196,6 +210,7 @@ class HybridCacheManager {
    * 清理所有缓存
    */
   private clearAllCache(): void {
+    this.memoryCache.clear();
     const keys = Object.keys(localStorage);
     keys.forEach((key) => {
       if (key.startsWith('lunatv_cache_')) {
@@ -351,6 +366,7 @@ class HybridCacheManager {
 
     try {
       const cacheKey = this.getUserCacheKey(targetUsername);
+      this.memoryCache.delete(cacheKey);
       localStorage.removeItem(cacheKey);
     } catch (error) {
       console.warn('清除用户缓存失败:', error);
@@ -390,6 +406,8 @@ class HybridCacheManager {
       }
 
       keysToRemove.forEach((key) => localStorage.removeItem(key));
+      // 磁盘数据变了，内存层整体失效，下次读取重新加载
+      this.memoryCache.clear();
     } catch (error) {
       console.warn('清除过期缓存失败:', error);
     }
@@ -420,12 +438,14 @@ async function handleDatabaseOperationFailure(
         freshData =
           await fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`);
         cacheManager.cachePlayRecords(freshData);
+        markRemoteDataSynced('playRecords');
         eventName = 'playRecordsUpdated';
         break;
       case 'favorites':
         freshData =
           await fetchFromApi<Record<string, Favorite>>(`/api/favorites`);
         cacheManager.cacheFavorites(freshData);
+        markRemoteDataSynced('favorites');
         eventName = 'favoritesUpdated';
         break;
       case 'searchHistory':
@@ -489,6 +509,103 @@ async function fetchFromApi<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+// ---- 远程数据同步（请求合并 + TTL 节流）----
+// 首页会同时渲染几十张 VideoCard，每张都会检查收藏状态。
+// 若每次都直接打接口，一次渲染就会产生几十个 /api/favorites 请求。
+const REMOTE_SYNC_TTL = 30 * 1000; // 同一份数据 30s 内最多同步一次
+
+type RemoteDataType = 'favorites' | 'playRecords';
+
+const REMOTE_SYNC_CONFIG: Record<
+  RemoteDataType,
+  { path: string; event: string; label: string }
+> = {
+  favorites: {
+    path: '/api/favorites',
+    event: 'favoritesUpdated',
+    label: '收藏',
+  },
+  playRecords: {
+    path: '/api/playrecords',
+    event: 'playRecordsUpdated',
+    label: '播放记录',
+  },
+};
+
+const remoteSyncState: Record<
+  RemoteDataType,
+  { syncedAt: number; generation: number; task: Promise<any> | null }
+> = {
+  favorites: { syncedAt: 0, generation: 0, task: null },
+  playRecords: { syncedAt: 0, generation: 0, task: null },
+};
+
+/**
+ * 从服务端拉取数据：同一时刻只发一个请求，其余调用共享同一个 Promise。
+ * 拿到数据后与本地缓存比对，有变化才写缓存并派发更新事件。
+ */
+const loadRemoteData = <T>(
+  type: RemoteDataType,
+  readCache: () => T | null,
+  writeCache: (data: T) => void,
+): Promise<T> => {
+  const state = remoteSyncState[type];
+  if (state.task) return state.task as Promise<T>;
+
+  // 记录发起时的版本号，返回时若已被本地改写则丢弃结果
+  const generation = state.generation;
+
+  const task = fetchFromApi<T>(REMOTE_SYNC_CONFIG[type].path)
+    .then((data) => {
+      if (generation !== state.generation) return data;
+
+      state.syncedAt = Date.now();
+      if (JSON.stringify(readCache()) !== JSON.stringify(data)) {
+        writeCache(data);
+        window.dispatchEvent(
+          new CustomEvent(REMOTE_SYNC_CONFIG[type].event, { detail: data }),
+        );
+      }
+      return data;
+    })
+    .finally(() => {
+      state.task = null;
+    });
+
+  state.task = task;
+  return task;
+};
+
+/**
+ * 缓存命中时的后台刷新：TTL 内不重复请求，并发调用复用同一个请求。
+ */
+const refreshRemoteDataInBackground = <T>(
+  type: RemoteDataType,
+  readCache: () => T | null,
+  writeCache: (data: T) => void,
+): void => {
+  const state = remoteSyncState[type];
+  if (state.task) return;
+  if (Date.now() - state.syncedAt < REMOTE_SYNC_TTL) return;
+
+  loadRemoteData(type, readCache, writeCache).catch((err) => {
+    // 失败也记录时间，避免异常时反复重试形成请求风暴
+    state.syncedAt = Date.now();
+    console.warn(`后台同步${REMOTE_SYNC_CONFIG[type].label}失败:`, err);
+    triggerGlobalError(`后台同步${REMOTE_SYNC_CONFIG[type].label}失败`);
+  });
+};
+
+/**
+ * 标记某类数据已是最新（本地刚改写或刚主动拉取）：
+ * 重置 TTL，并作废此刻仍在途的请求，避免旧数据覆盖新数据。
+ */
+const markRemoteDataSynced = (type: RemoteDataType): void => {
+  const state = remoteSyncState[type];
+  state.generation += 1;
+  state.syncedAt = Date.now();
+};
+
 /**
  * 生成存储key
  */
@@ -519,42 +636,26 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
 
   // 数据库存储模式：使用混合缓存策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
+    const readCache = () => cacheManager.getCachedPlayRecords();
+    const writeCache = (data: Record<string, PlayRecord>) =>
+      cacheManager.cachePlayRecords(data);
+
     // 优先从缓存获取数据
-    const cachedData = cacheManager.getCachedPlayRecords();
+    const cachedData = readCache();
 
     if (cachedData) {
-      // 返回缓存数据，同时后台异步更新
-      fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`)
-        .then((freshData) => {
-          // 只有数据真正不同时才更新缓存
-          if (JSON.stringify(cachedData) !== JSON.stringify(freshData)) {
-            cacheManager.cachePlayRecords(freshData);
-            // 触发数据更新事件，供组件监听
-            window.dispatchEvent(
-              new CustomEvent('playRecordsUpdated', {
-                detail: freshData,
-              }),
-            );
-          }
-        })
-        .catch((err) => {
-          console.warn('后台同步播放记录失败:', err);
-          triggerGlobalError('后台同步播放记录失败');
-        });
-
+      // 后台异步更新（带请求合并与节流，避免首页并发打爆接口）
+      refreshRemoteDataInBackground('playRecords', readCache, writeCache);
       return cachedData;
-    } else {
-      // 缓存为空，直接从 API 获取并缓存
-      try {
-        const freshData =
-          await fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`);
-        cacheManager.cachePlayRecords(freshData);
-        return freshData;
-      } catch (err) {
-        console.error('获取播放记录失败:', err);
-        triggerGlobalError('获取播放记录失败');
-        return {};
-      }
+    }
+
+    // 缓存为空，直接从 API 获取并缓存
+    try {
+      return await loadRemoteData('playRecords', readCache, writeCache);
+    } catch (err) {
+      console.error('获取播放记录失败:', err);
+      triggerGlobalError('获取播放记录失败');
+      return {};
     }
   }
 
@@ -597,6 +698,7 @@ export async function savePlayRecord(
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
     cachedRecords[key] = record;
     cacheManager.cachePlayRecords(cachedRecords);
+    markRemoteDataSynced('playRecords');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -607,13 +709,29 @@ export async function savePlayRecord(
 
     // 异步同步到数据库
     try {
-      await fetchWithAuth('/api/playrecords', {
+      const res = await fetchWithAuth('/api/playrecords', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ key, record }),
       });
+      // 服务端会把同一影片其他源的重复记录删掉，这里同步清理本地缓存
+      const data = (await res.json().catch(() => null)) as {
+        removedKeys?: string[];
+      } | null;
+      if (data?.removedKeys?.length) {
+        const latestRecords = cacheManager.getCachedPlayRecords() || {};
+        data.removedKeys.forEach((removedKey) => {
+          delete latestRecords[removedKey];
+        });
+        cacheManager.cachePlayRecords(latestRecords);
+        window.dispatchEvent(
+          new CustomEvent('playRecordsUpdated', {
+            detail: latestRecords,
+          }),
+        );
+      }
     } catch (err) {
       await handleDatabaseOperationFailure('playRecords', err);
       triggerGlobalError('保存播放记录失败');
@@ -631,6 +749,15 @@ export async function savePlayRecord(
   try {
     const allRecords = await getAllPlayRecords();
     allRecords[key] = record;
+    // 同一部影片只保留当前这条，避免切换播放源后出现多条记录
+    Object.keys(allRecords).forEach((recordKey) => {
+      if (
+        recordKey !== key &&
+        isSameVideoRecord(record, allRecords[recordKey])
+      ) {
+        delete allRecords[recordKey];
+      }
+    });
     localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(allRecords));
     window.dispatchEvent(
       new CustomEvent('playRecordsUpdated', {
@@ -643,6 +770,72 @@ export async function savePlayRecord(
     throw err;
   }
   return true;
+}
+
+/**
+ * 合并历史遗留的重复播放记录（同一影片不同源只保留最新一条）。
+ * 返回被删除的记录数量，记录页打开时调用。
+ */
+export async function mergeDuplicatePlayRecords(): Promise<number> {
+  if (typeof window === 'undefined') {
+    return 0;
+  }
+
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const res = await fetchWithAuth('/api/playrecords/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = (await res.json().catch(() => null)) as {
+        removedKeys?: string[];
+      } | null;
+      const removedKeys = data?.removedKeys ?? [];
+      if (removedKeys.length === 0) {
+        // 服务端已确认无重复，这次请求顺带算作一次同步
+        markRemoteDataSynced('playRecords');
+        return 0;
+      }
+
+      const latestRecords = cacheManager.getCachedPlayRecords() || {};
+      removedKeys.forEach((removedKey) => {
+        delete latestRecords[removedKey];
+      });
+      cacheManager.cachePlayRecords(latestRecords);
+      markRemoteDataSynced('playRecords');
+      window.dispatchEvent(
+        new CustomEvent('playRecordsUpdated', {
+          detail: latestRecords,
+        }),
+      );
+      return removedKeys.length;
+    } catch (err) {
+      console.warn('合并重复播放记录失败:', err);
+      return 0;
+    }
+  }
+
+  // localstorage 模式
+  try {
+    const allRecords = await getAllPlayRecords();
+    const removedKeys = pickDuplicatePlayRecordKeys(allRecords);
+    if (removedKeys.length === 0) return 0;
+
+    removedKeys.forEach((removedKey) => {
+      delete allRecords[removedKey];
+    });
+    localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(allRecords));
+    window.dispatchEvent(
+      new CustomEvent('playRecordsUpdated', {
+        detail: allRecords,
+      }),
+    );
+    return removedKeys.length;
+  } catch (err) {
+    console.warn('合并重复播放记录失败:', err);
+    return 0;
+  }
 }
 
 /**
@@ -661,6 +854,7 @@ export async function deletePlayRecord(
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
     delete cachedRecords[key];
     cacheManager.cachePlayRecords(cachedRecords);
+    markRemoteDataSynced('playRecords');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -950,42 +1144,26 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
 
   // 数据库存储模式：使用混合缓存策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
+    const readCache = () => cacheManager.getCachedFavorites();
+    const writeCache = (data: Record<string, Favorite>) =>
+      cacheManager.cacheFavorites(data);
+
     // 优先从缓存获取数据
-    const cachedData = cacheManager.getCachedFavorites();
+    const cachedData = readCache();
 
     if (cachedData) {
-      // 返回缓存数据，同时后台异步更新
-      fetchFromApi<Record<string, Favorite>>(`/api/favorites`)
-        .then((freshData) => {
-          // 只有数据真正不同时才更新缓存
-          if (JSON.stringify(cachedData) !== JSON.stringify(freshData)) {
-            cacheManager.cacheFavorites(freshData);
-            // 触发数据更新事件
-            window.dispatchEvent(
-              new CustomEvent('favoritesUpdated', {
-                detail: freshData,
-              }),
-            );
-          }
-        })
-        .catch((err) => {
-          console.warn('后台同步收藏失败:', err);
-          triggerGlobalError('后台同步收藏失败');
-        });
-
+      // 后台异步更新（带请求合并与节流，避免首页并发打爆接口）
+      refreshRemoteDataInBackground('favorites', readCache, writeCache);
       return cachedData;
-    } else {
-      // 缓存为空，直接从 API 获取并缓存
-      try {
-        const freshData =
-          await fetchFromApi<Record<string, Favorite>>(`/api/favorites`);
-        cacheManager.cacheFavorites(freshData);
-        return freshData;
-      } catch (err) {
-        console.error('获取收藏失败:', err);
-        triggerGlobalError('获取收藏失败');
-        return {};
-      }
+    }
+
+    // 缓存为空，直接从 API 获取并缓存
+    try {
+      return await loadRemoteData('favorites', readCache, writeCache);
+    } catch (err) {
+      console.error('获取收藏失败:', err);
+      triggerGlobalError('获取收藏失败');
+      return {};
     }
   }
 
@@ -1018,6 +1196,7 @@ export async function saveFavorite(
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
     cachedFavorites[key] = favorite;
     cacheManager.cacheFavorites(cachedFavorites);
+    markRemoteDataSynced('favorites');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -1081,6 +1260,7 @@ export async function deleteFavorite(
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
     delete cachedFavorites[key];
     cacheManager.cacheFavorites(cachedFavorites);
+    markRemoteDataSynced('favorites');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -1136,41 +1316,30 @@ export async function isFavorited(
 
   // 数据库存储模式：使用混合缓存策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
-    const cachedFavorites = cacheManager.getCachedFavorites();
+    const readCache = () => cacheManager.getCachedFavorites();
+    const writeCache = (data: Record<string, Favorite>) =>
+      cacheManager.cacheFavorites(data);
+
+    const cachedFavorites = readCache();
 
     if (cachedFavorites) {
-      // 返回缓存数据，同时后台异步更新
-      fetchFromApi<Record<string, Favorite>>(`/api/favorites`)
-        .then((freshData) => {
-          // 只有数据真正不同时才更新缓存
-          if (JSON.stringify(cachedFavorites) !== JSON.stringify(freshData)) {
-            cacheManager.cacheFavorites(freshData);
-            // 触发数据更新事件
-            window.dispatchEvent(
-              new CustomEvent('favoritesUpdated', {
-                detail: freshData,
-              }),
-            );
-          }
-        })
-        .catch((err) => {
-          console.warn('后台同步收藏失败:', err);
-          triggerGlobalError('后台同步收藏失败');
-        });
-
+      // 后台异步更新（带请求合并与节流，避免首页并发打爆接口）
+      refreshRemoteDataInBackground('favorites', readCache, writeCache);
       return !!cachedFavorites[key];
-    } else {
-      // 缓存为空，直接从 API 获取并缓存
-      try {
-        const freshData =
-          await fetchFromApi<Record<string, Favorite>>(`/api/favorites`);
-        cacheManager.cacheFavorites(freshData);
-        return !!freshData[key];
-      } catch (err) {
-        console.error('检查收藏状态失败:', err);
-        triggerGlobalError('检查收藏状态失败');
-        return false;
-      }
+    }
+
+    // 缓存为空，直接从 API 获取并缓存
+    try {
+      const freshData = await loadRemoteData(
+        'favorites',
+        readCache,
+        writeCache,
+      );
+      return !!freshData[key];
+    } catch (err) {
+      console.error('检查收藏状态失败:', err);
+      triggerGlobalError('检查收藏状态失败');
+      return false;
     }
   }
 
@@ -1188,6 +1357,7 @@ export async function clearAllPlayRecords(): Promise<void> {
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cachePlayRecords({});
+    markRemoteDataSynced('playRecords');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -1224,6 +1394,7 @@ export async function refreshAllPlayRecords(): Promise<void> {
 
     if (STORAGE_TYPE !== 'localstorage') {
       cacheManager.cachePlayRecords(freshData);
+      markRemoteDataSynced('playRecords');
     } else {
       localStorage.setItem(PLAY_RECORDS_KEY, JSON.stringify(freshData));
     }
@@ -1253,6 +1424,7 @@ export async function refreshAllFavorites(): Promise<void> {
 
     if (STORAGE_TYPE !== 'localstorage') {
       cacheManager.cacheFavorites?.(freshData);
+      markRemoteDataSynced('favorites');
     } else {
       localStorage.setItem('lunatv_favorites', JSON.stringify(freshData));
     }
@@ -1277,6 +1449,7 @@ export async function clearAllFavorites(): Promise<void> {
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cacheFavorites({});
+    markRemoteDataSynced('favorites');
 
     // 触发立即更新事件
     window.dispatchEvent(
@@ -1340,6 +1513,7 @@ export async function refreshAllCache(): Promise<void> {
 
     if (playRecords.status === 'fulfilled') {
       cacheManager.cachePlayRecords(playRecords.value);
+      markRemoteDataSynced('playRecords');
       window.dispatchEvent(
         new CustomEvent('playRecordsUpdated', {
           detail: playRecords.value,
@@ -1349,6 +1523,7 @@ export async function refreshAllCache(): Promise<void> {
 
     if (favorites.status === 'fulfilled') {
       cacheManager.cacheFavorites(favorites.value);
+      markRemoteDataSynced('favorites');
       window.dispatchEvent(
         new CustomEvent('favoritesUpdated', {
           detail: favorites.value,

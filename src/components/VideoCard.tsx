@@ -53,7 +53,7 @@ export interface VideoCardProps {
   type?: string;
   isBangumi?: boolean;
   isAggregate?: boolean;
-  origin?: 'vod' | 'live';
+  origin?: 'vod' | 'live' | 'douban' | 'bangumi';
   remark?: string;
 }
 
@@ -138,13 +138,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const actualId = id;
     const actualDoubanId = dynamicDoubanId;
     // 收藏存储 key：豆瓣/番组计划卡片不传 source（key 为 +豆瓣ID）
-    const favSource = from === 'douban' ? '' : actualSource;
+    const favSource = (from === 'douban' ? '' : actualSource) || '';
     const favId =
-      from === 'douban'
+      (from === 'douban'
         ? actualDoubanId != null
           ? String(actualDoubanId)
-          : undefined
-        : actualId;
+          : ''
+        : actualId) || '';
     const actualEpisodes = dynamicEpisodes;
     const actualYear = year;
     const actualQuery = query || '';

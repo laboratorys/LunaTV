@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
-import { db } from '@/lib/db';
+import { db, generateStorageKey, parseStorageKey } from '@/lib/db';
+import { isSameVideoRecord } from '@/lib/playRecordUtils';
 import { PlayRecord } from '@/lib/types';
 import { handleWebPlayRecord } from '@/lib/utils';
 
@@ -102,50 +103,53 @@ export async function POST(request: NextRequest) {
       id,
       handleWebPlayRecord(finalRecord),
     );
-    (async () => {
-      try {
-        const allRecords = await db.getAllPlayRecords(authInfo.username ?? '');
-        if (!allRecords) return;
 
-        // 将 Map 对象转为数组，并补充 key 信息，方便后续按时间排序
-        const recordsArray = Object.entries(allRecords).map(
-          ([itemKey, itemValue]) => ({
-            key: itemKey,
-            save_time: itemValue.save_time ?? 0,
-          }),
-        );
+    const username = authInfo.username;
+    const currentKey = generateStorageKey(source, id);
+    const removedKeys: string[] = [];
 
-        // 如果总记录数大于 50 条，开始裁切
-        const MAX_RECORDS = 50;
-        if (recordsArray.length > MAX_RECORDS) {
-          // 按照保存时间升序排列（最老的在最前面）
-          recordsArray.sort((a, b) => a.save_time - b.save_time);
+    // 同一部影片只保留当前这条：清掉其他源的重复记录，并裁掉超过 50 条的旧记录
+    try {
+      const allRecords = await db.getAllPlayRecords(username);
+      const currentRecord = allRecords[currentKey] ?? finalRecord;
 
-          // 计算需要剔除的数量
-          const deleteCount = recordsArray.length - MAX_RECORDS;
-          // 取出最老的前几条
-          const toDelete = recordsArray.slice(0, deleteCount);
-
-          // 并发删除过期、多余的老旧记录
-          await Promise.all(
-            toDelete.map(({ key: expiredKey }) => {
-              const [exSource, exId] = expiredKey.split('+');
-              if (exSource && exId) {
-                return db.deletePlayRecord(
-                  authInfo.username ?? '',
-                  exSource,
-                  exId,
-                );
-              }
-              return Promise.resolve();
-            }),
-          );
+      Object.entries(allRecords).forEach(([recordKey, item]) => {
+        if (
+          recordKey !== currentKey &&
+          isSameVideoRecord(currentRecord, item)
+        ) {
+          removedKeys.push(recordKey);
         }
-      } catch (truncateErr) {
-        console.error('播放记录自动截断失败:', truncateErr);
+      });
+
+      const MAX_RECORDS = 50;
+      const kept = Object.entries(allRecords)
+        .filter(
+          ([recordKey]) =>
+            recordKey !== currentKey && !removedKeys.includes(recordKey),
+        )
+        .map(([recordKey, item]) => ({
+          key: recordKey,
+          save_time: item.save_time ?? 0,
+        }));
+      const overflow = kept.length + 1 - MAX_RECORDS;
+      if (overflow > 0) {
+        // 按保存时间升序排列，最老的在最前面
+        kept.sort((a, b) => a.save_time - b.save_time);
+        kept.slice(0, overflow).forEach(({ key }) => removedKeys.push(key));
       }
-    })();
-    return NextResponse.json({ success: true }, { status: 200 });
+
+      await Promise.all(
+        removedKeys.map((recordKey) => {
+          const parsed = parseStorageKey(recordKey);
+          return db.deletePlayRecord(username, parsed.source, parsed.id);
+        }),
+      );
+    } catch (dedupeErr) {
+      console.error('播放记录去重/截断失败:', dedupeErr);
+    }
+
+    return NextResponse.json({ success: true, removedKeys }, { status: 200 });
   } catch (err) {
     console.error('保存播放记录失败', err);
     return NextResponse.json(

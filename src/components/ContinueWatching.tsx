@@ -8,6 +8,7 @@ import type { PlayRecord } from '@/lib/db.client';
 import {
   clearAllPlayRecords,
   getAllPlayRecords,
+  mergeDuplicatePlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 
@@ -18,10 +19,17 @@ interface ContinueWatchingProps {
   className?: string;
 }
 
+type KeyedPlayRecord = PlayRecord & { key: string };
+
+const toRecordList = (
+  allRecords: Record<string, PlayRecord>,
+): KeyedPlayRecord[] =>
+  Object.entries(allRecords)
+    .map(([key, record]) => ({ ...record, key }))
+    .sort((a, b) => b.save_time - a.save_time);
+
 export default function ContinueWatching({ className }: ContinueWatchingProps) {
-  const [playRecords, setPlayRecords] = useState<
-    (PlayRecord & { key: string })[]
-  >([]);
+  const [playRecords, setPlayRecords] = useState<KeyedPlayRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(() => {
     // 从 localStorage 初始化状态
@@ -35,18 +43,8 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   // 处理播放记录数据更新的函数
   const updatePlayRecords = (allRecords: Record<string, PlayRecord>) => {
-    // 将记录转换为数组并根据 save_time 由近到远排序
-    const recordsArray = Object.entries(allRecords).map(([key, record]) => ({
-      ...record,
-      key,
-    }));
-
-    // 按 save_time 降序排序（最新的在前面）
-    const sortedRecords = recordsArray.sort(
-      (a, b) => b.save_time - a.save_time,
-    );
-
-    setPlayRecords(sortedRecords);
+    // 转换为数组并按 save_time 由近到远排序
+    setPlayRecords(toRecordList(allRecords));
   };
 
   useEffect(() => {
@@ -80,6 +78,26 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
 
     return unsubscribe;
   }, [isExpanded, playRecords.length]);
+
+  // 打开记录页时合并历史遗留的重复记录（同一影片不同源只留最新一条）
+  useEffect(() => {
+    let cancelled = false;
+
+    const mergeRecords = async () => {
+      const removedCount = await mergeDuplicatePlayRecords();
+      if (cancelled || removedCount === 0) return;
+      const allRecords = await getAllPlayRecords();
+      if (!cancelled) setPlayRecords(toRecordList(allRecords));
+    };
+
+    mergeRecords().catch(() => {
+      /* 合并失败不影响正常展示 */
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 如果没有播放记录，则不渲染组件
   if (!loading && playRecords.length === 0) {
