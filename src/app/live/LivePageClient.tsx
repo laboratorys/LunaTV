@@ -1238,8 +1238,8 @@ function LivePageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/live'>
-        <div className='flex items-center justify-center min-h-screen bg-transparent'>
-          <div className='text-center max-w-md mx-auto px-6'>
+        <div className='fixed inset-x-0 top-14 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] flex items-center justify-center overflow-y-auto bg-transparent px-5 py-6 md:static md:inset-auto md:min-h-screen md:overflow-visible md:py-0'>
+          <div className='mx-auto w-full max-w-md text-center'>
             {/* 动画直播图标 */}
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
@@ -1263,7 +1263,7 @@ function LivePageClient() {
             </div>
 
             {/* 进度指示器 */}
-            <div className='mb-6 w-80 mx-auto'>
+            <div className='mb-6 w-full max-w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${
@@ -1319,8 +1319,8 @@ function LivePageClient() {
   if (error) {
     return (
       <PageLayout activePath='/live'>
-        <div className='flex items-center justify-center min-h-screen bg-transparent'>
-          <div className='text-center max-w-md mx-auto px-6'>
+        <div className='fixed inset-x-0 top-14 bottom-[calc(4rem_+_env(safe-area-inset-bottom))] flex items-center justify-center overflow-y-auto bg-transparent px-5 py-6 md:static md:inset-auto md:min-h-screen md:overflow-visible md:py-0'>
+          <div className='mx-auto w-full max-w-md text-center'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-linear-to-r from-red-500 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
