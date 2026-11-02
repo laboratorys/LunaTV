@@ -220,7 +220,8 @@ export class DbManager {
 
   async getCacheByKey(key: string): Promise<any> {
     const result = await this.storage.getCacheByKey(key);
-    return result ? JSON.parse(result) : null;
+    if (typeof result === 'string') return JSON.parse(result);
+    return result ?? null;
   }
 
   async setCacheByKey(key: string, data: any, ttl: number): Promise<void> {
