@@ -370,9 +370,11 @@ export default function PlayPageClient() {
         }
       | undefined;
     if (!plugin) {
-      console.warn(
-        '[Danmu][DEBUG] 推送跳过：播放器插件未挂载（plugins.artplayerPluginDanmuku 为空）',
-      );
+      // Artplayer 需动态 import + 实例化，此时数据往往已到；ready 回调会补推。
+      // 无数据待推时不提示，避免首屏必打一条无意义日志。
+      if (danmuList.length > 0) {
+        console.log('[Danmu] 播放器未就绪，弹幕将在 ready 后补推');
+      }
       return;
     }
     const art = artPlayerRef.current;
@@ -713,6 +715,28 @@ export default function PlayPageClient() {
     if (video.hasAttribute('disableRemotePlayback')) {
       video.removeAttribute('disableRemotePlayback');
     }
+  };
+
+  // 起播兜底：自动播放被浏览器策略拦截时，静音起播并在用户交互后恢复声音。
+  const resumePlayback = () => {
+    const video = artPlayerRef.current?.video as HTMLVideoElement | undefined;
+    if (!video || !video.paused) return;
+    video.play().catch((err) => {
+      if ((err as { name?: string })?.name !== 'NotAllowedError') return;
+      video.muted = true;
+      video
+        .play()
+        .then(() => {
+          const unmute = () => {
+            video.muted = false;
+          };
+          window.addEventListener('pointerdown', unmute, { once: true });
+          window.addEventListener('keydown', unmute, { once: true });
+        })
+        .catch(() => {
+          video.muted = false;
+        });
+    });
   };
 
   // Wake Lock 相关函数
@@ -1939,14 +1963,9 @@ export default function PlayPageClient() {
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
               const art = artPlayerRef.current;
               if (art) {
-                // 过滤会延迟 manifest 就绪，ArtPlayer 的 autoplay 可能在源就绪前
-                // 就触发失败；manifest 解析完成（过滤后的列表已就绪）后补一次 play，
-                // 确保过滤结束后自动起播（仅首次解析时，避免 level 切换反复触发）。
-                if (!firstManifestParsed && art.paused) {
-                  video.play().catch(() => {});
-                }
-                // 顶部广告过滤提示延后到 manifest 解析后再弹，避免在播放器初始化
-                // 阶段被内部时序覆盖/提前自动隐藏（缓存命中路径尤为明显）。
+                // 过滤会延迟 manifest 就绪，源就绪后补一次起播。
+                if (!firstManifestParsed) resumePlayback();
+                // 顶部提示延后到 manifest 解析后再弹，避免被初始化时序覆盖。
                 if (!firstManifestParsed && adNoticeRef.current > 0) {
                   showAdFilteredNotice(adNoticeRef.current);
                   adNoticeRef.current = 0;
@@ -2307,15 +2326,8 @@ export default function PlayPageClient() {
         }
         // 兜底：某些路径（缓存命中、恢复播放）不会走到 loader 的调度，这里再补一次
         scheduleNextEpisodePrefetch();
-        // 兜底起播：过滤（尤其是命中缓存）后仍暂停时，再尝试一次
-        if (artPlayerRef.current.paused) {
-          try {
-            const p = artPlayerRef.current.play();
-            if (p && typeof p.catch === 'function') p.catch(() => {});
-          } catch {
-            // 自动播放被浏览器策略拦截时忽略，由用户手动点击
-          }
-        }
+        // 兜底起播：过滤（尤其是慢路径）后仍暂停时再尝试一次。
+        resumePlayback();
         // 若存在需要恢复的播放进度，则跳转
         if (resumeTimeRef.current && resumeTimeRef.current > 0) {
           try {
