@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.9',
+    date: '2026-11-03',
+    added: [
+      '订阅接口 `/api/sub` 返回弹幕 API 配置（含 token）',
+      '视频源支持按源配置过滤广告开关（filter_ads），配置文件源缺省开启，后台手动添加源缺省关闭',
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+      '修复 PCR 广告缓存查询偶发 500 报错',
+      '修复 PCR 去广告回退本地后视频不自动播放',
+      '优化弹幕推送日志，仅在播放器未就绪时提示',
+    ],
+  },
+  {
     version: '5.1.8',
     date: '2026-11-02',
     added: [
