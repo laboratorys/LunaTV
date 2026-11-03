@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.1.8',
+    date: '2026-11-02',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: ['pcr接口请求超时', '生产环境console.log移除'],
+  },
+  {
     version: '5.1.7',
     date: '2026-10-30',
     added: [
