@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
+import { resolveDanmuApiConfig } from '@/lib/danmu';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,43 +34,67 @@ export async function GET(request: NextRequest) {
     const apiSites = await getAvailableApiSites(authInfo.username);
     const cacheTime = await getCacheTime();
 
-    // 组装按 key 索引的 api_site；filter_ads 默认 true（仅显式 false 才关闭）
+    // 组装按 key 索引的 api_site，结构与订阅文件一致；filter_ads 按实际存储值输出（config 源缺省 true，手动源缺省 false）
     const api_site: Record<
       string,
-      { api: string; name: string; filter_ads: boolean }
+      { api: string; name: string; detail?: string; filter_ads: boolean }
     > = {};
     for (const site of apiSites) {
       if (!site.api) {
         continue;
       }
-      api_site[site.key] = {
+      const entry: {
+        api: string;
+        name: string;
+        detail?: string;
+        filter_ads: boolean;
+      } = {
         api: site.api,
         name: site.name,
         filter_ads: site.filter_ads !== false,
       };
+      if (site.detail) {
+        entry.detail = site.detail;
+      }
+      api_site[site.key] = entry;
     }
 
     // lives：返回全部未禁用且 url/name 有效的直播源
-    const lives: Record<string, { name: string; url: string; epg?: string }> =
-      {};
+    const lives: Record<
+      string,
+      { name: string; url: string; ua?: string; epg?: string }
+    > = {};
     for (const live of config.LiveConfig || []) {
       if (live.disabled || !live.url || !live.name) {
         continue;
       }
-      const entry: { name: string; url: string; epg?: string } = {
+      const entry: { name: string; url: string; ua?: string; epg?: string } = {
         name: live.name,
         url: live.url,
       };
+      if (live.ua) {
+        entry.ua = live.ua;
+      }
       if (live.epg) {
         entry.epg = live.epg;
       }
       lives[live.key] = entry;
     }
 
+    // 弹幕 API：取最终生效并已存库的配置，未配置时不输出该字段
+    const danmuApi = resolveDanmuApiConfig(config);
+
     const body = {
       cache_time: cacheTime,
       api_site,
       lives,
+      ...(danmuApi.url
+        ? {
+            danmu_api: danmuApi.token
+              ? { url: danmuApi.url, token: danmuApi.token }
+              : { url: danmuApi.url },
+          }
+        : {}),
     };
 
     return NextResponse.json(body, {

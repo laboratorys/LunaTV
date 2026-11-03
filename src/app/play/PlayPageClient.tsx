@@ -134,7 +134,7 @@ export default function PlayPageClient() {
     }
     return true;
   });
-  // 各源是否插播广告（来自订阅配置的 filter_ads 字段，缺省 false）
+  // 各源是否插播广告（来自 RUNTIME_CONFIG，config 源缺省 true、手动添加缺省 false）
   const [sourceFilterAdsMap] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined') {
       const runtimeConfig = (window as any).RUNTIME_CONFIG;
@@ -158,12 +158,10 @@ export default function PlayPageClient() {
   // 真正生效的广告过滤开关 = 播放器开关 && 该源标记了插播广告
   const pcrEnabledRef = useRef(true);
   useEffect(() => {
-    const allowedBySource = sourceFilterAdsMap[currentSource] ?? true; // 未知源沿用旧行为
+    const allowedBySource = sourceFilterAdsMap[currentSource] ?? true; // 未配置时默认过滤
     pcrEnabledRef.current = blockAdEnabled && allowedBySource;
     if (blockAdEnabled && !allowedBySource) {
-      console.log(
-        `[PcrAd] 源 ${currentSource} 未标记 filter_ads，跳过广告过滤`,
-      );
+      console.log(`[PcrAd] 源 ${currentSource} 已关闭过滤广告，跳过`);
     }
   }, [blockAdEnabled, currentSource, sourceFilterAdsMap]);
 
