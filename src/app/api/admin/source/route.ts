@@ -14,6 +14,7 @@ type Action =
   | 'enable'
   | 'delete'
   | 'sort'
+  | 'set_filter_ads'
   | 'batch_disable'
   | 'batch_enable'
   | 'batch_delete';
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       'enable',
       'delete',
       'sort',
+      'set_filter_ads',
       'batch_disable',
       'batch_enable',
       'batch_delete',
@@ -73,11 +75,12 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'add': {
-        const { key, name, api, detail } = body as {
+        const { key, name, api, detail, filter_ads } = body as {
           key?: string;
           name?: string;
           api?: string;
           detail?: string;
+          filter_ads?: boolean;
         };
         if (!key || !name || !api) {
           return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
@@ -90,9 +93,29 @@ export async function POST(request: NextRequest) {
           name,
           api,
           detail,
+          // 手动添加的源默认关闭过滤广告，需显式开启
+          filter_ads: filter_ads === true,
           from: 'custom',
           disabled: false,
         });
+        break;
+      }
+      case 'set_filter_ads': {
+        const { key, filter_ads } = body as {
+          key?: string;
+          filter_ads?: boolean;
+        };
+        if (!key || typeof filter_ads !== 'boolean') {
+          return NextResponse.json(
+            { error: '缺少 key 或 filter_ads 参数' },
+            { status: 400 },
+          );
+        }
+        const entry = adminConfig.SourceConfig.find((s) => s.key === key);
+        if (!entry) {
+          return NextResponse.json({ error: '源不存在' }, { status: 404 });
+        }
+        entry.filter_ads = filter_ads;
         break;
       }
       case 'disable': {

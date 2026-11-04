@@ -32,6 +32,7 @@ interface DataSource {
   key: string;
   api: string;
   detail?: string;
+  filter_ads?: boolean;
   disabled?: boolean;
   from: 'config' | 'custom';
 }
@@ -50,6 +51,7 @@ const SourceSection = ({
     key: '',
     api: '',
     detail: '',
+    filter_ads: false,
     disabled: false,
     from: 'config',
   });
@@ -169,18 +171,28 @@ const SourceSection = ({
         name: newSource.name,
         api: newSource.api,
         detail: newSource.detail,
+        filter_ads: newSource.filter_ads !== false,
       });
       setNewSource({
         name: '',
         key: '',
         api: '',
         detail: '',
+        filter_ads: false,
         disabled: false,
         from: 'custom',
       });
       setShowAddForm(false);
     }).catch(() => {
       console.error('操作失败', 'add', newSource);
+    });
+  };
+
+  const handleToggleFilterAds = (key: string, checked: boolean) => {
+    withLoading(`filterAds_${key}`, () =>
+      callSourceApi({ action: 'set_filter_ads', key, filter_ads: checked }),
+    ).catch(() => {
+      console.error('操作失败', 'set_filter_ads', key);
     });
   };
 
@@ -436,6 +448,18 @@ const SourceSection = ({
           title={source.detail || '-'}
         >
           {source.detail || '-'}
+        </td>
+        <td className='px-6 py-4 whitespace-nowrap'>
+          <input
+            type='checkbox'
+            checked={source.filter_ads !== false}
+            disabled={isLoading(`filterAds_${source.key}`)}
+            onChange={(e) =>
+              handleToggleFilterAds(source.key, e.target.checked)
+            }
+            onPointerDown={(e) => e.stopPropagation()}
+            className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
+          />
         </td>
         <td className='px-6 py-4 whitespace-nowrap max-w-4'>
           <span
@@ -740,6 +764,20 @@ const SourceSection = ({
                 className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
               />
             </div>
+            <label className='flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer'>
+              <input
+                type='checkbox'
+                checked={newSource.filter_ads !== false}
+                onChange={(e) =>
+                  setNewSource((prev) => ({
+                    ...prev,
+                    filter_ads: e.target.checked,
+                  }))
+                }
+                className='appearance-auto accent-primary-600 w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600'
+              />
+              过滤广告（默认关闭）
+            </label>
             <div className='flex justify-end'>
               <button
                 onClick={handleAddSource}
@@ -800,6 +838,9 @@ const SourceSection = ({
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                     Detail 地址
+                  </th>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                    过滤广告
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                     状态

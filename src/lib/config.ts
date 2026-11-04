@@ -12,7 +12,7 @@ export interface ApiSite {
   api: string;
   name: string;
   detail?: string;
-  filter_ads?: boolean; // 该源是否插播广告（缺省按 false，配合播放器去广告开关才生效）
+  filter_ads?: boolean; // 该源是否插播广告（缺省按 true，需配合播放器去广告开关才生效）
 }
 
 export interface LiveCfg {
@@ -86,7 +86,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
       existingSource.name = site.name;
       existingSource.api = site.api;
       existingSource.detail = site.detail;
-      existingSource.filter_ads = site.filter_ads === true;
+      existingSource.filter_ads = site.filter_ads !== false;
       existingSource.from = 'config';
     } else {
       // 如果不存在，创建新条目
@@ -95,7 +95,7 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
         name: site.name,
         api: site.api,
         detail: site.detail,
-        filter_ads: site.filter_ads === true,
+        filter_ads: site.filter_ads !== false,
         from: 'config',
         disabled: false,
       });
@@ -292,6 +292,7 @@ async function getInitConfig(
       name: site.name,
       api: site.api,
       detail: site.detail,
+      filter_ads: site.filter_ads !== false,
       from: 'config',
       disabled: false,
     });

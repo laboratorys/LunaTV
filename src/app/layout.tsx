@@ -98,12 +98,11 @@ export default async function RootLayout({
     shortDrama = config.FeaturesConfig?.shortDrama ?? true;
     source = config.FeaturesConfig?.source ?? false;
     live = config.FeaturesConfig?.live ?? false;
-    // 只取来自配置文件的源：自定义源（from='custom')没有 filter_ads 信息，
-    // 不在 map 里，客户端按未知源沿用旧行为。
+    // config 源缺省开启过滤广告，手动添加的源缺省关闭；按实际存储值输出
     sourceFilterAds = Object.fromEntries(
       (config.SourceConfig || [])
-        .filter((s) => s.from === 'config')
-        .map((s) => [s.key, s.filter_ads === true]),
+        .filter((s) => !s.disabled)
+        .map((s) => [s.key, s.filter_ads !== false]),
     );
   }
 
