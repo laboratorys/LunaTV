@@ -687,10 +687,10 @@ export async function filterAdsByPcr(
   for (let i = 1; i < segments.length; i++) {
     if (discBefore(lines, segments[i].tagStartIndex) >= 0) blockStarts.push(i);
   }
-  let anchors =
-    blockStarts.length >= MIN_BLOCK_ANCHORS
-      ? blockStarts
-      : uniformGrid(segments.length, MAX_ANCHORS);
+  const useBlocks = blockStarts.length >= MIN_BLOCK_ANCHORS;
+  let anchors = useBlocks
+    ? blockStarts
+    : uniformGrid(segments.length, MAX_ANCHORS);
   anchors = capAnchors(anchors, MAX_ANCHORS);
   if (anchors[anchors.length - 1] !== last) anchors.push(last);
 
@@ -709,7 +709,9 @@ export async function filterAdsByPcr(
   await Promise.all(coarse.map((i) => pcrOf(anchors[i])));
 
   // A playlist whose clock restarts on nearly every interval is not ad-muxed;
-  // bail out early instead of paying for dozens of binary searches.
+  // bail out early instead of paying for dozens of binary searches. Only do
+  // this for the uniform grid: with DISCONTINUITY anchors the resets sit right
+  // on the block boundaries (ad insertions), so they are expected here.
   let brokenIntervals = 0;
   for (let k = 0; k + 1 < coarse.length; k++) {
     if (!(await continuous(anchors[coarse[k]], anchors[coarse[k + 1]]))) {
@@ -717,7 +719,11 @@ export async function filterAdsByPcr(
     }
   }
   const intervals = coarse.length - 1;
-  if (intervals >= MIN_RESET_SAMPLE && brokenIntervals * 2 > intervals) {
+  if (
+    !useBlocks &&
+    intervals >= MIN_RESET_SAMPLE &&
+    brokenIntervals * 2 > intervals
+  ) {
     log(
       `skip: clock resets on most intervals (${brokenIntervals}/${intervals})`,
     );

@@ -110,8 +110,13 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
     }
   });
 
-  // 将 Map 转换回数组
-  adminConfig.SourceConfig = Array.from(currentApiSites.values());
+  // 文件为权威来源：按文件顺序重建数组，文件外的手动源按原顺序排在后面
+  adminConfig.SourceConfig = [
+    ...apiSitesFromFile.map(([key]) => currentApiSites.get(key)!),
+    ...Array.from(currentApiSites.values()).filter(
+      (source) => !apiSitesFromFileKey.has(source.key),
+    ),
+  ];
 
   // 覆盖 CustomCategories
   const customCategoriesFromFile = fileConfig.custom_category || [];
@@ -148,8 +153,16 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
     }
   });
 
-  // 将 Map 转换回数组
-  adminConfig.CustomCategories = Array.from(currentCustomCategories.values());
+  // 文件为权威来源：按文件顺序重建数组，文件外的手动分类按原顺序排在后面
+  adminConfig.CustomCategories = [
+    ...customCategoriesFromFile.map(
+      (c) => currentCustomCategories.get(c.query + c.type)!,
+    ),
+    ...Array.from(currentCustomCategories.values()).filter(
+      (category) =>
+        !customCategoriesFromFileKeys.has(category.query + category.type),
+    ),
+  ];
 
   const livesFromFile = Object.entries(fileConfig.lives || []);
   const currentLives = new Map(
@@ -185,8 +198,13 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
     }
   });
 
-  // 将 Map 转换回数组
-  adminConfig.LiveConfig = Array.from(currentLives.values());
+  // 文件为权威来源：按文件顺序重建数组，文件外的手动源按原顺序排在后面
+  adminConfig.LiveConfig = [
+    ...livesFromFile.map(([key]) => currentLives.get(key)!),
+    ...Array.from(currentLives.values()).filter(
+      (live) => !livesFromFileKeys.has(live.key),
+    ),
+  ];
 
   // 弹幕 API：订阅文件的 danmu_api 优先，每次拉取保存都同步覆盖到站点配置。
   // 与 api_site/lives/custom_category 一致，文件为权威来源；手动在站点配置里
@@ -470,7 +488,59 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     return true;
   });
 
+  // 顺序兜底：库里存的是历史合并顺序（已存在条目原地保留），重新部署后不会自动重排，
+  // 所以每次读配置时按配置文件里的 key 顺序再排一次（文件外的条目排在后面）。
+  applyFileOrder(adminConfig);
+
   return adminConfig;
+}
+
+/**
+ * 按 `ConfigFile` 的 key 顺序重排源/直播源/自定义分类。
+ * 只调整顺序，不增删条目；文件里没有的（手动添加）条目保持原相对顺序排在后面。
+ */
+function applyFileOrder(adminConfig: AdminConfig): void {
+  let fileConfig: ConfigFileStruct;
+  try {
+    fileConfig = JSON.parse(adminConfig.ConfigFile || '{}') as ConfigFileStruct;
+  } catch {
+    return;
+  }
+
+  const reorder = <T>(
+    items: T[] | undefined,
+    fileKeys: string[],
+    keyOf: (item: T) => string,
+  ): T[] | undefined => {
+    if (!items || items.length === 0 || fileKeys.length === 0) {
+      return items;
+    }
+    const rank = new Map(fileKeys.map((key, index) => [key, index]));
+    const fromFile = items
+      .filter((item) => rank.has(keyOf(item)))
+      .sort((a, b) => rank.get(keyOf(a))! - rank.get(keyOf(b))!);
+    const extra = items.filter((item) => !rank.has(keyOf(item)));
+    return [...fromFile, ...extra];
+  };
+
+  adminConfig.SourceConfig =
+    reorder(
+      adminConfig.SourceConfig,
+      Object.keys(fileConfig.api_site || {}),
+      (source) => source.key,
+    ) || [];
+  adminConfig.LiveConfig =
+    reorder(
+      adminConfig.LiveConfig,
+      Object.keys(fileConfig.lives || {}),
+      (live) => live.key,
+    ) || [];
+  adminConfig.CustomCategories =
+    reorder(
+      adminConfig.CustomCategories,
+      (fileConfig.custom_category || []).map((c) => c.query + c.type),
+      (category) => category.query + category.type,
+    ) || [];
 }
 
 export async function resetConfig() {
