@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '5.2.0',
+    date: '2026-11-19',
+    added: [
+      // 无新增内容
+    ],
+    changed: ['优化配置重建逻辑', '增强广告过滤功能'],
+    fixed: [
+      // 无修复内容
+    ],
+  },
+  {
     version: '5.1.9',
     date: '2026-11-03',
     added: [
